@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Maven project configuration file
+  http://maven.apache.org/
+
+  For building this project: mvn install
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.kortforsyningen</groupId>
+  <artifactId>proj</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>PROJ bindings</name>
+  <url>https://github.com/Kortforsyningen/PROJ-JNI</url>
+  <description>
+    Java Native Interface for the PROJ C/C++ library.
+    PROJ is a generic coordinate transformation software that transforms
+    geospatial coordinates from one coordinate reference system (CRS) to another.
+    This includes cartographic projections as well as geodetic transformations.
+    This package exposes PROJ services as implementations of GeoAPI interfaces.
+    Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
+  </description>
+
+  <organization>
+    <name>Agency for Data Supply and Efficiency</name>
+    <url>https://www.kortforsyningen.dk/</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:https://github.com/Kortforsyningen/PROJ-JNI</connection>
+    <url>https://github.com/Kortforsyningen/PROJ-JNI</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>kbevers</id>
+      <name>Kristian Evers</name>
+      <email>kristianevers@gmail.com</email>
+      <organization>Kortforsyningen</organization>
+      <organizationUrl>https://www.kortforsyningen.dk</organizationUrl>
+      <roles>
+        <role>C/C++ developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>desruisseaux</id>
+      <name>Martin Desruisseaux</name>
+      <email>martin.desruisseaux@geomatys.com</email>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.com</organizationUrl>
+      <roles>
+        <role>Java developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.opengis</groupId>
+      <artifactId>geoapi</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opengis</groupId>
+      <artifactId>geoapi-conformance</artifactId>
+      <version>3.0.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <!-- Compilation: target Java 11, enable all warnings. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <release>11</release>
+          <encoding>UTF-8</encoding>
+          <showWarnings>true</showWarnings>
+          <showDeprecation>true</showDeprecation>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+            <arg>-Xdoclint:all</arg>
+            <arg>--doclint-format</arg> <arg>html5</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <!-- Test execution. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+      </plugin>
+
+      <!-- JAR packaging: add project name and version in MANIFEST.MF file. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.1.2</version>
+        <configuration>
+          <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Automatic-Module-Name>
+                org.kortforsyningen.proj
+              </Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
