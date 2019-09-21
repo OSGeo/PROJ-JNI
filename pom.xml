@@ -100,6 +100,7 @@
             <arg>-Xlint:all</arg>
             <arg>-Xdoclint:all</arg>
             <arg>--doclint-format</arg> <arg>html5</arg>
+            <arg>-h</arg> <arg>${project.build.sourceDirectory}/../cpp</arg>
           </compilerArgs>
         </configuration>
       </plugin>
