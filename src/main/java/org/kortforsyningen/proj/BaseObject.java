@@ -21,6 +21,13 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Set;
+import java.util.Collection;
+import java.util.Collections;
+import org.opengis.util.GenericName;
+import org.opengis.util.InternationalString;
+import org.opengis.referencing.ReferenceIdentifier;
+
 
 /**
  * Base class of all objects wrapping a PROJ {@code osgeo::proj::util::BaseObject}.
@@ -42,11 +49,27 @@ class BaseObject {
      * Instead, the {@link BaseObject#ptr} value is copied.
      */
     private static final class Disposer implements Runnable {
-        /** Pointer to C++ BaseObject. */
+        /**
+         * Pointer to C++ {@code BaseObject}.
+         */
         private final long ptr;
 
-        Disposer(final long ptr) {this.ptr = ptr;}
-        @Override public void run() {destroy(ptr);}
+        /**
+         * Creates a disposer for the given PROJ object.
+         *
+         * @param  ptr  copy of {@link BaseObject#ptr} value.
+         */
+        Disposer(final long ptr) {
+            this.ptr = ptr;
+        }
+
+        /**
+         * Invoked by the cleaner thread when the enclosing {@link BaseObject} is no longer reachable.
+         */
+        @Override
+        public void run() {
+            destroy(ptr);
+        }
     }
 
     /**
@@ -62,6 +85,63 @@ class BaseObject {
             destroy(ptr);
             throw e;
         }
+    }
+
+    /**
+     * Returns the primary name by which this object is identified.
+     * This method can be invoked only if the wrapped PROJ object is
+     * an instance of {@code osgeo::proj::common::IdentifiedObject}.
+     *
+     * @return the primary name.
+     * @throws UnsupportedOperationException if this object does not provide a name.
+     */
+    public ReferenceIdentifier getName() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Returns alternative names by which this object is identified.
+     * The set may be non-empty only if the wrapped PROJ object is
+     * an instance of {@code osgeo::proj::common::IdentifiedObject}.
+     *
+     * @return alternative names and abbreviations, or an empty collection if there is none.
+     */
+    public Collection<GenericName> getAlias() {
+        return Collections.emptySet();
+    }
+
+    /**
+     * Returns identifiers which reference elsewhere the object's defining information.
+     * The set may be non-empty only if the wrapped PROJ object is
+     * an instance of {@code osgeo::proj::common::IdentifiedObject}.
+     *
+     * @return this object identifiers, or an empty collection if there is none.
+     */
+    public Set<ReferenceIdentifier> getIdentifiers() {
+        return Collections.emptySet();
+    }
+
+    /**
+     * Returns comments on or information about this object, including data source information.
+     * The value may be non-null only if the wrapped PROJ object is
+     * an instance of {@code osgeo::proj::common::IdentifiedObject}.
+     *
+     * @return the remarks, or {@code null} if none.
+     */
+    public InternationalString getRemarks() {
+        return null;
+    }
+
+    /**
+     * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
+     * This method can be invoked only if the wrapped PROJ object is
+     * an instance of {@code osgeo::proj::io::IWKTExportable}.
+     *
+     * @return the Well-Known Text (WKT) for this object.
+     * @throws UnsupportedOperationException if this object can not be formatted as WKT.
+     */
+    public String toWKT() throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**

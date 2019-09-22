@@ -19,31 +19,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include <proj.h>
-#include "org_kortforsyningen_proj_Context.h"
+package org.kortforsyningen.proj;
 
 
-/** \brief Allocates a PJ_CONTEXT for using PROJ in a multi-threads environment.
+/**
+ * Wrappers around {@code osgeo::proj::io::AuthorityFactory}.
+ * This is an entry point by which geodetic objects can be created from authority codes.
+ * Each {@code io::AuthorityFactory} should be used only by one thread at a time.
  *
- * Each thread should have its own PJ_CONTEXT instance.
- *
- * @param  env         The JNI environment.
- * @param  caller      The class from which this method has been invoked.
- * @return The address of the new PJ_CONTEXT structure, or 0 in case of failure.
+ * @author  Martin Desruisseaux (Geomatys)
+ * @version 1.0
+ * @since   1.0
  */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env, jclass caller) {
-    PJ_CONTEXT *ctx = proj_context_create();
-    return (jlong) ctx;
-}
+final class AuthorityFactory {
+    /**
+     * Do not allow instantiation.
+     */
+    private AuthorityFactory() {
+    }
 
-
-/** \brief Releases a PJ_CONTEXT.
- *
- * @param  env     The JNI environment.
- * @param  caller  The class from which this method has been invoked.
- * @param  ctxPtr  The address of the PJ_CONTEXT to release.
- */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroy(JNIEnv *env, jclass caller, jlong ctxPtr) {
-    PJ_CONTEXT *ctx = (PJ_CONTEXT*) ctxPtr;
-    proj_context_destroy(ctx);
+    /**
+     * Returns the pointer to a {@code cs::CoordinateSystem} from the specified code.
+     *
+     * @param  ptr    pointer to the {@code osgeo::proj::io::AuthorityFactory} wrapped by this class.
+     * @param  code   object code allocated by authority.
+     * @return pointer to the PROJ {@code osgeo::proj::cs::CoordinateSystem}, or 0 in case of failure.
+     */
+    private static native long createCoordinateSystem(long ptr, String code);
 }

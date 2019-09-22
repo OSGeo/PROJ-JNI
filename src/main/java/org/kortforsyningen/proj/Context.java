@@ -75,11 +75,27 @@ final class Context {
      * Instead, the {@link Context#ptr} value is copied.
      */
     private static final class Disposer implements Runnable {
-        /** Pointer to PJ_CONTEXT. */
+        /**
+         * Pointer to {@code PJ_CONTEXT}.
+         */
         private final long ptr;
 
-        Disposer(final long ptr) {this.ptr = ptr;}
-        @Override public void run() {destroy(ptr);}
+        /**
+         * Creates a disposer for the given PROJ object.
+         *
+         * @param  ptr  copy of {@link Context#ptr} value.
+         */
+        Disposer(final long ptr) {
+            this.ptr = ptr;
+        }
+
+        /**
+         * Invoked by the cleaner thread when the enclosing {@link Context} is no longer reachable.
+         */
+        @Override
+        public void run() {
+            destroy(ptr);
+        }
     }
 
     /**
