@@ -83,6 +83,10 @@
     </dependency>
   </dependencies>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
   <build>
     <plugins>
 
@@ -93,7 +97,6 @@
         <version>3.8.1</version>
         <configuration>
           <release>11</release>
-          <encoding>UTF-8</encoding>
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
           <compilerArgs>
