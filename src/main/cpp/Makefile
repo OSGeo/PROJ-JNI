@@ -43,7 +43,7 @@
 #
 FLAG   = -shared -shared-libgcc -fpic -O2
 LIB    = -lm -ldl -lproj
-SRC    = org_kortforsyningen_proj_Context.cpp
+SRC    = bindings.cpp
 OUT    = libproj-binding.so
 
 ifndef JAVA_HOME

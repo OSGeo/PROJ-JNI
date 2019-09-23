@@ -21,6 +21,8 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Objects;
+
 
 /**
  * Wrappers around {@code osgeo::proj::io::AuthorityFactory}.
@@ -31,12 +33,24 @@ package org.kortforsyningen.proj;
  * @version 1.0
  * @since   1.0
  */
-final class AuthorityFactory {
+final class AuthorityFactory extends ObjectReference {
     /**
-     * Do not allow instantiation.
+     * Creates a new factory for the given authority.
+     *
+     * @param  authority  the authority name, for example {@code "EPSG"}.
      */
-    private AuthorityFactory() {
+    AuthorityFactory(final String authority) {
+        super(newInstance(Context.current(), Objects.requireNonNull(authority)), true);
     }
+
+    /**
+     * Instantiate an {@code osgeo::proj::io::AuthorityFactory}.
+     *
+     * @param  context    pointer to the PROJ thread context.
+     * @param  authority  name of the authority. Shall not be null.
+     * @return shared pointer to the factory, or 0 if out of memory.
+     */
+    private static native long newInstance(long context, String authority);
 
     /**
      * Returns the pointer to a {@code cs::CoordinateSystem} from the specified code.

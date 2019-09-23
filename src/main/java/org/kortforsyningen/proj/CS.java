@@ -33,7 +33,7 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
  * @version 1.0
  * @since   1.0
  */
-class CS extends BaseObject implements CoordinateSystem {
+class CS extends IdentifiedObject implements CoordinateSystem {
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::cs::CoordinateSystem}.
      *

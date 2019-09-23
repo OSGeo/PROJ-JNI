@@ -21,8 +21,6 @@
  */
 package org.kortforsyningen.proj;
 
-import java.lang.ref.Cleaner;
-
 
 /**
  * Wrapper for {@code PJ_CONTEXT}, the PROJ threading-context.
@@ -34,29 +32,7 @@ import java.lang.ref.Cleaner;
  * @version 1.0
  * @since   1.0
  */
-final class Context {
-    /**
-     * Manager of objects having native resources to be released after the Java object has been garbage-collected.
-     * This manager will invoke a {@code proj_xxx_destroy(…)} method where <var>xxx</var> depends on the resource
-     * which has been registered.
-     */
-    static final Cleaner DISPOSER = Cleaner.create(Context::cleanerThread);
-
-    /**
-     * Creates a new thread for disposing PROJ objects after their Java wrappers have been garbage-collected.
-     * Only one thread should be created. We create a thread ourselves mostly for specying a more explicit name
-     * than the default name.
-     *
-     * @param  cleaner  provided by {@link Cleaner}.
-     * @return the thread to use for disposing PROJ objects.
-     */
-    private static Thread cleanerThread(final Runnable cleaner) {
-        final Thread t = new Thread(cleaner);
-        t.setPriority(Thread.MAX_PRIORITY - 2);
-        t.setName("PROJ objects disposer");
-        return t;
-    }
-
+final class Context extends ObjectReference {
     /**
      * {@code PJ_CONTEXT} instances associated to each Java thread
      * that needed to perform at least one PROJ operation.
@@ -64,29 +40,18 @@ final class Context {
     private static final ThreadLocal<Context> CONTEXTS = ThreadLocal.withInitial(Context::new);
 
     /**
-     * The pointer to {@code PJ_CONTEXT} structure allocated in the C/C++ heap.
-     * This value has no meaning in Java code. <strong>Do not modify</strong>, since this value is used by PROJ.
-     */
-    private final long ptr;
-
-    /**
      * Task invoked when the enclosing {@link Context} object has been garbage-collected.
      * This object shall not contain any reference to enclosing {@code Context}.
      * Instead, the {@link Context#ptr} value is copied.
      */
-    private static final class Disposer implements Runnable {
-        /**
-         * Pointer to {@code PJ_CONTEXT}.
-         */
-        private final long ptr;
-
+    private static final class Destroyer extends Disposer {
         /**
          * Creates a disposer for the given PROJ object.
          *
          * @param  ptr  copy of {@link Context#ptr} value.
          */
-        Disposer(final long ptr) {
-            this.ptr = ptr;
+        Destroyer(final long ptr) {
+            super(ptr);
         }
 
         /**
@@ -102,12 +67,9 @@ final class Context {
      * Creates and wraps a new {@code PJ_CONTEXT}.
      */
     private Context() {
-        ptr = create();
-        if (ptr == 0) {
-            throw new OutOfMemoryError();
-        }
+        super(create(), false);
         try {
-            DISPOSER.register(this, new Disposer(ptr));
+            onDispose(new Destroyer(ptr));
         } catch (Throwable e) {
             destroy(ptr);
             throw e;

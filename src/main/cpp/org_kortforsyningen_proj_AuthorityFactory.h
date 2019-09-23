@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
+ * Method:    newInstance
+ * Signature: (JLjava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    createCoordinateSystem
  * Signature: (JLjava/lang/String;)J
  */
