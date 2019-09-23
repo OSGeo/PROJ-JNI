@@ -21,6 +21,14 @@
  */
 package org.kortforsyningen.proj;
 
+import java.net.URL;
+import java.net.URISyntaxException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.lang.ref.Cleaner;
 
 
@@ -157,5 +165,81 @@ abstract class ObjectReference {
      */
     final void onDispose(final Disposer handler) {
         DISPOSER.register(this, handler);
+    }
+
+    /**
+     * Returns the version number of the PROJ library.
+     *
+     * @return the PROJ release string.
+     *
+     * @see Proj#version()
+     */
+    static native String version();
+
+    /**
+     * Returns an absolute path to the Java Native Interface C/C++ code.
+     * If the resources can not be accessed by an absolute path,
+     * then this method copies the resource in a temporary file.
+     *
+     * @return absolute path to the library (may be a temporary file).
+     * @throws URISyntaxException if an error occurred while creating a URI to the native file.
+     * @throws IOException if an error occurred while copying the library to a temporary file.
+     * @throws SecurityException if the security manager denies loading resource, creating absolute path, <i>etc</i>.
+     * @throws UnsatisfiedLinkError if no native resource has been found for the current OS.
+     *
+     * @see System#load(String)
+     */
+    private static Path libraryPath() throws URISyntaxException, IOException {
+        final String os = System.getProperty("os.name");
+        final String libdir, suffix;
+        if (os.contains("Windows")) {
+            libdir = "windows";
+            suffix = "dll";
+        } else if (os.contains("Mac OS")) {
+            libdir = "darwin";
+            suffix = "so";
+        } else if (os.contains("Linux")) {
+            libdir = "linux";
+            suffix = "so";
+        } else {
+            throw new UnsatisfiedLinkError("Unsupported operating system: " + os);
+        }
+        /*
+         * If the native file is inside the JAR file, we need to extract it to a temporary file.
+         * That file will be deleted on JVM exists, so a new file will be copied every time the
+         * application is executed.
+         *
+         * Example of URL for a JAR entry: jar:file:/home/…/proj.jar!/org/…/ObjectReference.class
+         */
+        final String nativeFile = libdir + "/libproj-binding." + suffix;
+        final URL res = ObjectReference.class.getResource(nativeFile);
+        if (res == null) {
+            throw new UnsatisfiedLinkError("Missing native file: " + nativeFile);
+        }
+        final Path location;
+        if ("jar".equals(res.getProtocol())) {
+            location = Files.createTempFile("libproj-binding", suffix);
+            location.toFile().deleteOnExit();
+            try (InputStream in = res.openStream()) {
+                Files.copy(in, location, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } else {
+            location = Paths.get(res.toURI());
+        }
+        return location;
+    }
+
+    /**
+     * Loads the native library. If this initialization fails, a message is logged at fatal error level
+     * (because the library will be unusable) but no exception is thrown.  We do not throw an exception
+     * from this static initializer because doing so would result in {@link NoClassDefFoundError} to be
+     * thrown on all subsequent attempts to use this class, which may be confusing.
+     */
+    static {
+        try {
+            System.load(libraryPath().toAbsolutePath().toString());
+        } catch (UnsatisfiedLinkError | Exception e) {
+            System.getLogger("org.kortforsyningen.proj").log(System.Logger.Level.ERROR, e);
+        }
     }
 }

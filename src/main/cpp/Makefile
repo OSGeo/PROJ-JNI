@@ -38,10 +38,10 @@
 # GCC options reminder:
 #    -shared		Produce a shared object which can then be linked with other objects to form an executable.
 #    -shared-libgcc	Use the shared version of libgcc. Recommended for JNI when exceptions may be thrown from gcc.
-#    -fpic		Generate position-independent code suitable for use in a shared library.
+#    -fPIC		Generate position-independent code suitable for use in a shared library.
 #    -O2		Performs nearly all supported optimizations that do not involve a space-speed tradeoff.
 #
-FLAG   = -shared -shared-libgcc -fpic -O2
+FLAG   = -fPIC -shared -shared-libgcc -O2
 LIB    = -lm -ldl -lproj
 SRC    = bindings.cpp
 OUT    = libproj-binding.so
@@ -78,4 +78,4 @@ endif
 # The $(LIB) parameter should be last (it way work anywhere,
 # but putting it last allows more predictable results).
 all:
-	g++ $(FLAG) $(INCLUDE_DIR) -o ../resources/native/$(OUTDIR)/$(OUT) $(SRC) $(LIB)
+	g++ $(FLAG) $(INCLUDE_DIR) -o ../resources/org/kortforsyningen/proj/$(OUTDIR)/$(OUT) $(SRC) $(LIB)

@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import java.util.Objects;
+import java.util.Optional;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -38,6 +39,32 @@ public final class Proj {
      * Do not allow instantiation of this class.
      */
     private Proj() {
+    }
+
+    /**
+     * Returns the version number of the PROJ library.
+     * If the PROJ library is not installed on the current system,
+     * then this method logs a warning and return an empty value.
+     * This method can be used as a way to check if the library is present.
+     *
+     * @return the PROJ release string, or an empty value if the native library has not been found.
+     */
+    public static Optional<String> version() {
+        final System.Logger.Level level;
+        final LinkageError error;
+        try {
+            return Optional.of(ObjectReference.version());
+        } catch (UnsatisfiedLinkError e) {
+            // Thrown the first time that we try to use the library.
+            level = System.Logger.Level.WARNING;
+            error = e;
+        } catch (NoClassDefFoundError e) {
+            // Thrown on attempts after the first one if the exception was not caught.
+            level = System.Logger.Level.TRACE;
+            error = e;
+        }
+        System.getLogger("org.kortforsyningen.proj").log(level, "Can not link PROJ native library.", error);
+        return Optional.empty();
     }
 
     /**

@@ -20,7 +20,20 @@
  * SOFTWARE.
  */
 #include <proj.h>
+#include "org_kortforsyningen_proj_ObjectReference.h"
 #include "org_kortforsyningen_proj_Context.h"
+
+
+/** \brief Returns the PROJ release number.
+ *
+ * @param  env         The JNI environment.
+ * @param  caller      The class from which this method has been invoked.
+ * @return The PROJ release number, or NULL.
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(JNIEnv *env, jclass caller) {
+    const char *desc = pj_release;
+    return (desc) ? env->NewStringUTF(desc) : NULL;
+}
 
 
 /** \brief Allocates a PJ_CONTEXT for using PROJ in a multi-threads environment.

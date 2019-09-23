@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_ObjectReference_release
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     org_kortforsyningen_proj_ObjectReference
+ * Method:    version
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif
