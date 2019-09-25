@@ -19,15 +19,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#include <string>
 #include <proj.h>
-#include "org_kortforsyningen_proj_ObjectReference.h"
+#include "proj/io.hpp"
 #include "org_kortforsyningen_proj_Context.h"
+#include "org_kortforsyningen_proj_ObjectReference.h"
+#include "org_kortforsyningen_proj_AuthorityFactory.h"
+
+using osgeo::proj::io::DatabaseContext;
+using osgeo::proj::io::DatabaseContextNNPtr;
+using osgeo::proj::io::AuthorityFactory;
+using osgeo::proj::io::AuthorityFactoryNNPtr;
 
 
 /** \brief Returns the PROJ release number.
  *
- * @param  env         The JNI environment.
- * @param  caller      The class from which this method has been invoked.
+ * @param  env     The JNI environment.
+ * @param  caller  The class from which this method has been invoked.
  * @return The PROJ release number, or NULL.
  */
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(JNIEnv *env, jclass caller) {
@@ -40,13 +48,53 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(
  *
  * Each thread should have its own PJ_CONTEXT instance.
  *
- * @param  env         The JNI environment.
- * @param  caller      The class from which this method has been invoked.
+ * @param  env     The JNI environment.
+ * @param  caller  The class from which this method has been invoked.
  * @return The address of the new PJ_CONTEXT structure, or 0 in case of failure.
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env, jclass caller) {
     PJ_CONTEXT *ctx = proj_context_create();
-    return (jlong) ctx;
+    return reinterpret_cast<jlong>(ctx);
+}
+
+
+/** \brief Casts the given address as a pointer to PJ_CONTEXT.
+ *
+ * This method is defined for type safety.
+ *
+ * @param  ctxPtr  The address of the PJ_CONTEXT for the current thread.
+ * @return The given ctxPtr as a pointer to PJ_CONTEXT.
+ */
+inline PJ_CONTEXT* as_context(jlong ctxPtr) {
+    return reinterpret_cast<PJ_CONTEXT*>(ctxPtr);
+}
+
+
+/** \brief Allocates a osgeo::proj::io::AuthorityFactory.
+ *
+ * The factory should be used by only one thread at a time.
+ *
+ * @param  env        The JNI environment.
+ * @param  caller     The class from which this method has been invoked.
+ * @param  ctxPtr     The address of the PJ_CONTEXT for the current thread.
+ * @param  authority  Name of the authority for which to create the factory.
+ * @return The address of the new authority factory, or 0 in case of failure.
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance(JNIEnv *env, jclass caller, jlong ctxPtr, jstring authority) {
+    const char *authority_utf = env->GetStringUTFChars(authority, NULL);
+    if (authority_utf) {
+        try {
+            std::string authority_string = authority_utf;           // Encoding agnostic. May throw an exception.
+            DatabaseContextNNPtr db = DatabaseContext::create(std::string(), std::vector<std::string>(), as_context(ctxPtr));
+            AuthorityFactoryNNPtr factory = AuthorityFactory::create(db, authority_string);
+            // TODO: wrap the shared pointer.
+        } catch (const std::exception &e) {
+            jclass c = env->FindClass("org/opengis/util/FactoryException");
+            if (c) env->ThrowNew(c, e.what());
+        }
+        env->ReleaseStringUTFChars(authority, authority_utf);       // Must be after the catch block in case an exception happens.
+    }
+    return 0;
 }
 
 
@@ -57,6 +105,5 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env
  * @param  ctxPtr  The address of the PJ_CONTEXT to release.
  */
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroy(JNIEnv *env, jclass caller, jlong ctxPtr) {
-    PJ_CONTEXT *ctx = (PJ_CONTEXT*) ctxPtr;
-    proj_context_destroy(ctx);
+    proj_context_destroy(as_context(ctxPtr));
 }

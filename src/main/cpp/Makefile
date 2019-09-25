@@ -22,8 +22,9 @@
 
 #
 # Compiles the native part of the bindings to PROJ. This build process requires the PROJ library to be installed on
-# the current platform. The Proj header files are expected to be found either in the "/usr/local/include" directory
-# (for example on Linux distributions), or "/opt/local/include" on some other platforms.
+# the current platform. The PROJ header files shall exist in the compiler default include directory ("/usr/include"
+# or "/usr/local/include" or "/opt/local/include", etc). On Linux distributions, those header files are obtained by
+# installing the "proj-devel" package.
 #
 # HOW TO BUILD:
 # C/C++ compilation is currently not part of Maven build. Compilation shall be done manually like below:
@@ -31,51 +32,59 @@
 #     cd src/main/cpp
 #     make
 #
-# The executable will be created in the "src/resources/native/<platform>/" directory for inclusion in the JAR file.
+# The executable will be created in the "src/resources/…/proj/<platform>/" directory for inclusion in the JAR file.
 # Only the executable for the current platform will be updated. If the JNI have been updated, then `make` will need
-# to be executed on all supported platforms.
+# to be executed on all supported platforms. The JNI may also need to be recompiled when the PROJ version changes.
 #
-# GCC options reminder:
-#    -shared		Produce a shared object which can then be linked with other objects to form an executable.
-#    -shared-libgcc	Use the shared version of libgcc. Recommended for JNI when exceptions may be thrown from gcc.
-#    -fPIC		Generate position-independent code suitable for use in a shared library.
-#    -O2		Performs nearly all supported optimizations that do not involve a space-speed tradeoff.
-#
-FLAG   = -fPIC -shared -shared-libgcc -O2
-LIB    = -lm -ldl -lproj
-SRC    = bindings.cpp
-OUT    = libproj-binding.so
-
 ifndef JAVA_HOME
     $(error JAVA_HOME is not set.)
 endif
-
-INCLUDE_DIR = -I$(JAVA_HOME)/include -I/usr/local/include -I/opt/local/include
 
 ifndef OS
     OS = $(shell uname)
 endif
 
 ifeq ($(OS),Windows_NT)
-    OUTDIR = window
-endif
-
-ifeq ($(OS),Linux)
-    INCLUDE_DIR += -I$(JAVA_HOME)/include/linux
-    OUTDIR = linux
-endif
-
-ifeq ($(OS),Darwin)
-    INCLUDE_DIR += -I$(JAVA_HOME)/include/darwin
-    LIB += -L/opt/local/lib
-    OUTDIR = darwin
-endif
-
-ifndef OUTDIR
+    SUBDIR = window
+else ifeq ($(OS),Linux)
+    SUBDIR = linux
+else ifeq ($(OS),Darwin)
+    SUBDIR = darwin
+else
     $(error The $(OS) platform is not supported by this makefile.)
 endif
 
-# The $(LIB) parameter should be last (it way work anywhere,
+
+#
+# GCC options reminder:
+#    -fPIC		Generate position-independent code suitable for use in a shared library.
+#    -shared		Produce a shared object which can then be linked with other objects to form an executable.
+#    -shared-libgcc	Use the shared version of libgcc. Recommended for JNI when exceptions may be thrown from gcc.
+#    -O2		Performs nearly all supported optimizations that do not involve a space-speed tradeoff.
+#
+# If the user specified a PROJ directory, also search for include files and shared library there.
+# This is useful when that custom directory contains a more recent version of PROJ than the one
+# installed on the system.
+#
+FLAGS       = -fPIC -shared -shared-libgcc -O2
+LIBS        = -lproj
+SRC_FILES   = bindings.cpp
+OUT_FILE    = libproj-binding.so
+INCLUDE_DIR = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/$(SUBDIR)
+
+ifeq ($(OS),Darwin)
+    LIBS += -L/opt/local/lib
+endif
+
+ifdef PROJ_DIR
+    INCLUDE_DIR += -I$(PROJ_DIR)/include -I$(PROJ_DIR)/src
+    LIBS = -L$(PROJ_DIR)/src/.libs -lproj
+endif
+
+
+#
+# The $(LIBS) parameter should be last (it way work anywhere,
 # but putting it last allows more predictable results).
+#
 all:
-	g++ $(FLAG) $(INCLUDE_DIR) -o ../resources/org/kortforsyningen/proj/$(OUTDIR)/$(OUT) $(SRC) $(LIB)
+	g++ $(FLAGS) $(INCLUDE_DIR) -o ../resources/org/kortforsyningen/proj/$(SUBDIR)/$(OUT_FILE) $(SRC_FILES) $(LIBS)

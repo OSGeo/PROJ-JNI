@@ -134,7 +134,7 @@ abstract class ObjectReference {
     ObjectReference(final long ptr, final boolean isShared) {
         this.ptr = ptr;
         if (ptr == 0) {
-            throw new OutOfMemoryError();
+            throw new OutOfMemoryError("Can not allocate PROJ object.");
         }
         if (isShared) try {
             onDispose(new Disposer(ptr));

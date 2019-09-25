@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import java.util.Objects;
+import org.opengis.util.FactoryException;
 
 
 /**
@@ -38,19 +39,23 @@ final class AuthorityFactory extends ObjectReference {
      * Creates a new factory for the given authority.
      *
      * @param  authority  the authority name, for example {@code "EPSG"}.
+     * @throws FactoryException if the factory can not be created.
      */
-    AuthorityFactory(final String authority) {
+    AuthorityFactory(final String authority) throws FactoryException {
         super(newInstance(Context.current(), Objects.requireNonNull(authority)), true);
     }
 
     /**
-     * Instantiate an {@code osgeo::proj::io::AuthorityFactory}.
+     * Instantiates an {@code osgeo::proj::io::AuthorityFactory}.
+     * Also creates the {@code osgeo::proj::io::DatabaseContext}.
+     * Each database context can be used by only one thread.
      *
      * @param  context    pointer to the PROJ thread context.
      * @param  authority  name of the authority. Shall not be null.
      * @return shared pointer to the factory, or 0 if out of memory.
+     * @throws FactoryException if the factory can not be created.
      */
-    private static native long newInstance(long context, String authority);
+    private static native long newInstance(long context, String authority) throws FactoryException;
 
     /**
      * Returns the pointer to a {@code cs::CoordinateSystem} from the specified code.
