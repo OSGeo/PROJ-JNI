@@ -10,13 +10,13 @@ Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
 
   * For building:
     - Java Developer Kit (JDK) version 11 or later.
-    - PROJ 6. On Linux platforms, it is provided by the `proj` package.
-    - PROJ 6 header files. On Linux platforms, it is provided by the `proj-devel` package.
-    - `g++` compiler and `make` building tools.
+    - PROJ 6. On Linux platforms, it is provided by the **proj** package.
+    - PROJ 6 header files. On Linux platforms, it is provided by the **proj-devel** package.
+    - **g++** compiler and **make** building tools.
     - Apache Maven.
   * For running:
     - Java Runtime Environment (JRE) version 11 or later.
-    - PROJ 6. On Linux platforms, it is provided by the `proj` package.
+    - PROJ 6. On Linux platforms, it is provided by the **proj** package.
 
 
 ## Build instruction

@@ -32,6 +32,42 @@ using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryNNPtr;
 
 
+/** \brief Prints the given text to java.lang.System.out stream on a single line.
+ *
+ * We use this method for debugging purposes only. The use of java.lang.System.out
+ * instead of C++ std::cout is for avoiding conflicts caused by different languages
+ * writing to the same standard output stream.
+ *
+ * If this method can not print, than it silently ignore the given text.
+ * But such failure should never happen actually.
+ *
+ * @param  env     The JNI environment.
+ * @param  caller  The class from which this method has been invoked.
+ * @return The PROJ release number, or NULL.
+ */
+void print(JNIEnv *env, const std::string &text) {
+    jclass c = env->FindClass("java/lang/System");
+    if (c) {
+        jfieldID field = env->GetStaticFieldID(c, "out", "Ljava/io/PrintStream;");
+        if (field) {
+            jobject obj = env->GetStaticObjectField(c, field);
+            if (obj) {
+                c = env->FindClass("java/io/PrintStream");
+                if (c) {
+                    jmethodID method = env->GetMethodID(c, "println", "(Ljava/lang/String;)V");
+                    if (method) {
+                        jstring str = env->NewStringUTF(text.c_str());
+                        if (str) {
+                            env->CallVoidMethod(obj, method, str);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 /** \brief Returns the PROJ release number.
  *
  * @param  env     The JNI environment.
