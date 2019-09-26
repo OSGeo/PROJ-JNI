@@ -39,8 +39,8 @@ using osgeo::proj::io::AuthorityFactoryNNPtr;
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
-/** \brief Prints the given text to java.lang.System.out stream on a single line.
- *
+/**
+ * Prints the given text to java.lang.System.out stream on a single line.
  * We use this method for debugging purposes only. The use of java.lang.System.out
  * instead of C++ std::cout is for avoiding conflicts caused by different languages
  * writing to the same standard output stream.
@@ -75,8 +75,8 @@ void print(JNIEnv *env, const std::string &text) {
 }
 
 
-/** \brief Casts the given address as a pointer to PJ_CONTEXT.
- *
+/**
+ * Casts the given address as a pointer to PJ_CONTEXT.
  * This method is defined for type safety.
  *
  * @param  ctxPtr  The address of the PJ_CONTEXT for the current thread.
@@ -94,8 +94,8 @@ inline PJ_CONTEXT* as_context(jlong ctxPtr) {
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
-/** \brief Allocates a PJ_CONTEXT for using PROJ in a multi-threads environment.
- *
+/**
+ * Allocates a PJ_CONTEXT for using PROJ in a multi-threads environment.
  * Each thread should have its own PJ_CONTEXT instance.
  *
  * @param  env     The JNI environment.
@@ -108,7 +108,8 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env
 }
 
 
-/** \brief Releases a PJ_CONTEXT.
+/**
+ * Releases a PJ_CONTEXT.
  *
  * @param  env     The JNI environment.
  * @param  caller  The class from which this method has been invoked.
@@ -126,7 +127,8 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroy(JNIEnv *env
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
-/** \brief Returns the PROJ release number.
+/**
+ * Returns the PROJ release number.
  *
  * @param  env     The JNI environment.
  * @param  caller  The class from which this method has been invoked.
@@ -145,8 +147,8 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
-/** \brief Allocates a osgeo::proj::io::AuthorityFactory.
- *
+/**
+ * Allocates a osgeo::proj::io::AuthorityFactory.
  * The factory should be used by only one thread at a time.
  *
  * @param  env        The JNI environment.
