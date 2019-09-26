@@ -32,6 +32,13 @@ using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryNNPtr;
 
 
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                           HELPER METHODS (not invoked from Java)                           │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
 /** \brief Prints the given text to java.lang.System.out stream on a single line.
  *
  * We use this method for debugging purposes only. The use of java.lang.System.out
@@ -68,16 +75,23 @@ void print(JNIEnv *env, const std::string &text) {
 }
 
 
-/** \brief Returns the PROJ release number.
+/** \brief Casts the given address as a pointer to PJ_CONTEXT.
  *
- * @param  env     The JNI environment.
- * @param  caller  The class from which this method has been invoked.
- * @return The PROJ release number, or NULL.
+ * This method is defined for type safety.
+ *
+ * @param  ctxPtr  The address of the PJ_CONTEXT for the current thread.
+ * @return The given ctxPtr as a pointer to PJ_CONTEXT.
  */
-JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(JNIEnv *env, jclass caller) {
-    const char *desc = pj_release;
-    return (desc) ? env->NewStringUTF(desc) : NULL;
+inline PJ_CONTEXT* as_context(jlong ctxPtr) {
+    return reinterpret_cast<PJ_CONTEXT*>(ctxPtr);
 }
+
+
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                                       CLASS Context                                        │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 /** \brief Allocates a PJ_CONTEXT for using PROJ in a multi-threads environment.
@@ -94,16 +108,41 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env
 }
 
 
-/** \brief Casts the given address as a pointer to PJ_CONTEXT.
+/** \brief Releases a PJ_CONTEXT.
  *
- * This method is defined for type safety.
- *
- * @param  ctxPtr  The address of the PJ_CONTEXT for the current thread.
- * @return The given ctxPtr as a pointer to PJ_CONTEXT.
+ * @param  env     The JNI environment.
+ * @param  caller  The class from which this method has been invoked.
+ * @param  ctxPtr  The address of the PJ_CONTEXT to release.
  */
-inline PJ_CONTEXT* as_context(jlong ctxPtr) {
-    return reinterpret_cast<PJ_CONTEXT*>(ctxPtr);
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroy(JNIEnv *env, jclass caller, jlong ctxPtr) {
+    proj_context_destroy(as_context(ctxPtr));
 }
+
+
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                                   CLASS ObjectReference                                    │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+/** \brief Returns the PROJ release number.
+ *
+ * @param  env     The JNI environment.
+ * @param  caller  The class from which this method has been invoked.
+ * @return The PROJ release number, or NULL.
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(JNIEnv *env, jclass caller) {
+    const char *desc = pj_release;
+    return (desc) ? env->NewStringUTF(desc) : NULL;
+}
+
+
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                                   CLASS AuthorityFactory                                   │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
 /** \brief Allocates a osgeo::proj::io::AuthorityFactory.
@@ -131,15 +170,4 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
         env->ReleaseStringUTFChars(authority, authority_utf);       // Must be after the catch block in case an exception happens.
     }
     return 0;
-}
-
-
-/** \brief Releases a PJ_CONTEXT.
- *
- * @param  env     The JNI environment.
- * @param  caller  The class from which this method has been invoked.
- * @param  ctxPtr  The address of the PJ_CONTEXT to release.
- */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroy(JNIEnv *env, jclass caller, jlong ctxPtr) {
-    proj_context_destroy(as_context(ctxPtr));
 }
