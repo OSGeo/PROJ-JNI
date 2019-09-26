@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#include <assert.h>
 #include <string>
 #include <proj.h>
 #include "proj/io.hpp"
@@ -40,35 +41,26 @@ using osgeo::proj::io::AuthorityFactoryNNPtr;
 
 
 /**
- * Prints the given text to java.lang.System.out stream on a single line.
- * We use this method for debugging purposes only. The use of java.lang.System.out
- * instead of C++ std::cout is for avoiding conflicts caused by different languages
- * writing to the same standard output stream.
+ * Sends the given text to java.lang.System.Logger for the PROJ package.
+ * We use this method for debugging purposes only. The use of Java logger
+ * instead of C++ std::cout is for avoiding conflicts caused by different
+ * languages writing to the same standard output stream.
  *
- * If this method can not print, than it silently ignore the given text.
- * But such failure should never happen actually.
+ * If this method can not print, than it silently ignores the given text.
+ * Such failure could happen if the Java method has moved but this C++
+ * code has not been updated accordingly.
  *
  * @param  env     The JNI environment.
  * @param  caller  The class from which this method has been invoked.
- * @return The PROJ release number, or NULL.
  */
-void print(JNIEnv *env, const std::string &text) {
-    jclass c = env->FindClass("java/lang/System");
+void log(JNIEnv *env, const std::string &text) {
+    jclass c = env->FindClass("org/kortforsyningen/proj/ObjectReference");
     if (c) {
-        jfieldID field = env->GetStaticFieldID(c, "out", "Ljava/io/PrintStream;");
-        if (field) {
-            jobject obj = env->GetStaticObjectField(c, field);
-            if (obj) {
-                c = env->FindClass("java/io/PrintStream");
-                if (c) {
-                    jmethodID method = env->GetMethodID(c, "println", "(Ljava/lang/String;)V");
-                    if (method) {
-                        jstring str = env->NewStringUTF(text.c_str());
-                        if (str) {
-                            env->CallVoidMethod(obj, method, str);
-                        }
-                    }
-                }
+        jmethodID method = env->GetStaticMethodID(c, "log", "(Ljava/lang/String;)V");
+        if (method) {
+            jstring str = env->NewStringUTF(text.c_str());
+            if (str) {
+                env->CallStaticVoidMethod(c, method, str);
             }
         }
     }
@@ -103,6 +95,7 @@ inline PJ_CONTEXT* as_context(jlong ctxPtr) {
  * @return The address of the new PJ_CONTEXT structure, or 0 in case of failure.
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env, jclass caller) {
+    static_assert(sizeof(PJ_CONTEXT*) <= sizeof(jlong), "Can not store PJ_CONTEXT* in a jlong.");
     PJ_CONTEXT *ctx = proj_context_create();
     return reinterpret_cast<jlong>(ctx);
 }

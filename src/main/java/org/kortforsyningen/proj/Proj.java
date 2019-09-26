@@ -63,7 +63,7 @@ public final class Proj {
             level = System.Logger.Level.TRACE;
             error = e;
         }
-        System.getLogger("org.kortforsyningen.proj").log(level, "Can not link PROJ native library.", error);
+        System.getLogger(ObjectReference.LOGGER_NAME).log(level, "Can not link PROJ native library.", error);
         return Optional.empty();
     }
 

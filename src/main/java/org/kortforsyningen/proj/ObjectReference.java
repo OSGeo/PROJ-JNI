@@ -44,6 +44,11 @@ import java.lang.ref.Cleaner;
  */
 abstract class ObjectReference {
     /**
+     * Name of the logger to use for all warnings or debug messages emitted by this package.
+     */
+    static final String LOGGER_NAME = "org.kortforsyningen.proj";
+
+    /**
      * Manager of objects having native resources to be released after the Java object has been garbage-collected.
      * This manager will invoke a {@code proj_xxx_destroy(…)} method where <var>xxx</var> depends on the resource
      * which has been registered, or decrement the reference count of a shared pointer.
@@ -239,7 +244,19 @@ abstract class ObjectReference {
         try {
             System.load(libraryPath().toAbsolutePath().toString());
         } catch (UnsatisfiedLinkError | Exception e) {
-            System.getLogger("org.kortforsyningen.proj").log(System.Logger.Level.ERROR, e);
+            System.getLogger(LOGGER_NAME).log(System.Logger.Level.ERROR, e);
         }
+    }
+
+    /**
+     * Invoked by native code for logging a message. This method should not be invoked from Java code
+     * in order to allow the logging system to infer more accurately the source Java class and method.
+     * If this method is renamed, then the native C++ code needs to be updated accordingly.
+     *
+     * @param  message  the message to log.
+     */
+    @SuppressWarnings("unused")
+    private static void log(String message) {
+        System.getLogger(LOGGER_NAME).log(System.Logger.Level.DEBUG, message);
     }
 }
