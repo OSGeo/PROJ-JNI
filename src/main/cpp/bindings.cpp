@@ -39,6 +39,13 @@ using osgeo::proj::io::AuthorityFactoryNNPtr;
 // │                           HELPER METHODS (not invoked from Java)                           │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
+/*
+ * NOTE ON CHARACTER ENCODING: this implementation assumes that the PROJ library expects strings
+ * encoded in UTF-8, regardless the platform encoding. Consequently we use the JNI "StringUTF"
+ * methods directly. It is not completely appropriate because JNI methods use a modified UTF-8,
+ * but it should be okay if the strings do not use the null character (0) or the supplementary
+ * characters (the ones encoded on 4 bytes in a UTF-8 string).
+ */
 
 /**
  * Sends the given text to java.lang.System.Logger for the PROJ package.
@@ -154,9 +161,8 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
     const char *authority_utf = env->GetStringUTFChars(authority, NULL);
     if (authority_utf) {
         try {
-            std::string authority_string = authority_utf;           // Encoding agnostic. May throw an exception.
             DatabaseContextNNPtr db = DatabaseContext::create(std::string(), std::vector<std::string>(), as_context(ctxPtr));
-            AuthorityFactoryNNPtr factory = AuthorityFactory::create(db, authority_string);
+            AuthorityFactoryNNPtr factory = AuthorityFactory::create(db, authority_utf);
             // TODO: wrap the shared pointer.
         } catch (const std::exception &e) {
             jclass c = env->FindClass("org/opengis/util/FactoryException");

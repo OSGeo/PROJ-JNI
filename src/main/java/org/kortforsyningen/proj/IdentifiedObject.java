@@ -43,7 +43,8 @@ abstract class IdentifiedObject extends ObjectReference implements org.opengis.r
      * @param  ptr  pointer to the wrapped PROJ object.
      */
     IdentifiedObject(final long ptr) {
-        super(ptr, true);
+        super(ptr);
+        registerNativeDisposal();
     }
 
     /**

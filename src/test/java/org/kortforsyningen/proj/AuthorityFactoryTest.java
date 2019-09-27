@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.opengis.util.FactoryException;
 
 
-
 /**
  * Tests the {@link AuthorityFactory} class.
  *
@@ -41,6 +40,9 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testCreate() throws FactoryException {
-        AuthorityFactory factory = new AuthorityFactory("EPSG");
+        ObjectReference.version();      // For forcing loading of native library.
+        try (Context c = Context.acquire()) {
+            AuthorityFactory factory = c.factory("EPSG");
+        }
     }
 }

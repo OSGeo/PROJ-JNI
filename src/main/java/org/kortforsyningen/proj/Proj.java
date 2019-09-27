@@ -99,7 +99,9 @@ public final class Proj {
      */
     public static Object createFromUserInput(final String text) throws FactoryException {
         Objects.requireNonNull(text);
-        return createFromUserInput(text, Context.current());
+        try (Context c = Context.acquire()) {
+            return createFromUserInput(text, 0);    // TODO
+        }
     }
 
     /**

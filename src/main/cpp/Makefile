@@ -83,8 +83,8 @@ endif
 
 
 #
-# The $(LIBS) parameter should be last (it way work anywhere,
-# but putting it last allows more predictable results).
+# The $(LIBS) parameter should be last (it way work anywhere, but putting it last allows more predictable results).
+# Source files are encoded in UTF-8.
 #
 all:
 	g++ $(FLAGS) $(INCLUDE_DIR) -o ../resources/org/kortforsyningen/proj/$(SUBDIR)/$(OUT_FILE) $(SRC_FILES) $(LIBS)

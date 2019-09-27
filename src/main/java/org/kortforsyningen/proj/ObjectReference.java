@@ -33,10 +33,7 @@ import java.lang.ref.Cleaner;
 
 
 /**
- * Base class of all wrappers around PROJ objects referenced by a raw pointer.
- * The type of pointer (and consequently the action to take at disposal time)
- * depends on the subclass: it may be a pointer to a traditional C/C++ object
- * allocated by {@code malloc(…)}, or it may be a C++ shared pointer.
+ * Base class of all wrappers around PROJ objects referenced by a shared pointer.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -50,8 +47,7 @@ abstract class ObjectReference {
 
     /**
      * Manager of objects having native resources to be released after the Java object has been garbage-collected.
-     * This manager will invoke a {@code proj_xxx_destroy(…)} method where <var>xxx</var> depends on the resource
-     * which has been registered, or decrement the reference count of a shared pointer.
+     * This manager will decrement the reference count of the shared pointer.
      */
     private static final Cleaner DISPOSER = Cleaner.create(ObjectReference::cleanerThread);
 
@@ -81,21 +77,16 @@ abstract class ObjectReference {
      * {@code Disposer} shall not contain any reference to the enclosing {@code ObjectReference}.
      * Instead, this class holds a copy of the {@link ObjectReference#ptr} value.
      * See {@link Cleaner} for explanation about why this separation is required.
-     *
-     * <p>The default implementation assumes that {@link #ptr} is a shared pointer and that releasing
-     * the object consists in decrementing the references count. If {@link #ptr} is a different kind
-     * of pointer, then the {@link #run()} method must be overridden.</p>
      */
-    static class Disposer implements Runnable {
+    private static final class Disposer implements Runnable {
         /**
          * Pointer to PROJ structure to release after the enclosing object has been garbage collected.
          * This is a copy of {@link ObjectReference#ptr}. Releasing is done by calling {@link #run()}.
          */
-        final long ptr;
+        private final long ptr;
 
         /**
          * Creates a disposer for the PROJ object referenced by the given pointer.
-         * The type of pointer (classical or shared) depends on the class of this {@code Disposer}.
          *
          * @param  ptr  copy of {@link ObjectReference#ptr} value.
          */
@@ -105,9 +96,7 @@ abstract class ObjectReference {
 
         /**
          * Invoked by the cleaner thread when the enclosing {@link ObjectReference} is no longer reachable.
-         * This method shall never been invoked by us. The default implementation assumes that {@link #ptr}
-         * is a shared pointer and decrement the references count. If {@link #ptr} is another kind of pointer,
-         * then this method must be overridden.
+         * This method shall never been invoked by us.
          */
         @Override
         public void run() {
@@ -118,58 +107,43 @@ abstract class ObjectReference {
     /**
      * Decrements the references count of the given shared pointer. This method is invoked automatically by
      * the default {@link Disposer} implementation when this {@link ObjectReference} is garbage collected.
-     * This method will be ignored if this {@link ObjectReference} uses another disposal mechanism.
+     * It may also be invoked if an error occurred at construction time before a disposer is registered.
+     * No reference to the disposed {@link ObjectReference} shall exist after this method call.
      *
-     * @param  ptr  the shared pointer allocated by PROJ.
+     * @param  ptr  the pointer to the wrapped PROJ structure.
      */
-    private static native void release(long ptr);
+    static native void release(long ptr);
 
     /**
      * Creates a wrapper for the given pointer to a PROJ structure. If the given pointer is null,
      * then this constructor assumes that the PROJ object allocation failed because of out of memory.
      *
-     * <p>If {@code isShared} is true, then this constructor automatically register a handler for
-     * decrementing the references count after this {@link ObjectReference} is garbage collected.
-     * Otherwise the caller is responsible for invoking {@link #onDispose(Disposer)} after construction.</p>
-     *
-     * @param  ptr       pointer to the PROJ structure to wrap.
-     * @param  isShared  whether the given pointer is a shared pointer.
+     * @param  ptr  pointer to the PROJ structure to wrap, or 0 if memory allocation failed.
      * @throws OutOfMemoryError if the given {@code ptr} is null.
      */
-    ObjectReference(final long ptr, final boolean isShared) {
+    ObjectReference(final long ptr) {
         this.ptr = ptr;
         if (ptr == 0) {
             throw new OutOfMemoryError("Can not allocate PROJ object.");
         }
-        if (isShared) try {
-            onDispose(new Disposer(ptr));
+    }
+
+    /**
+     * Sets a handler to be invoked when this {@link ObjectReference} is garbage collected.
+     * The handler will decrement the references count after this {@link ObjectReference}
+     * is garbage collected.
+     *
+     * <p>This method shall be invoked in subclass constructors only. It shall not be invoked
+     * after construction for making sure that no pointer to this {@code ObjectReference} has
+     * been published if this method fails.</p>
+     */
+    final void registerNativeDisposal() {
+        try {
+            DISPOSER.register(this, new Disposer(ptr));
         } catch (Throwable e) {
             release(ptr);
             throw e;
         }
-    }
-
-    /**
-     * Sets the handler to invoke when this {@link ObjectReference} is garbage collected.
-     * This method shall be invoked at most once during construction in a code like below:
-     *
-     * <pre>
-     * try {
-     *     onDispose(new Disposer(ptr));
-     * } catch (Throwable e) {
-     *     release(ptr);
-     *     throw e;
-     * }
-     * </pre>
-     *
-     * This method shall not be invoked after {@link #ObjectReference(long, boolean)} if the
-     * {@code isShared} flag was {@code true} because that constructor has automatically
-     * invoked this method in such case.
-     *
-     * @param  handler  a task to execute when this {@link ObjectReference} is garbage-collected.
-     */
-    final void onDispose(final Disposer handler) {
-        DISPOSER.register(this, handler);
     }
 
     /**

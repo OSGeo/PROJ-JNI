@@ -7,6 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef org_kortforsyningen_proj_Context_TIMEOUT
+#define org_kortforsyningen_proj_Context_TIMEOUT 60000000000LL
 /*
  * Class:     org_kortforsyningen_proj_Context
  * Method:    create

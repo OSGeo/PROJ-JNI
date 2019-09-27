@@ -28,7 +28,10 @@ import org.opengis.util.FactoryException;
 /**
  * Wrappers around {@code osgeo::proj::io::AuthorityFactory}.
  * This is an entry point by which geodetic objects can be created from authority codes.
- * Each {@code io::AuthorityFactory} should be used only by one thread at a time.
+ *
+ * <p>Each {@code osgeo::proj::io::AuthorityFactory} contains (indirectly) a reference
+ * to a {@code PJ_CONTEXT} object. Consequently those two objects shall be used in the
+ * same thread.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -38,11 +41,12 @@ final class AuthorityFactory extends ObjectReference {
     /**
      * Creates a new factory for the given authority.
      *
+     * @param  context    pointer to the PROJ thread context.
      * @param  authority  the authority name, for example {@code "EPSG"}.
      * @throws FactoryException if the factory can not be created.
      */
-    AuthorityFactory(final String authority) throws FactoryException {
-        super(newInstance(Context.current(), Objects.requireNonNull(authority)), true);
+    AuthorityFactory(final long context, final String authority) throws FactoryException {
+        super(newInstance(context, Objects.requireNonNull(authority)));
     }
 
     /**
