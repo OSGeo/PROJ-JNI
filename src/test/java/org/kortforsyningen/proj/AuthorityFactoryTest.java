@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import org.junit.Test;
+import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.util.FactoryException;
 
 import static org.junit.Assert.*;
@@ -41,12 +42,26 @@ public final strictfp class AuthorityFactoryTest {
      * @throws FactoryException if the factory can not be created.
      */
     @Test
-    public void testCreate() throws FactoryException {
+    public void testNewInstance() throws FactoryException {
         try (Context c = Context.acquire()) {
             AuthorityFactory epsg = c.factory("EPSG");
-            assertSame(epsg, c.factory("EPSG"));
-            AuthorityFactory iau = c.factory("IAU");
+            AuthorityFactory iau  = c.factory("IAU");
             assertNotSame(epsg, iau);
+
+            assertSame(epsg, c.factory("EPSG"));
+            assertSame(iau,  c.factory("IAU"));
         }
+    }
+
+    /**
+     * Tests indirectly {@link AuthorityFactory#createCoordinateSystem(long, String)}.
+     *
+     * @throws FactoryException if the factory can not be created or if the CS creation failed.
+     */
+    @Test
+    public void testCreateCoordinateSystem() throws FactoryException {
+        final AuthorityFactory.CS factory = new AuthorityFactory.CS("EPSG");
+        final CoordinateSystem cs = factory.createCoordinateSystem("6422");
+        // TODO
     }
 }

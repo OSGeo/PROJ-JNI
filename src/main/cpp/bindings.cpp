@@ -32,6 +32,7 @@ using osgeo::proj::io::DatabaseContext;
 using osgeo::proj::io::DatabaseContextNNPtr;
 using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryPtr;
+using osgeo::proj::cs::CoordinateSystemPtr;
 
 
 
@@ -281,4 +282,23 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JNIEnv *env, jobject object) {
     jlong ptr = get_and_clear_ptr(env, object);
     release_shared_ptr<AuthorityFactory>(ptr);
+}
+
+
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createCoordinateSystem
+    (JNIEnv *env, jclass caller, jlong ptr, jstring code)
+{
+    const char *code_utf = env->GetStringUTFChars(code, NULL);
+    if (code_utf) {
+        try {
+            AuthorityFactoryPtr factory = unwrap_shared_ptr<AuthorityFactory>(ptr);
+            CoordinateSystemPtr cs = factory->createCoordinateSystem(code_utf).as_nullable();
+            return wrap_shared_ptr(cs);
+        } catch (const std::exception &e) {
+            jclass c = env->FindClass("org/opengis/util/FactoryException");
+            if (c) env->ThrowNew(c, e.what());
+        }
+        env->ReleaseStringUTFChars(code, code_utf);
+    }
+    return 0;
 }
