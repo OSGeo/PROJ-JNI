@@ -42,7 +42,6 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testCreate() throws FactoryException {
-        ObjectReference.version();      // For forcing loading of native library.
         try (Context c = Context.acquire()) {
             AuthorityFactory epsg = c.factory("EPSG");
             assertSame(epsg, c.factory("EPSG"));

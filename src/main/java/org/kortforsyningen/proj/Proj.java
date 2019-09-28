@@ -53,7 +53,7 @@ public final class Proj {
         final System.Logger.Level level;
         final LinkageError error;
         try {
-            return Optional.of(ObjectReference.version());
+            return Optional.of(NativeResource.version());
         } catch (UnsatisfiedLinkError e) {
             // Thrown the first time that we try to use the library.
             level = System.Logger.Level.WARNING;
@@ -63,7 +63,7 @@ public final class Proj {
             level = System.Logger.Level.TRACE;
             error = e;
         }
-        System.getLogger(ObjectReference.LOGGER_NAME).log(level, "Can not link PROJ native library.", error);
+        System.getLogger(NativeResource.LOGGER_NAME).log(level, "Can not link PROJ native library.", error);
         return Optional.empty();
     }
 

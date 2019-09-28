@@ -29,121 +29,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.lang.ref.Cleaner;
 
 
 /**
- * Base class of all wrappers around PROJ objects referenced by a shared pointer.
+ * Base class of all objects having a reference to a native resource.
+ * The resource is referenced in a pointer of type {@code long} and named {@code "ptr"}.
+ * The field name matter, since native code searches for a field having exactly that name.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
  */
-abstract class ObjectReference {
+abstract class NativeResource {
     /**
      * Name of the logger to use for all warnings or debug messages emitted by this package.
      */
     static final String LOGGER_NAME = "org.kortforsyningen.proj";
 
     /**
-     * Manager of objects having native resources to be released after the Java object has been garbage-collected.
-     * This manager will decrement the reference count of the shared pointer.
+     * For subclass constructors.
      */
-    private static final Cleaner DISPOSER = Cleaner.create(ObjectReference::cleanerThread);
-
-    /**
-     * Creates a new thread for disposing PROJ objects after their Java wrappers have been garbage-collected.
-     * We create a thread ourselves mostly for specifying a more explicit name than the default name.
-     *
-     * @param  cleaner  provided by {@link Cleaner}.
-     * @return the thread to use for disposing PROJ objects.
-     */
-    private static Thread cleanerThread(final Runnable cleaner) {
-        final Thread t = new Thread(cleaner);
-        t.setPriority(Thread.MAX_PRIORITY - 2);
-        t.setName("PROJ objects disposer");
-        return t;
-    }
-
-    /**
-     * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
-     * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
-     * unless potential usage of this field is also verified in the C/C++ source code.
-     */
-    final long ptr;
-
-    /**
-     * Task invoked when the enclosing {@link ObjectReference} instance has been garbage-collected.
-     * {@code Disposer} shall not contain any reference to the enclosing {@code ObjectReference}.
-     * Instead, this class holds a copy of the {@link ObjectReference#ptr} value.
-     * See {@link Cleaner} for explanation about why this separation is required.
-     */
-    private static final class Disposer implements Runnable {
-        /**
-         * Pointer to PROJ structure to release after the enclosing object has been garbage collected.
-         * This is a copy of {@link ObjectReference#ptr}. Releasing is done by calling {@link #run()}.
-         */
-        private final long ptr;
-
-        /**
-         * Creates a disposer for the PROJ object referenced by the given pointer.
-         *
-         * @param  ptr  copy of {@link ObjectReference#ptr} value.
-         */
-        Disposer(final long ptr) {
-            this.ptr = ptr;
-        }
-
-        /**
-         * Invoked by the cleaner thread when the enclosing {@link ObjectReference} is no longer reachable.
-         * This method shall never been invoked by us.
-         */
-        @Override
-        public void run() {
-            release(ptr);
-        }
-    }
-
-    /**
-     * Decrements the references count of the given shared pointer. This method is invoked automatically by
-     * the default {@link Disposer} implementation when this {@link ObjectReference} is garbage collected.
-     * It may also be invoked if an error occurred at construction time before a disposer is registered.
-     * No reference to the disposed {@link ObjectReference} shall exist after this method call.
-     *
-     * @param  ptr  the pointer to the wrapped PROJ structure.
-     */
-    static native void release(long ptr);
-
-    /**
-     * Creates a wrapper for the given pointer to a PROJ structure. If the given pointer is null,
-     * then this constructor assumes that the PROJ object allocation failed because of out of memory.
-     *
-     * @param  ptr  pointer to the PROJ structure to wrap, or 0 if memory allocation failed.
-     * @throws OutOfMemoryError if the given {@code ptr} is null.
-     */
-    ObjectReference(final long ptr) {
-        this.ptr = ptr;
-        if (ptr == 0) {
-            throw new OutOfMemoryError("Can not allocate PROJ object.");
-        }
-    }
-
-    /**
-     * Sets a handler to be invoked when this {@link ObjectReference} is garbage collected.
-     * The handler will decrement the references count after this {@link ObjectReference}
-     * is garbage collected.
-     *
-     * <p>This method shall be invoked in subclass constructors only. It shall not be invoked
-     * after construction for making sure that no pointer to this {@code ObjectReference} has
-     * been published if this method fails.</p>
-     */
-    final void registerNativeDisposal() {
-        try {
-            DISPOSER.register(this, new Disposer(ptr));
-        } catch (Throwable e) {
-            release(ptr);
-            throw e;
-        }
+    NativeResource() {
     }
 
     /**
@@ -188,10 +94,10 @@ abstract class ObjectReference {
          * That file will be deleted on JVM exists, so a new file will be copied every time the
          * application is executed.
          *
-         * Example of URL for a JAR entry: jar:file:/home/…/proj.jar!/org/…/ObjectReference.class
+         * Example of URL for a JAR entry: jar:file:/home/…/proj.jar!/org/…/NativeResource.class
          */
         final String nativeFile = libdir + "/libproj-binding." + suffix;
-        final URL res = ObjectReference.class.getResource(nativeFile);
+        final URL res = NativeResource.class.getResource(nativeFile);
         if (res == null) {
             throw new UnsatisfiedLinkError("Missing native file: " + nativeFile);
         }

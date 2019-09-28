@@ -23,8 +23,9 @@
 #include <string>
 #include <proj.h>
 #include "proj/io.hpp"
+#include "org_kortforsyningen_proj_NativeResource.h"
 #include "org_kortforsyningen_proj_Context.h"
-#include "org_kortforsyningen_proj_ObjectReference.h"
+#include "org_kortforsyningen_proj_SharedObject.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
 
 using osgeo::proj::io::DatabaseContext;
@@ -64,7 +65,7 @@ using osgeo::proj::io::AuthorityFactoryPtr;
  * @param  text  The text to log. Shall not be null.
  */
 void log(JNIEnv *env, const std::string &text) {
-    jclass c = env->FindClass("org/kortforsyningen/proj/ObjectReference");
+    jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
     if (c) {
         jmethodID method = env->GetStaticMethodID(c, "log", "(Ljava/lang/String;)V");
         if (method) {
@@ -130,7 +131,7 @@ template <class T> std::shared_ptr<T> unwrap_shared_ptr(jlong ptr) {
         std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
         return *wrapper;
     }
-    throw std::invalid_argument("Null C/C++ pointer");
+    throw std::invalid_argument("Null pointer to PROJ object.");
 }
 
 
@@ -214,7 +215,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *e
 
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
-// │                                   CLASS ObjectReference                                    │
+// │                                    CLASS NativeResource                                    │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -225,7 +226,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *e
  * @param  caller  The class from which this function has been invoked.
  * @return The PROJ release number, or NULL.
  */
-JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(JNIEnv *env, jclass caller) {
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(JNIEnv *env, jclass caller) {
     const char *desc = pj_release;
     return (desc) ? env->NewStringUTF(desc) : NULL;
 }

@@ -51,7 +51,7 @@ import org.opengis.util.FactoryException;
  * @version 1.0
  * @since   1.0
  */
-final class Context implements AutoCloseable {
+final class Context extends NativeResource implements AutoCloseable {
     /**
      * Timeout after which to discard unused contexts, in nanoseconds.
      * There is no guarantees that contexts will be discarded soon after this timeout;
@@ -69,9 +69,12 @@ final class Context implements AutoCloseable {
 
     /**
      * The raw (not managed) pointer to the {@code PJ_CONTEXT} allocated in the C/C++ heap.
-     * <strong>Do not modify</strong>: this value has no meaning in Java but is needed by PROJ.
-     * This pointer is not managed by {@code std::shared_ptr} library, so we must be careful
-     * about when to invoke {@link #destroyPJ()}.
+     * This value has no meaning in Java code. <strong>Do not modify</strong> since this value
+     * is required for using PROJ. Do not rename neither, unless potential usage of this field
+     * is also verified in the C/C++ source code.
+     *
+     * <p>This pointer is not managed by {@code std::shared_ptr} library, so we must be careful
+     * about when to invoke {@link #destroyPJ()}.</p>
      */
     private final long ptr;
 

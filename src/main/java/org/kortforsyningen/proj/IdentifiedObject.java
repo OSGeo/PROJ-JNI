@@ -36,7 +36,7 @@ import org.opengis.referencing.ReferenceIdentifier;
  * @version 1.0
  * @since   1.0
  */
-abstract class IdentifiedObject extends ObjectReference implements org.opengis.referencing.IdentifiedObject {
+abstract class IdentifiedObject extends SharedObject implements org.opengis.referencing.IdentifiedObject {
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::common::IdentifiedObject}.
      *
@@ -44,7 +44,6 @@ abstract class IdentifiedObject extends ObjectReference implements org.opengis.r
      */
     IdentifiedObject(final long ptr) {
         super(ptr);
-        registerNativeDisposal();
     }
 
     /**

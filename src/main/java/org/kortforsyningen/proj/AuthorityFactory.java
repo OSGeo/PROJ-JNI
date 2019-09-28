@@ -37,7 +37,7 @@ import org.opengis.util.FactoryException;
  * @version 1.0
  * @since   1.0
  */
-final class AuthorityFactory {
+final class AuthorityFactory extends NativeResource {
     /**
      * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
      * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
