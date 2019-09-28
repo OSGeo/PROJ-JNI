@@ -19,11 +19,11 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create
 
 /*
  * Class:     org_kortforsyningen_proj_Context
- * Method:    destroy
- * Signature: (J)V
+ * Method:    destroyPJ
+ * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroy
-  (JNIEnv *, jclass, jlong);
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

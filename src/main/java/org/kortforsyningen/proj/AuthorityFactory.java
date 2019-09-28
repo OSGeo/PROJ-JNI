@@ -37,16 +37,26 @@ import org.opengis.util.FactoryException;
  * @version 1.0
  * @since   1.0
  */
-final class AuthorityFactory extends ObjectReference {
+final class AuthorityFactory {
+    /**
+     * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
+     * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
+     * unless potential usage of this field is also verified in the C/C++ source code.
+     */
+    private final long ptr;
+
     /**
      * Creates a new factory for the given authority.
      *
      * @param  context    pointer to the PROJ thread context.
      * @param  authority  the authority name, for example {@code "EPSG"}.
+     * @param  sibling    if another factory has been created for the same context, that factory.
+     *                    Otherwise null. This is used for sharing the same database context.
      * @throws FactoryException if the factory can not be created.
      */
-    AuthorityFactory(final long context, final String authority) throws FactoryException {
-        super(newInstance(context, Objects.requireNonNull(authority)));
+    AuthorityFactory(final long context, final String authority, final AuthorityFactory sibling) throws FactoryException {
+        Objects.requireNonNull(authority);
+        ptr = newInstance(context, authority, (sibling != null) ? sibling.ptr : 0);
     }
 
     /**
@@ -56,17 +66,26 @@ final class AuthorityFactory extends ObjectReference {
      *
      * @param  context    pointer to the PROJ thread context.
      * @param  authority  name of the authority. Shall not be null.
+     * @param  sibling    if another factory has been created for the same context, pointer to that factory.
+     *                    Otherwise zero. This is used for sharing the same database context when possible.
      * @return shared pointer to the factory, or 0 if out of memory.
      * @throws FactoryException if the factory can not be created.
      */
-    private static native long newInstance(long context, String authority) throws FactoryException;
+    private static native long newInstance(long context, String authority, long sibling) throws FactoryException;
 
     /**
      * Returns the pointer to a {@code cs::CoordinateSystem} from the specified code.
      *
      * @param  ptr    pointer to the {@code osgeo::proj::io::AuthorityFactory} wrapped by this class.
-     * @param  code   object code allocated by authority.
+     * @param  code  object code allocated by authority.
      * @return pointer to the PROJ {@code osgeo::proj::cs::CoordinateSystem}, or 0 in case of failure.
      */
     private static native long createCoordinateSystem(long ptr, String code);
+
+    /**
+     * Releases resources used by this factory. This method decrements the {@code object.use_count()}
+     * value of the shared pointer. The authority factory is not necessarily immediately destroyed;
+     * it depends on whether it is still used by other C++ code.
+     */
+    native void release();
 }

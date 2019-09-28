@@ -24,6 +24,8 @@ package org.kortforsyningen.proj;
 import org.junit.Test;
 import org.opengis.util.FactoryException;
 
+import static org.junit.Assert.*;
+
 
 /**
  * Tests the {@link AuthorityFactory} class.
@@ -42,7 +44,10 @@ public final strictfp class AuthorityFactoryTest {
     public void testCreate() throws FactoryException {
         ObjectReference.version();      // For forcing loading of native library.
         try (Context c = Context.acquire()) {
-            AuthorityFactory factory = c.factory("EPSG");
+            AuthorityFactory epsg = c.factory("EPSG");
+            assertSame(epsg, c.factory("EPSG"));
+            AuthorityFactory iau = c.factory("IAU");
+            assertNotSame(epsg, iau);
         }
     }
 }

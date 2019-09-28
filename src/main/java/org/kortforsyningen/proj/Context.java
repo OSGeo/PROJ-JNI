@@ -24,6 +24,7 @@ package org.kortforsyningen.proj;
 import java.util.Map;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import org.opengis.util.FactoryException;
 
@@ -69,8 +70,8 @@ final class Context implements AutoCloseable {
     /**
      * The raw (not managed) pointer to the {@code PJ_CONTEXT} allocated in the C/C++ heap.
      * <strong>Do not modify</strong>: this value has no meaning in Java but is needed by PROJ.
-     * This pointer is not managed by {@code std::shared_ptr} library, so we must be careful about
-     * when to invoke {@link #destroy(long)}.
+     * This pointer is not managed by {@code std::shared_ptr} library, so we must be careful
+     * about when to invoke {@link #destroyPJ()}.
      */
     private final long ptr;
 
@@ -127,6 +128,18 @@ final class Context implements AutoCloseable {
     }
 
     /**
+     * Returns an arbitrary element of the given collection, or {@code null} if none.
+     *
+     * @param  <E>         the of elements in the collection.
+     * @param  collection  the collection from which to get an arbitrary element.
+     * @return an arbitrary element from the given collection, or {@code null} if none.
+     */
+    private static <E> E any(final Iterable<E> collection) {
+        final Iterator<E> it = collection.iterator();
+        return it.hasNext() ? it.next() : null;
+    }
+
+    /**
      * Returns a factory for the given authority, creating it when first needed.
      * The factory shall be used inside a try-with-resource block as shown in class javadoc.
      *
@@ -137,7 +150,7 @@ final class Context implements AutoCloseable {
     final AuthorityFactory factory(final String authority) throws FactoryException {
         AuthorityFactory factory = factories.get(authority);
         if (factory == null) {
-            factory = new AuthorityFactory(ptr, authority);
+            factory = new AuthorityFactory(ptr, authority, any(factories.values()));
             factories.put(authority, factory);
         }
         return factory;
@@ -195,7 +208,7 @@ final class Context implements AutoCloseable {
      * destroyed last.
      */
     private void destroy() {
-        factories.forEach(Context::release);
+        factories.values().forEach(AuthorityFactory::release);
         /*
          * PJ_CONTEXT is not a pointer managed by C++ std::shared_ptr library, so we need to be
          * careful here. We destroy PJ_CONTEXT here on the assumption that above lines disposed
@@ -203,7 +216,7 @@ final class Context implements AutoCloseable {
          * line, we will have a memory leak. But the alternative (destroy PJ_CONTEXT in finally
          * block) may be worst since it could destroy a resource still used by live C++ objects.
          */
-        destroy(ptr);
+        destroyPJ();
     }
 
     /**
@@ -211,19 +224,6 @@ final class Context implements AutoCloseable {
      * This method shall be invoked exactly once when {@link Context} is disposed.
      * It is caller's responsibility to ensure that the {@code PJ_CONTEXT} is not
      * used anymore, for example that all {@link #factories} have been disposed.
-     *
-     * @param  ptr  pointer to the {@code PJ_CONTEXT} allocated by PROJ.
      */
-    private static native void destroy(long ptr);
-
-    /**
-     * Invoked by {@link Map#forEach} for releasing native resources associated to all values in a map.
-     * This is a helper method for {@link #destroy()} implementation only.
-     *
-     * @param  key    ignored.
-     * @param  value  the wrapper for which to release native resource.
-     */
-    private static void release(final Object key, final ObjectReference value) {
-        ObjectReference.release(value.ptr);
-    }
+    private native void destroyPJ();
 }

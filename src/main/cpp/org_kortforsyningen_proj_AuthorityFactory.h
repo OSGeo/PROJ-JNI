@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    newInstance
- * Signature: (JLjava/lang/String;)J
+ * Signature: (JLjava/lang/String;J)J
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
-  (JNIEnv *, jclass, jlong, jstring);
+  (JNIEnv *, jclass, jlong, jstring, jlong);
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
@@ -22,6 +22,14 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createCoordinateSystem
   (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     org_kortforsyningen_proj_AuthorityFactory
+ * Method:    release
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

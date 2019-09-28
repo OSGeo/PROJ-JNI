@@ -39,6 +39,9 @@ using osgeo::proj::io::AuthorityFactoryPtr;
 // │                          HELPER FUNCTIONS (not invoked from Java)                          │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
+#define PJ_FIELD_NAME "ptr"
+#define PJ_FIELD_TYPE "J"
+
 /*
  * NOTE ON CHARACTER ENCODING: this implementation assumes that the PROJ library expects strings
  * encoded in UTF-8, regardless the platform encoding. Consequently we use the JNI "StringUTF"
@@ -57,8 +60,8 @@ using osgeo::proj::io::AuthorityFactoryPtr;
  * Such failure could happen if the Java method has moved but this C++
  * function has not been updated accordingly.
  *
- * @param  env     The JNI environment.
- * @param  caller  The class from which this function has been invoked.
+ * @param  env   The JNI environment.
+ * @param  text  The text to log. Shall not be null.
  */
 void log(JNIEnv *env, const std::string &text) {
     jclass c = env->FindClass("org/kortforsyningen/proj/ObjectReference");
@@ -71,6 +74,7 @@ void log(JNIEnv *env, const std::string &text) {
             }
         }
     }
+    // Java exception already thrown if any above JNI functions failed.
 }
 
 
@@ -79,7 +83,7 @@ void log(JNIEnv *env, const std::string &text) {
  * This function is defined for type safety.
  *
  * @param  ctxPtr  The address of the PJ_CONTEXT for the current thread.
- * @return The given ctxPtr as a pointer to PJ_CONTEXT.
+ * @return The given ctxPtr as a pointer to PJ_CONTEXT, or NULL if ctxPtr is zero.
  */
 inline PJ_CONTEXT* as_context(jlong ctxPtr) {
     return reinterpret_cast<PJ_CONTEXT*>(ctxPtr);
@@ -100,13 +104,8 @@ inline PJ_CONTEXT* as_context(jlong ctxPtr) {
  * @param  object  The object to wrap in a memory block that can be referenced from a Java object.
  * @return Address to store in the Java object, or 0 if out of memory.
  */
-template <class T> jlong wrap_shared_ptr(std::shared_ptr<T> object) {
-    /*
-     * If the given object was newly allocated by the caller, then object.use_count() == 2 at this point
-     * (one reference hold by the caller and one reference hold in this function). The memory block below
-     * shall be initialized with zeros since this value may be read by the = operator.
-     */
-    std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(calloc(1, sizeof(object)));
+template <class T> jlong wrap_shared_ptr(std::shared_ptr<T> &object) {
+    std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(calloc(1, sizeof(std::shared_ptr<T>)));
     if (wrapper) {
         *wrapper = object;          // This assignation also increases object.use_count() by one.
     }
@@ -124,24 +123,58 @@ template <class T> jlong wrap_shared_ptr(std::shared_ptr<T> object) {
  *
  * @param  ptr  Address returned by wrap_shared_ptr(…). Shall not be zero.
  * @return Shared pointer which was wrapped in the specified memory block.
+ * @throw  std::invalid_argument if the given value is zero.
  */
 template <class T> std::shared_ptr<T> unwrap_shared_ptr(jlong ptr) {
-    std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
-    return *wrapper;
+    if (ptr) {
+        std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
+        return *wrapper;
+    }
+    throw std::invalid_argument("Null C/C++ pointer");
 }
 
 
 /**
  * Frees the memory block wrapping the shared pointer.
  * The use count of that shared pointer is decreased by one.
+ * This method does nothing if the memory block has already been released
+ * (it would be a bug if it happens, but we nevertheless try to be safe).
  *
- * @param  ptr  Address returned by wrap_shared_ptr(…). Shall not be zero.
+ * @param  ptr  Address returned by wrap_shared_ptr(…).
  */
 template <class T> void release_shared_ptr(jlong ptr) {
-    std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
-    *wrapper = nullptr;     // This assignation decreases object.use_count().
-    free(wrapper);
+    if (ptr) {
+        std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
+        *wrapper = nullptr;     // This assignation decreases object.use_count().
+        free(wrapper);
+    }
 }
+
+
+/**
+ * Gets the value of the `ptr` field of given object and sets that value to zero.
+ * This method is invoked for implementation of `release()` or `destroy()` methods.
+ * In theory we are not allowed to change the value of a final field. But no Java
+ * code should use this field and the Java object should be garbage collected soon
+ * anyway. We set this field to zero because the consequence of accidentally uses
+ * of outdated value from C++ code is potentially worst.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the PROJ structure (not allowed to be NULL).
+ * @return The address of the PROJ structure, or NULL if the operation fails
+ *         (for example because the `ptr` field has not been found).
+ */
+jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
+    jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
+    if (id) {
+        jlong ptr = env->GetLongField(object, id);
+        env->SetLongField(object, id, (jlong) 0);
+        return ptr;
+    }
+    // java.lang.NoSuchFieldError already thrown by GetFieldID(…).
+    return 0;
+}
+
 
 
 
@@ -166,14 +199,15 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env
 
 
 /**
- * Releases a PJ_CONTEXT.
+ * Releases a PJ_CONTEXT. This function sets the `ptr` field in the Java object to zero as a safety
+ * in case there is two attempts to destroy the same object.
  *
  * @param  env     The JNI environment.
- * @param  caller  The class from which this function has been invoked.
- * @param  ctxPtr  The address of the PJ_CONTEXT to release.
+ * @param  object  The Java object wrapping the context to release.
  */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroy(JNIEnv *env, jclass caller, jlong ctxPtr) {
-    proj_context_destroy(as_context(ctxPtr));
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *env, jobject object) {
+    jlong ctxPtr = get_and_clear_ptr(env, object);
+    proj_context_destroy(as_context(ctxPtr));           // Does nothing if ctxPtr is null.
 }
 
 
@@ -212,13 +246,19 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_ObjectReference_version(
  * @param  caller     The class from which this function has been invoked.
  * @param  ctxPtr     The address of the PJ_CONTEXT for the current thread.
  * @param  authority  Name of the authority for which to create the factory.
+ * @param  sibling    if another factory has been created for the same context, that factory.
+ *                    Otherwise zero. This is used for sharing the same database context.
  * @return The address of the new authority factory, or 0 in case of failure.
  */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance(JNIEnv *env, jclass caller, jlong ctxPtr, jstring authority) {
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
+    (JNIEnv *env, jclass caller, jlong ctxPtr, jstring authority, jlong sibling)
+{
     const char *authority_utf = env->GetStringUTFChars(authority, NULL);
     if (authority_utf) {
         try {
-            DatabaseContextNNPtr db = DatabaseContext::create(std::string(), std::vector<std::string>(), as_context(ctxPtr));
+            DatabaseContextNNPtr db = (sibling)
+                    ? unwrap_shared_ptr<AuthorityFactory>(sibling)->databaseContext()
+                    : DatabaseContext::create(std::string(), std::vector<std::string>(), as_context(ctxPtr));
             AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_utf).as_nullable();
             return wrap_shared_ptr(factory);
         } catch (const std::exception &e) {
@@ -228,4 +268,16 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
         env->ReleaseStringUTFChars(authority, authority_utf);       // Must be after the catch block in case an exception happens.
     }
     return 0;
+}
+
+
+/**
+ * Releases the osgeo::proj::io::AuthorityFactory wrapped by the given Java object.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the authority factory to release.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JNIEnv *env, jobject object) {
+    jlong ptr = get_and_clear_ptr(env, object);
+    release_shared_ptr<AuthorityFactory>(ptr);
 }
