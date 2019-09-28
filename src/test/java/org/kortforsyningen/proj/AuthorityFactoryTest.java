@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import org.junit.Test;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.util.FactoryException;
 
@@ -50,6 +51,24 @@ public final strictfp class AuthorityFactoryTest {
 
             assertSame(epsg, c.factory("EPSG"));
             assertSame(iau,  c.factory("IAU"));
+        }
+    }
+
+    /**
+     * Tests indirectly {@link AuthorityFactory#createCoordinateSystem(long, String)} with an invalid code.
+     * We expect a {@link NoSuchAuthorityCodeException} to be thrown with information about the invalid code.
+     *
+     * @throws FactoryException if the operation failed for another reason than the expected exception.
+     */
+    @Test
+    public void testInvalidCode() throws FactoryException {
+        final AuthorityFactory.CS factory = new AuthorityFactory.CS("EPSG");
+        try {
+            factory.createCoordinateSystem("-52");
+            fail("An exception should have been thrown.");
+        } catch (NoSuchAuthorityCodeException e) {
+            assertEquals("getAuthority",    "EPSG", e.getAuthority());
+            assertEquals("getAuthorityCode", "-52", e.getAuthorityCode());
         }
     }
 

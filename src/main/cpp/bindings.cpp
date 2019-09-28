@@ -294,6 +294,18 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createCoo
             AuthorityFactoryPtr factory = unwrap_shared_ptr<AuthorityFactory>(ptr);
             CoordinateSystemPtr cs = factory->createCoordinateSystem(code_utf).as_nullable();
             return wrap_shared_ptr(cs);
+        } catch (const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
+            jclass c = env->FindClass("org/opengis/referencing/NoSuchAuthorityCodeException");
+            if (c) {
+                jmethodID method = env->GetMethodID(c, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+                if (method) {
+                    const char *message = e.what();
+                    jobject jt = env->NewObject(c, method, message ? env->NewStringUTF(message) : NULL,
+                                                                     env->NewStringUTF(e.getAuthority().c_str()),
+                                                                     env->NewStringUTF(e.getAuthorityCode().c_str()));
+                    env->Throw(static_cast<jthrowable>(jt));
+                }
+            }
         } catch (const std::exception &e) {
             jclass c = env->FindClass("org/opengis/util/FactoryException");
             if (c) env->ThrowNew(c, e.what());
