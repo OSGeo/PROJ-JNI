@@ -32,7 +32,6 @@ using osgeo::proj::io::DatabaseContext;
 using osgeo::proj::io::DatabaseContextNNPtr;
 using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryPtr;
-using osgeo::proj::cs::CoordinateSystemPtr;
 
 
 
@@ -178,6 +177,29 @@ jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
 }
 
 
+/**
+ * Returns the shared pointer stored in the memory block referenced by the `ptr`
+ * field in the given Java object. This function does not release the memory block
+ * and does not alter the Java field. It can be invoked from C++ code like below:
+ *
+ *   AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(object);
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the PROJ structure (not allowed to be NULL).
+ * @return Shared pointer to the PROJ object associated to the given Java object, or NULL
+ *         if the operation fails (for example because the `ptr` field has not been found).
+ * @throw  std::invalid_argument if the `ptr` field in the Java object is zero.
+ */
+template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject object) {
+    jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
+    if (id) {
+        return unwrap_shared_ptr<T>(env->GetLongField(object, id));
+    }
+    // java.lang.NoSuchFieldError already thrown by GetFieldID(…).
+    return 0;
+}
+
+
 
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -255,6 +277,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
     (JNIEnv *env, jclass caller, jlong ctxPtr, jstring authority, jlong sibling)
 {
+    jlong result = 0;
     const char *authority_utf = env->GetStringUTFChars(authority, NULL);
     if (authority_utf) {
         try {
@@ -262,14 +285,14 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
                     ? unwrap_shared_ptr<AuthorityFactory>(sibling)->databaseContext()
                     : DatabaseContext::create(std::string(), std::vector<std::string>(), as_context(ctxPtr));
             AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_utf).as_nullable();
-            return wrap_shared_ptr(factory);
+            result = wrap_shared_ptr(factory);
         } catch (const std::exception &e) {
             jclass c = env->FindClass("org/opengis/util/FactoryException");
             if (c) env->ThrowNew(c, e.what());
         }
         env->ReleaseStringUTFChars(authority, authority_utf);       // Must be after the catch block in case an exception happens.
     }
-    return 0;
+    return result;
 }
 
 
@@ -285,15 +308,41 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JN
 }
 
 
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createCoordinateSystem
-    (JNIEnv *env, jclass caller, jlong ptr, jstring code)
+/**
+ * Returns the pointer to an osgeo::proj::common::IdentifiedObject from the specified code.
+ * The PROJ method invoked by this function is determined by the type argument.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the authority factory to release.
+ * @param  type    One of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, etc. constants.
+ * @param  code    Object code allocated by authority.
+ * @return Pointer to the PROJ osgeo::proj::cs::CoordinateSystem, or 0 if out of memory.
+ * @throws FactoryException if no object can be created for the given code.
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
+    (JNIEnv *env, jobject object, jint type, jstring code)
 {
+    jlong result = 0;
     const char *code_utf = env->GetStringUTFChars(code, NULL);
     if (code_utf) {
         try {
-            AuthorityFactoryPtr factory = unwrap_shared_ptr<AuthorityFactory>(ptr);
-            CoordinateSystemPtr cs = factory->createCoordinateSystem(code_utf).as_nullable();
-            return wrap_shared_ptr(cs);
+            AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
+            switch (type) {
+                case org_kortforsyningen_proj_AuthorityFactory_ANY: {
+                    osgeo::proj::util::BaseObjectPtr obj = factory->createObject(code_utf).as_nullable();
+                    result = wrap_shared_ptr(obj);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM: {
+                    osgeo::proj::cs::CoordinateSystemPtr cs = factory->createCoordinateSystem(code_utf).as_nullable();
+                    result = wrap_shared_ptr(cs);
+                    break;
+                }
+                default: {
+                    jclass c = env->FindClass("org/opengis/util/FactoryException");
+                    if (c) env->ThrowNew(c, "Unsupported object type.");
+                }
+            }
         } catch (const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
             jclass c = env->FindClass("org/opengis/referencing/NoSuchAuthorityCodeException");
             if (c) {
@@ -303,7 +352,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createCoo
                     jobject jt = env->NewObject(c, method, message ? env->NewStringUTF(message) : NULL,
                                                                      env->NewStringUTF(e.getAuthority().c_str()),
                                                                      env->NewStringUTF(e.getAuthorityCode().c_str()));
-                    env->Throw(static_cast<jthrowable>(jt));
+                    if (jt) env->Throw(static_cast<jthrowable>(jt));
                 }
             }
         } catch (const std::exception &e) {
@@ -312,5 +361,5 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createCoo
         }
         env->ReleaseStringUTFChars(code, code_utf);
     }
-    return 0;
+    return result;
 }

@@ -7,6 +7,38 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef org_kortforsyningen_proj_AuthorityFactory_ANY
+#define org_kortforsyningen_proj_AuthorityFactory_ANY 0L
+#undef org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID
+#define org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID 1L
+#undef org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN
+#define org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN 2L
+#undef org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME
+#define org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME 3L
+#undef org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME
+#define org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME 4L
+#undef org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM
+#define org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM 5L
+#undef org_kortforsyningen_proj_AuthorityFactory_GEOCENTRIC_CRS
+#define org_kortforsyningen_proj_AuthorityFactory_GEOCENTRIC_CRS 6L
+#undef org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS
+#define org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS 7L
+#undef org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS
+#define org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS 8L
+#undef org_kortforsyningen_proj_AuthorityFactory_TEMPORAL_CRS
+#define org_kortforsyningen_proj_AuthorityFactory_TEMPORAL_CRS 9L
+#undef org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS
+#define org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS 10L
+#undef org_kortforsyningen_proj_AuthorityFactory_ENGINEERING_CRS
+#define org_kortforsyningen_proj_AuthorityFactory_ENGINEERING_CRS 11L
+#undef org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS
+#define org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS 12L
+#undef org_kortforsyningen_proj_AuthorityFactory_CONVERSION
+#define org_kortforsyningen_proj_AuthorityFactory_CONVERSION 13L
+#undef org_kortforsyningen_proj_AuthorityFactory_TRANSFORMATION
+#define org_kortforsyningen_proj_AuthorityFactory_TRANSFORMATION 14L
+#undef org_kortforsyningen_proj_AuthorityFactory_CONCATENATED_OPERATION
+#define org_kortforsyningen_proj_AuthorityFactory_CONCATENATED_OPERATION 15L
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    newInstance
@@ -17,11 +49,11 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
- * Method:    createCoordinateSystem
- * Signature: (JLjava/lang/String;)J
+ * Method:    createGeodeticObject
+ * Signature: (ILjava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createCoordinateSystem
-  (JNIEnv *, jclass, jlong, jstring);
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
+  (JNIEnv *, jobject, jint, jstring);
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory

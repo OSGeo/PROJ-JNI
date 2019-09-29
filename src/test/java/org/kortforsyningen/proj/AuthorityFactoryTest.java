@@ -55,7 +55,7 @@ public final strictfp class AuthorityFactoryTest {
     }
 
     /**
-     * Tests indirectly {@link AuthorityFactory#createCoordinateSystem(long, String)} with an invalid code.
+     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(int, String)} with an invalid code.
      * We expect a {@link NoSuchAuthorityCodeException} to be thrown with information about the invalid code.
      *
      * @throws FactoryException if the operation failed for another reason than the expected exception.
@@ -73,7 +73,7 @@ public final strictfp class AuthorityFactoryTest {
     }
 
     /**
-     * Tests indirectly {@link AuthorityFactory#createCoordinateSystem(long, String)}.
+     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(int, String)}.
      *
      * @throws FactoryException if the factory can not be created or if the CS creation failed.
      */

@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import java.util.Objects;
+import java.lang.annotation.Native;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.util.FactoryException;
 
@@ -39,6 +40,28 @@ import org.opengis.util.FactoryException;
  * @since   1.0
  */
 final class AuthorityFactory extends NativeResource {
+    /**
+     * Kind of geodetic objects created by native functions invoked from this class.
+     */
+    @Native
+    private static final int
+            ANY                      =  0,
+            ELLIPSOID                =  1,
+            PRIME_MERIDIAN           =  2,
+            GEODETIC_REFERENCE_FRAME =  3,
+            VERTICAL_REFERENCE_FRAME =  4,
+            COORDINATE_SYSTEM        =  5,
+            GEOCENTRIC_CRS           =  6,
+            GEOGRAPHIC_CRS           =  7,
+            VERTICAL_CRS             =  8,
+            TEMPORAL_CRS             =  9,
+            PROJECTED_CRS            = 10,
+            ENGINEERING_CRS          = 11,
+            COMPOUND_CRS             = 12,
+            CONVERSION               = 13,
+            TRANSFORMATION           = 14,
+            CONCATENATED_OPERATION   = 15;
+
     /**
      * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
      * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
@@ -78,14 +101,15 @@ final class AuthorityFactory extends NativeResource {
     private static native long newInstance(long context, String authority, long sibling) throws FactoryException;
 
     /**
-     * Returns the pointer to a {@code cs::CoordinateSystem} from the specified code.
+     * Returns the pointer to an {@code osgeo::proj::common::IdentifiedObject} from the specified code.
+     * The PROJ method invoked by this function is determined by the {@code type} argument.
      *
-     * @param  ptr   pointer to the {@code osgeo::proj::io::AuthorityFactory} wrapped by this class.
+     * @param  type  one of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, <i>etc.</i> constants.
      * @param  code  object code allocated by authority.
      * @return pointer to the PROJ {@code osgeo::proj::cs::CoordinateSystem}, or 0 if out of memory.
      * @throws FactoryException if no object can be created for the given code.
      */
-    private static native long createCoordinateSystem(long ptr, String code) throws FactoryException;
+    private native long createGeodeticObject(int type, String code) throws FactoryException;
 
     /**
      * Releases resources used by this factory. This method decrements the {@code object.use_count()}
@@ -93,24 +117,6 @@ final class AuthorityFactory extends NativeResource {
      * it depends on whether it is still used by other C++ code.
      */
     native void release();
-
-
-    /**
-     * Reference a {@code AuthorityFactory.createFoo(…)} method to invoke for creating objects.
-     * This interface allows authority factories to use a single method for creating any kind of
-     * objects (coordinate system, CRS, datum, <i>etc.</i>) identified by a single authority code.
-     */
-    private static interface Invoker {
-        /**
-         * Creates a new object for the given code.
-         *
-         * @param  ptr   pointer to the {@code osgeo::proj::io::AuthorityFactory} to use.
-         * @param  code  object code allocated by authority.
-         * @return pointer to the PROJ object, or 0 if out of memory.
-         * @throws FactoryException if no object can be created for the given code.
-         */
-        long create(long ptr, String code) throws FactoryException;
-    }
 
 
     /**
@@ -133,17 +139,16 @@ final class AuthorityFactory extends NativeResource {
 
         /**
          * Creates an object (coordinate system, CRS, datum, …) for the given authority code.
-         * This method delegates to the {@code create} method specified by the given handler.
          *
-         * @param  handler  the method to invoke.
-         * @param  code     object code allocated by authority.
+         * @param  type  one of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, <i>etc.</i> constants.
+         * @param  code  object code allocated by authority.
          * @return pointer to the PROJ object, or 0 if out of memory.
          * @throws FactoryException if no object can be created for the given code.
          */
-        private long create(final Invoker handler, final String code) throws FactoryException {
+        private long createGeodeticObject(final int type, final String code) throws FactoryException {
             Objects.requireNonNull(code);
             try (Context c = Context.acquire()) {
-                return handler.create(c.factory(authority).ptr, code);
+                return c.factory(authority).createGeodeticObject(type, code);
             }
         }
 
@@ -155,7 +160,7 @@ final class AuthorityFactory extends NativeResource {
          * @throws FactoryException if the object creation failed.
          */
         public CoordinateSystem createCoordinateSystem(final String code) throws FactoryException {
-            return new org.kortforsyningen.proj.CS(create(AuthorityFactory::createCoordinateSystem, code));
+            return new org.kortforsyningen.proj.CS(createGeodeticObject(COORDINATE_SYSTEM, code));
         }
     }
 }
