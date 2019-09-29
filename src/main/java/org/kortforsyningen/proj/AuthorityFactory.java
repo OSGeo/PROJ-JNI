@@ -45,22 +45,21 @@ final class AuthorityFactory extends NativeResource {
      */
     @Native
     private static final int
-            ANY                      =  0,
-            ELLIPSOID                =  1,
-            PRIME_MERIDIAN           =  2,
-            GEODETIC_REFERENCE_FRAME =  3,
-            VERTICAL_REFERENCE_FRAME =  4,
-            COORDINATE_SYSTEM        =  5,
-            GEOCENTRIC_CRS           =  6,
-            GEOGRAPHIC_CRS           =  7,
-            VERTICAL_CRS             =  8,
-            TEMPORAL_CRS             =  9,
-            PROJECTED_CRS            = 10,
-            ENGINEERING_CRS          = 11,
-            COMPOUND_CRS             = 12,
-            CONVERSION               = 13,
-            TRANSFORMATION           = 14,
-            CONCATENATED_OPERATION   = 15;
+            ANY                         =  0,
+            PRIME_MERIDIAN              =  1,
+            ELLIPSOID                   =  2,
+            DATUM                       =  3,
+            GEODETIC_REFERENCE_FRAME    =  4,
+            VERTICAL_REFERENCE_FRAME    =  5,
+            COORDINATE_SYSTEM           =  6,
+            COORDINATE_REFERENCE_SYSTEM =  7,
+            GEODETIC_CRS                =  8,
+            GEOGRAPHIC_CRS              =  9,
+            VERTICAL_CRS                = 10,
+            PROJECTED_CRS               = 11,
+            COMPOUND_CRS                = 12,
+            CONVERSION                  = 13,
+            COORDINATE_OPERATION        = 14;
 
     /**
      * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.

@@ -329,13 +329,78 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeo
             AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
             switch (type) {
                 case org_kortforsyningen_proj_AuthorityFactory_ANY: {
-                    osgeo::proj::util::BaseObjectPtr obj = factory->createObject(code_utf).as_nullable();
-                    result = wrap_shared_ptr(obj);
+                    osgeo::proj::util::BaseObjectPtr rp = factory->createObject(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN: {
+                    osgeo::proj::datum::PrimeMeridianPtr rp = factory->createPrimeMeridian(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID: {
+                    osgeo::proj::datum::EllipsoidPtr rp = factory->createEllipsoid(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_DATUM: {
+                    osgeo::proj::datum::DatumPtr rp = factory->createDatum(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME: {
+                    osgeo::proj::datum::GeodeticReferenceFramePtr rp = factory->createGeodeticDatum(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME: {
+                    osgeo::proj::datum::VerticalReferenceFramePtr rp = factory->createVerticalDatum(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
                     break;
                 }
                 case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM: {
-                    osgeo::proj::cs::CoordinateSystemPtr cs = factory->createCoordinateSystem(code_utf).as_nullable();
-                    result = wrap_shared_ptr(cs);
+                    osgeo::proj::cs::CoordinateSystemPtr rp = factory->createCoordinateSystem(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: {
+                    osgeo::proj::crs::CRSPtr rp = factory->createCoordinateReferenceSystem(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS: {
+                    osgeo::proj::crs::GeodeticCRSPtr rp = factory->createGeodeticCRS(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS: {
+                    osgeo::proj::crs::GeographicCRSPtr rp = factory->createGeographicCRS(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS: {
+                    osgeo::proj::crs::VerticalCRSPtr rp = factory->createVerticalCRS(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS: {
+                    osgeo::proj::crs::ProjectedCRSPtr rp = factory->createProjectedCRS(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS: {
+                    osgeo::proj::crs::CompoundCRSPtr rp = factory->createCompoundCRS(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_CONVERSION: {
+                    osgeo::proj::operation::ConversionPtr rp = factory->createConversion(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION: {
+                    osgeo::proj::operation::CoordinateOperationPtr rp = factory->createCoordinateOperation(code_utf, false).as_nullable();
+                    result = wrap_shared_ptr(rp);
                     break;
                 }
                 default: {
