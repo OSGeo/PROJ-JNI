@@ -139,6 +139,30 @@
           </archive>
         </configuration>
       </plugin>
+
+      <!-- JavaDoc configuration. -->
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.1.1</version>
+        <configuration>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <docencoding>${project.build.sourceEncoding}</docencoding>
+          <charset>${project.build.sourceEncoding}</charset>
+          <author>false</author>
+          <version>false</version>
+          <noqualifier>all</noqualifier>
+          <quiet>true</quiet>
+          <keywords>true</keywords>
+          <breakiterator>true</breakiterator>
+          <validateLinks>true</validateLinks>
+          <links>
+            <link>http://www.geoapi.org/3.0/javadoc</link>
+          </links>
+          <additionalOptions>
+            <additionalOption>--add-stylesheet "${project.basedir}/src/javadoc/sis.css"</additionalOption>
+          </additionalOptions>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
