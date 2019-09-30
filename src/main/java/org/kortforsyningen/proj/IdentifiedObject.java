@@ -27,6 +27,7 @@ import java.util.Collections;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
 import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.metadata.extent.Extent;
 
 
 /**
@@ -75,6 +76,25 @@ abstract class IdentifiedObject extends SharedObject implements org.opengis.refe
     @Override
     public Set<ReferenceIdentifier> getIdentifiers() {
         return Collections.emptySet();
+    }
+
+    /**
+     * Area or region or time frame in which this CRS, datum or coordinate operation is valid.
+     *
+     * @return the CRS, datum or operation valid domain, or {@code null} if not available.
+     */
+    public Extent getDomainOfValidity() {
+        return null;
+    }
+
+    /**
+     * Description of domain of usage, or limitations of usage,
+     * for which this CRS, datum or operation object is valid.
+     *
+     * @return the CRS, datum or operation domain of usage, or {@code null} if none.
+     */
+    public InternationalString getScope() {
+        return null;
     }
 
     /**

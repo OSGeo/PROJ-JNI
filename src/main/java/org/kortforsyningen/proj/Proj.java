@@ -24,6 +24,7 @@ package org.kortforsyningen.proj;
 import java.util.Objects;
 import java.util.Optional;
 import org.opengis.util.FactoryException;
+import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 
@@ -68,7 +69,43 @@ public final class Proj {
     }
 
     /**
-     * Instantiate a geodetic object from a user specified text.The returned object will typically by a subtype of {@link CoordinateReferenceSystem}.
+     * Returns a factory for creating coordinate reference systems from codes allocated by the given authority.
+     * The authority is typically "EPSG", but not necessarily; other authorities like "IAU" are also allowed.
+     * After a factory has been obtained, its {@link CRSAuthorityFactory#createCoordinateReferenceSystem(String)}
+     * method can be invoked for creating a CRS from an authority code. For example the code below creates the
+     * "WGS 84" coordinate reference system for the "EPSG::4326" authority code:
+     *
+     * <blockquote><pre>
+     * CRSAuthorityFactory factory = Proj.getAuthorityFactory("EPSG");
+     * CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
+     * </pre></blockquote>
+     *
+     * <p>The {@link CRSAuthorityFactory} interface provides an implementation-neutral way to create
+     * coordinate reference systems. In above example, only the first line is PROJ-specific.
+     * The remaining lines can be executed with any GeoAPI implementation.</p>
+     *
+     * <p>The factory returned by this method is safe for concurrent use in multi-threads environment.
+     * The object returned by this method implements also the
+     * {@link org.opengis.referencing.cs.CSAuthorityFactory},
+     * {@link org.opengis.referencing.datum.DatumAuthorityFactory} and
+     * {@link org.opengis.referencing.operation.CoordinateOperationAuthorityFactory} interfaces
+     * (so it can be casted to any of those interfaces),
+     * but typically only the {@link CRSAuthorityFactory} interface is used.</p>
+     *
+     * @param  authority  authority name of the factory (e.g. {@code "EPSG"}).
+     * @return factory for the given authority.
+     */
+    public static CRSAuthorityFactory getAuthorityFactory(final String authority) {
+        /*
+         * No need to cache since AuthorityFactory.API is a very lightweight object.
+         * The costly object is AuthorityFactory, which is cached by Context class.
+         */
+        return new AuthorityFactory.API(Objects.requireNonNull(authority));
+    }
+
+    /**
+     * Instantiate a geodetic object from a user specified text.
+     * The returned object will typically by a subtype of {@link CoordinateReferenceSystem}.
      * The text can be a:
      *
      * <ul>
@@ -100,16 +137,7 @@ public final class Proj {
     public static Object createFromUserInput(final String text) throws FactoryException {
         Objects.requireNonNull(text);
         try (Context c = Context.acquire()) {
-            return createFromUserInput(text, 0);    // TODO
+            return c.createFromUserInput(text);
         }
     }
-
-    /**
-     * Invokes the C++ {@code createFromUserInput(text, ctx)} method.
-     *
-     * @param  text  the text to parse. It is caller responsibility to ensure that this argument is non-null.
-     * @param  ptr   pointer to the {@code PJ_CONTEXT} structure in PROJ heap.
-     * @return a coordinate reference system or other kind of object created from the given text.
-     */
-    private static native Object createFromUserInput(final String text, final long ptr);
 }

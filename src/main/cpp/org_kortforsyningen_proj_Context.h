@@ -19,6 +19,14 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create
 
 /*
  * Class:     org_kortforsyningen_proj_Context
+ * Method:    createFromUserInput
+ * Signature: (Ljava/lang/String;)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserInput
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     org_kortforsyningen_proj_Context
  * Method:    destroyPJ
  * Signature: ()V
  */

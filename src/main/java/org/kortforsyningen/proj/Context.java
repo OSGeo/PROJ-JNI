@@ -160,6 +160,14 @@ final class Context extends NativeResource implements AutoCloseable {
     }
 
     /**
+     * Invokes the C++ {@code createFromUserInput(text, ctx)} method.
+     *
+     * @param  text  the text to parse. It is caller responsibility to ensure that this argument is non-null.
+     * @return a coordinate reference system or other kind of object created from the given text.
+     */
+    native Object createFromUserInput(final String text);
+
+    /**
      * Disposes this context. This method returns the {@code PJ_CONTEXT} structure to the pool,
      * so it can be reused again by this thread or by another thread. Old {@code PJ_CONTEXT}s
      * not used for a long time are opportunistically discarded.

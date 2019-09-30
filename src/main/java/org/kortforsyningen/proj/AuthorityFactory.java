@@ -35,6 +35,7 @@ import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.*;
 import org.opengis.referencing.cs.*;
 import org.opengis.referencing.datum.*;
+import org.opengis.referencing.operation.*;
 
 
 /**
@@ -77,6 +78,7 @@ final class AuthorityFactory extends NativeResource {
      * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
      * unless potential usage of this field is also verified in the C/C++ source code.
      */
+    @Native
     private final long ptr;
 
     /**
@@ -152,7 +154,9 @@ final class AuthorityFactory extends NativeResource {
      * is used by only one thread at a time. There is no guarantee that two consecutive invocations of
      * {@code createFoo(…)} methods in the same thread will use the same {@link AuthorityFactory} instance.</p>
      */
-    static final class API implements CRSAuthorityFactory, CSAuthorityFactory, DatumAuthorityFactory {
+    static final class API implements CRSAuthorityFactory, CSAuthorityFactory, DatumAuthorityFactory,
+            CoordinateOperationAuthorityFactory
+    {
         /**
          * The authority name of this factory.
          */
@@ -160,6 +164,7 @@ final class AuthorityFactory extends NativeResource {
 
         /**
          * Creates a new factory for the given authority.
+         * It is caller responsibility to ensure that the given argument is non-null.
          *
          * @param  authority  authority name of this factory.
          */
@@ -242,12 +247,12 @@ final class AuthorityFactory extends NativeResource {
         }
 
         @Override
-        public IdentifiedObject createObject(String string) throws FactoryException {
+        public IdentifiedObject createObject(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public Unit<?> createUnit(String string) throws FactoryException {
+        public Unit<?> createUnit(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
@@ -260,7 +265,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public CoordinateSystemAxis createCoordinateSystemAxis(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            throw new FactoryException(UNSUPPORTED);
         }
 
         /**
@@ -276,128 +281,157 @@ final class AuthorityFactory extends NativeResource {
         }
 
         @Override
-        public CartesianCS createCartesianCS(String string) throws FactoryException {
+        public CartesianCS createCartesianCS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public EllipsoidalCS createEllipsoidalCS(String string) throws FactoryException {
+        public EllipsoidalCS createEllipsoidalCS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public SphericalCS createSphericalCS(String string) throws FactoryException {
+        public SphericalCS createSphericalCS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public CylindricalCS createCylindricalCS(String string) throws FactoryException {
+        public CylindricalCS createCylindricalCS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public PolarCS createPolarCS(String string) throws FactoryException {
+        public PolarCS createPolarCS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public VerticalCS createVerticalCS(String string) throws FactoryException {
+        public VerticalCS createVerticalCS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public TimeCS createTimeCS(String string) throws FactoryException {
+        public TimeCS createTimeCS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public PrimeMeridian createPrimeMeridian(String string) throws FactoryException {
+        public PrimeMeridian createPrimeMeridian(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public Ellipsoid createEllipsoid(String string) throws FactoryException {
+        public Ellipsoid createEllipsoid(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public Datum createDatum(String string) throws FactoryException {
+        public Datum createDatum(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public GeodeticDatum createGeodeticDatum(String string) throws FactoryException {
+        public GeodeticDatum createGeodeticDatum(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public VerticalDatum createVerticalDatum(String string) throws FactoryException {
+        public VerticalDatum createVerticalDatum(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public TemporalDatum createTemporalDatum(String string) throws FactoryException {
+        public TemporalDatum createTemporalDatum(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public EngineeringDatum createEngineeringDatum(String string) throws FactoryException {
+        public EngineeringDatum createEngineeringDatum(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public ImageDatum createImageDatum(String string) throws FactoryException {
+        public ImageDatum createImageDatum(final String code) throws FactoryException {
+            throw new FactoryException("Not supported yet.");
+        }
+
+        /**
+         * Returns an arbitrary coordinate reference system from a code.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
+        @Override
+        public CoordinateReferenceSystem createCoordinateReferenceSystem(final String code) throws FactoryException {
+            return new CRS(createGeodeticObject(COORDINATE_REFERENCE_SYSTEM, code));
+        }
+
+        @Override
+        public GeographicCRS createGeographicCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public CoordinateReferenceSystem createCoordinateReferenceSystem(String string) throws FactoryException {
+        public GeocentricCRS createGeocentricCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public GeographicCRS createGeographicCRS(String string) throws FactoryException {
+        public ProjectedCRS createProjectedCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public GeocentricCRS createGeocentricCRS(String string) throws FactoryException {
+        public VerticalCRS createVerticalCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public ProjectedCRS createProjectedCRS(String string) throws FactoryException {
+        public TemporalCRS createTemporalCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public VerticalCRS createVerticalCRS(String string) throws FactoryException {
+        public EngineeringCRS createEngineeringCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public TemporalCRS createTemporalCRS(String string) throws FactoryException {
+        public ImageCRS createImageCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public EngineeringCRS createEngineeringCRS(String string) throws FactoryException {
+        public DerivedCRS createDerivedCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public ImageCRS createImageCRS(String string) throws FactoryException {
+        public CompoundCRS createCompoundCRS(final String code) throws FactoryException {
             throw new FactoryException("Not supported yet.");
         }
 
         @Override
-        public DerivedCRS createDerivedCRS(String string) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+        public OperationMethod createOperationMethod(final String code) throws FactoryException {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        /**
+         * Creates an operation from a single operation code.
+         *
+         * @param  code  coded value for coordinate operation.
+         * @return the operation for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
+        @Override
+        public CoordinateOperation createCoordinateOperation(final String code) throws FactoryException {
+            return new Operation(createGeodeticObject(COORDINATE_OPERATION, code));
         }
 
         @Override
-        public CompoundCRS createCompoundCRS(String string) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+        public Set<CoordinateOperation> createFromCoordinateReferenceSystemCodes(final String source, final String target) throws FactoryException {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 }

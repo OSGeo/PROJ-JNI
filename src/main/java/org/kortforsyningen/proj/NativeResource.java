@@ -47,6 +47,12 @@ abstract class NativeResource {
     static final String LOGGER_NAME = "org.kortforsyningen.proj";
 
     /**
+     * The message to provide in exception when a feature is not supported in PROJ,
+     * or when we provide no mapping to it.
+     */
+    static final String UNSUPPORTED = "Not supported.";
+
+    /**
      * For subclass constructors.
      */
     NativeResource() {
