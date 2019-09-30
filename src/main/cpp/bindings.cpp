@@ -23,6 +23,7 @@
 #include <string>
 #include <proj.h>
 #include "proj/io.hpp"
+#include "WKTFormat.h"
 #include "org_kortforsyningen_proj_NativeResource.h"
 #include "org_kortforsyningen_proj_Context.h"
 #include "org_kortforsyningen_proj_SharedObject.h"
@@ -32,6 +33,11 @@ using osgeo::proj::io::DatabaseContext;
 using osgeo::proj::io::DatabaseContextNNPtr;
 using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryPtr;
+using osgeo::proj::io::WKTFormatter;
+using osgeo::proj::io::WKTFormatterNNPtr;
+using osgeo::proj::util::BaseObject;
+using osgeo::proj::util::BaseObjectPtr;
+using osgeo::proj::io::IWKTExportable;
 
 
 
@@ -40,10 +46,12 @@ using osgeo::proj::io::AuthorityFactoryPtr;
 // │                          HELPER FUNCTIONS (not invoked from Java)                          │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
-#define PJ_FIELD_NAME           "ptr"
-#define PJ_FIELD_TYPE           "J"
-#define FACTORY_EXCEPTION       "org/opengis/util/FactoryException"
-#define NO_SUCH_AUTHORITY_CODE  "org/opengis/referencing/NoSuchAuthorityCodeException"
+#define PJ_FIELD_NAME              "ptr"
+#define PJ_FIELD_TYPE              "J"
+#define FACTORY_EXCEPTION          "org/opengis/util/FactoryException"
+#define NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
+#define FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
+#define ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
 
 /*
  * NOTE ON CHARACTER ENCODING: this implementation assumes that the PROJ library expects strings
@@ -277,6 +285,49 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *e
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(JNIEnv *env, jclass caller) {
     const char *desc = pj_release;
     return (desc) ? env->NewStringUTF(desc) : nullptr;
+}
+
+
+/**
+ * Returns a Well-Known Text (WKT) for this object.
+ * This is allowed only if this object implements osgeo::proj::io::IWKTExportable.
+ *
+ * @param  env         The JNI environment.
+ * @param  object      The Java object wrapping the PROJ object to format.
+ * @param  convention  One of WKTFormat constants.
+ * @return The Well-Known Text (WKT) for this object, or null if the object is not IWKTExportable.
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
+    (JNIEnv *env, jobject object, jint convention, jboolean multiline, jboolean strict)
+{
+    WKTFormatter::Convention c;
+    switch (convention) {
+        case WKTFormat_WKT2_2019:            c = WKTFormatter::Convention::WKT2_2018;            break;      // TODO: rename "2018" as "2019" in next PROJ release.
+        case WKTFormat_WKT2_2015:            c = WKTFormatter::Convention::WKT2_2015;            break;
+        case WKTFormat_WKT2_2019_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2018_SIMPLIFIED; break;
+        case WKTFormat_WKT2_2015_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2015_SIMPLIFIED; break;
+        case WKTFormat_WKT1_GDAL:            c = WKTFormatter::Convention::WKT1_GDAL;            break;
+        case WKTFormat_WKT1_ESRI:            c = WKTFormatter::Convention::WKT1_ESRI;            break;
+        default: {
+            jclass c = env->FindClass(ILLEGAL_ARGUMENT_EXCEPTION);
+            if (c) env->ThrowNew(c, std::to_string(convention).c_str());
+            return nullptr;
+        }
+    }
+    try {
+        BaseObjectPtr candidate = get_and_unwrap_ptr<BaseObject>(env, object);
+        std::shared_ptr<IWKTExportable> exportable = std::dynamic_pointer_cast<IWKTExportable>(candidate);
+        if (exportable) {
+            WKTFormatterNNPtr formatter = WKTFormatter::create(c);
+            formatter->setMultiLine(multiline);
+            formatter->setStrict(strict);
+            return non_empty_string(env, exportable->exportToWKT(formatter.get()));
+        }
+    } catch (const std::exception &e) {
+        jclass c = env->FindClass(FORMATTING_EXCEPTION);
+        if (c) env->ThrowNew(c, e.what());
+    }
+    return nullptr;
 }
 
 

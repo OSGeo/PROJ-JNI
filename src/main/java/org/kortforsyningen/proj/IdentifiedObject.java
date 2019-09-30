@@ -106,17 +106,4 @@ abstract class IdentifiedObject extends SharedObject implements org.opengis.refe
     public InternationalString getRemarks() {
         return null;
     }
-
-    /**
-     * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
-     * This method can be invoked only if the wrapped PROJ object is
-     * an instance of {@code osgeo::proj::io::IWKTExportable}.
-     *
-     * @return the Well-Known Text (WKT) for this object.
-     * @throws UnsupportedOperationException if this object can not be formatted as WKT.
-     */
-    @Override
-    public String toWKT() throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

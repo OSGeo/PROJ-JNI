@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version
   (JNIEnv *, jclass);
 
+/*
+ * Class:     org_kortforsyningen_proj_NativeResource
+ * Method:    toWKT
+ * Signature: (IZZ)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
+  (JNIEnv *, jobject, jint, jboolean, jboolean);
+
 #ifdef __cplusplus
 }
 #endif

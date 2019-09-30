@@ -58,7 +58,7 @@ abstract class SharedObject {
      * {@code Implementation} shall not contain any reference to the enclosing {@code SharedObject}.
      * See {@link Cleaner} for explanation about why this separation is required.
      */
-    private static final class Implementation extends NativeResource implements Runnable {
+    static final class Implementation extends NativeResource implements Runnable {
         /**
          * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
          * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
@@ -98,7 +98,7 @@ abstract class SharedObject {
     /**
      * Provides access to the PROJ implementation.
      */
-    private final Implementation impl;
+    final Implementation impl;
 
     /**
      * Creates a wrapper for the given pointer to a PROJ structure. If the given pointer is null,
@@ -118,5 +118,42 @@ abstract class SharedObject {
             release(ptr);
             throw e;
         }
+    }
+
+    /**
+     * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
+     * This method can be invoked only if the wrapped PROJ object is
+     * an instance of {@code osgeo::proj::io::IWKTExportable}.
+     *
+     * @return the Well-Known Text (WKT) for this object.
+     * @throws UnsupportedOperationException if this object can not be formatted as WKT.
+     * @throws FormattingException if an error occurred during formatting.
+     */
+    public String toWKT() {
+        final String wkt = impl.toWKT(0, true, true);
+        if (wkt != null) {
+            return wkt;
+        } else {
+            throw new UnsupportedOperationException("This object is not exportable to WKT.");
+        }
+    }
+
+    /**
+     * Returns a simplified <cite>Well-Known Text</cite> (WKT) for this object,
+     * or an arbitrary string if this object can not be formatted in WKT.
+     *
+     * @return string representation of this object.
+     */
+    @Override
+    public String toString() {
+        try {
+            final String wkt = impl.toWKT(2, true, false);
+            if (wkt != null) {
+                return wkt;
+            }
+        } catch (FormattingException e) {
+            return e.toString();
+        }
+        return super.toString();
     }
 }
