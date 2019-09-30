@@ -19,31 +19,41 @@ extern "C" {
 #define org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME 4L
 #undef org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME
 #define org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME 5L
+#undef org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE
+#define org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE 6L
 #undef org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM
-#define org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM 6L
+#define org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM 7L
 #undef org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM
-#define org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM 7L
+#define org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM 8L
 #undef org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS
-#define org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS 8L
+#define org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS 9L
 #undef org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS
-#define org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS 9L
+#define org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS 10L
 #undef org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS
-#define org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS 10L
+#define org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS 11L
 #undef org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS
-#define org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS 11L
+#define org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS 12L
 #undef org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS
-#define org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS 12L
+#define org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS 13L
 #undef org_kortforsyningen_proj_AuthorityFactory_CONVERSION
-#define org_kortforsyningen_proj_AuthorityFactory_CONVERSION 13L
+#define org_kortforsyningen_proj_AuthorityFactory_CONVERSION 14L
 #undef org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION
-#define org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION 14L
+#define org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION 15L
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    newInstance
- * Signature: (JLjava/lang/String;J)J
+ * Signature: (JLjava/lang/String;Lorg/kortforsyningen/proj/AuthorityFactory;)J
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
-  (JNIEnv *, jclass, jlong, jstring, jlong);
+  (JNIEnv *, jclass, jlong, jstring, jobject);
+
+/*
+ * Class:     org_kortforsyningen_proj_AuthorityFactory
+ * Method:    getDescriptionText
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDescriptionText
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory

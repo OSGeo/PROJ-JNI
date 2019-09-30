@@ -40,8 +40,10 @@ using osgeo::proj::io::AuthorityFactoryPtr;
 // │                          HELPER FUNCTIONS (not invoked from Java)                          │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
-#define PJ_FIELD_NAME "ptr"
-#define PJ_FIELD_TYPE "J"
+#define PJ_FIELD_NAME           "ptr"
+#define PJ_FIELD_TYPE           "J"
+#define FACTORY_EXCEPTION       "org/opengis/util/FactoryException"
+#define NO_SUCH_AUTHORITY_CODE  "org/opengis/referencing/NoSuchAuthorityCodeException"
 
 /*
  * NOTE ON CHARACTER ENCODING: this implementation assumes that the PROJ library expects strings
@@ -50,6 +52,20 @@ using osgeo::proj::io::AuthorityFactoryPtr;
  * but it should be okay if the strings do not use the null character (0) or the supplementary
  * characters (the ones encoded on 4 bytes in a UTF-8 string).
  */
+
+
+/**
+ * Converts the given C++ string into a Java string if non-empty, or returns null if the string is empty.
+ * This method assumes UTF-8 encoding with no null character and no supplementary Unicode characters.
+ *
+ * @param  env   The JNI environment.
+ * @param  text  The text to convert to Java string.
+ * @return the Java string, or null if the given text is empty.
+ */
+inline jstring non_empty_string(JNIEnv *env, const std::string &text) {
+    return text.empty() ? nullptr : env->NewStringUTF(text.c_str());
+}
+
 
 /**
  * Sends the given text to java.lang.System.Logger for the PROJ package.
@@ -62,7 +78,7 @@ using osgeo::proj::io::AuthorityFactoryPtr;
  * function has not been updated accordingly.
  *
  * @param  env   The JNI environment.
- * @param  text  The text to log. Shall not be null.
+ * @param  text  The text to log.
  */
 void log(JNIEnv *env, const std::string &text) {
     jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
@@ -84,7 +100,7 @@ void log(JNIEnv *env, const std::string &text) {
  * This function is defined for type safety.
  *
  * @param  ctxPtr  The address of the PJ_CONTEXT for the current thread.
- * @return The given ctxPtr as a pointer to PJ_CONTEXT, or NULL if ctxPtr is zero.
+ * @return The given ctxPtr as a pointer to PJ_CONTEXT, or null if ctxPtr is zero.
  */
 inline PJ_CONTEXT* as_context(jlong ctxPtr) {
     return reinterpret_cast<PJ_CONTEXT*>(ctxPtr);
@@ -116,26 +132,6 @@ template <class T> jlong wrap_shared_ptr(std::shared_ptr<T> &object) {
 
 
 /**
- * Returns the shared pointer stored in the memory block at the given address.
- * This function does not release the memory block. It can be invoked from C++
- * code like below:
- *
- *   AuthorityFactoryPtr factory = unwrap_shared_ptr<AuthorityFactory>(ptr);
- *
- * @param  ptr  Address returned by wrap_shared_ptr(…). Shall not be zero.
- * @return Shared pointer which was wrapped in the specified memory block.
- * @throw  std::invalid_argument if the given value is zero.
- */
-template <class T> std::shared_ptr<T> unwrap_shared_ptr(jlong ptr) {
-    if (ptr) {
-        std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
-        return *wrapper;
-    }
-    throw std::invalid_argument("Null pointer to PROJ object.");
-}
-
-
-/**
  * Frees the memory block wrapping the shared pointer.
  * The use count of that shared pointer is decreased by one.
  * This method does nothing if the memory block has already been released
@@ -161,8 +157,8 @@ template <class T> void release_shared_ptr(jlong ptr) {
  * of outdated value from C++ code is potentially worst.
  *
  * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the PROJ structure (not allowed to be NULL).
- * @return The address of the PROJ structure, or NULL if the operation fails
+ * @param  object  The Java object wrapping the PROJ structure (not allowed to be null).
+ * @return The address of the PROJ structure, or null if the operation fails
  *         (for example because the `ptr` field has not been found).
  */
 jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
@@ -182,21 +178,50 @@ jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
  * field in the given Java object. This function does not release the memory block
  * and does not alter the Java field. It can be invoked from C++ code like below:
  *
- *   AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(object);
+ *   try {
+ *       AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
+ *   } catch (const std::exception &e) {
+ *       rethrow_as_some_java_exception(env, e);
+ *   }
+ *
+ * This method never returns null. Instead, a C++ exception is thrown if the pointer is missing.
  *
  * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the PROJ structure (not allowed to be NULL).
- * @return Shared pointer to the PROJ object associated to the given Java object, or NULL
- *         if the operation fails (for example because the `ptr` field has not been found).
+ * @param  object  The Java object wrapping the PROJ structure.
+ * @return Shared pointer to the PROJ object associated to the given Java object.
  * @throw  std::invalid_argument if the `ptr` field in the Java object is zero.
  */
 template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject object) {
-    jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
-    if (id) {
-        return unwrap_shared_ptr<T>(env->GetLongField(object, id));
+    if (object) {
+        jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
+        if (id) {
+            jlong ptr = env->GetLongField(object, id);
+            if (ptr) {
+                std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
+                return *wrapper;
+            }
+        }
+        // java.lang.NoSuchFieldError already thrown by GetFieldID(…).
     }
-    // java.lang.NoSuchFieldError already thrown by GetFieldID(…).
-    return 0;
+    throw std::invalid_argument("Null pointer to PROJ object.");
+}
+
+
+/**
+ * Rethrows the given C++ exception as an org.opengis.util.FactoryException with the same message.
+ * If a Java exception is already pending (this may happen if the exception was thrown by the JNI
+ * framework), then this method does nothing. This method returns normally; the exception will be
+ * thrown only when execution returns to Java code.
+ *
+ * @param  env  The JNI environment.
+ * @param  e    The C++ exception to rethrow in Java.
+ */
+void rethrow_as_factory_exception(JNIEnv *env, const std::exception &e) {
+    if (!env->ExceptionCheck()) {
+        jclass c = env->FindClass(FACTORY_EXCEPTION);
+        if (c) env->ThrowNew(c, e.what());
+        // If c was null, the appropriate Java exception is thrown by JNI.
+    }
 }
 
 
@@ -247,11 +272,11 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *e
  *
  * @param  env     The JNI environment.
  * @param  caller  The class from which this function has been invoked.
- * @return The PROJ release number, or NULL.
+ * @return The PROJ release number, or null.
  */
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(JNIEnv *env, jclass caller) {
     const char *desc = pj_release;
-    return (desc) ? env->NewStringUTF(desc) : NULL;
+    return (desc) ? env->NewStringUTF(desc) : nullptr;
 }
 
 
@@ -275,19 +300,19 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
  * @return The address of the new authority factory, or 0 in case of failure.
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
-    (JNIEnv *env, jclass caller, jlong ctxPtr, jstring authority, jlong sibling)
+    (JNIEnv *env, jclass caller, jlong ctxPtr, jstring authority, jobject sibling)
 {
     jlong result = 0;
-    const char *authority_utf = env->GetStringUTFChars(authority, NULL);
+    const char *authority_utf = env->GetStringUTFChars(authority, nullptr);
     if (authority_utf) {
         try {
             DatabaseContextNNPtr db = (sibling)
-                    ? unwrap_shared_ptr<AuthorityFactory>(sibling)->databaseContext()
+                    ? get_and_unwrap_ptr<AuthorityFactory>(env, sibling)->databaseContext()
                     : DatabaseContext::create(std::string(), std::vector<std::string>(), as_context(ctxPtr));
             AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_utf).as_nullable();
             result = wrap_shared_ptr(factory);
         } catch (const std::exception &e) {
-            jclass c = env->FindClass("org/opengis/util/FactoryException");
+            jclass c = env->FindClass(FACTORY_EXCEPTION);
             if (c) env->ThrowNew(c, e.what());
         }
         env->ReleaseStringUTFChars(authority, authority_utf);       // Must be after the catch block in case an exception happens.
@@ -309,21 +334,74 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JN
 
 
 /**
+ * Rethrows the given C++ exception as a Java exception with the same message, authority name
+ * and authority code. This method returns normally; the exception will be thrown in Java only.
+ *
+ * @param  env  The JNI environment.
+ * @param  e    The C++ exception to rethrow in Java.
+ */
+void rethrow_as_java_exception(JNIEnv *env, const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
+    jclass c = env->FindClass(NO_SUCH_AUTHORITY_CODE);
+    if (c) {
+        jmethodID method = env->GetMethodID(c, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+        if (method) {
+            const char *message = e.what();
+            jobject jt = env->NewObject(c, method, message ? env->NewStringUTF(message) : nullptr,
+                                                   non_empty_string(env, e.getAuthority()),
+                                                   non_empty_string(env, e.getAuthorityCode()));
+            if (jt) env->Throw(static_cast<jthrowable>(jt));
+        }
+    }
+    // If any of above tests failed, JNI will have throw the appropriate exception in Java.
+}
+
+
+/**
+ * Gets a description of the object corresponding to a code.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the authority factory to use.
+ * @param  code    Object code allocated by authority.
+ * @return Description of the identified object, or null if that object has no description.
+ * @throws FactoryException if the description can not be obtained for the given code.
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDescriptionText
+    (JNIEnv *env, jobject object, jstring code)
+{
+    jstring result = nullptr;
+    const char *code_utf = env->GetStringUTFChars(code, nullptr);
+    if (code_utf) {
+        try {
+            AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
+            std::string desc = factory->getDescriptionText(code_utf);
+            if (!desc.empty()) result = env->NewStringUTF(desc.c_str());
+        } catch (const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
+            rethrow_as_java_exception(env, e);
+        } catch (const std::exception &e) {
+            rethrow_as_factory_exception(env, e);
+        }
+        env->ReleaseStringUTFChars(code, code_utf);
+    }
+    return result;
+}
+
+
+/**
  * Returns the pointer to an osgeo::proj::common::IdentifiedObject from the specified code.
  * The PROJ method invoked by this function is determined by the type argument.
  *
  * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the authority factory to release.
+ * @param  object  The Java object wrapping the authority factory to use.
  * @param  type    One of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, etc. constants.
  * @param  code    Object code allocated by authority.
- * @return Pointer to the PROJ osgeo::proj::cs::CoordinateSystem, or 0 if out of memory.
+ * @return Pointer to an osgeo::proj::common::IdentifiedObject subtype, or 0 if out of memory.
  * @throws FactoryException if no object can be created for the given code.
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
     (JNIEnv *env, jobject object, jint type, jstring code)
 {
     jlong result = 0;
-    const char *code_utf = env->GetStringUTFChars(code, NULL);
+    const char *code_utf = env->GetStringUTFChars(code, nullptr);
     if (code_utf) {
         try {
             AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
@@ -355,6 +433,11 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeo
                 }
                 case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME: {
                     osgeo::proj::datum::VerticalReferenceFramePtr rp = factory->createVerticalDatum(code_utf).as_nullable();
+                    result = wrap_shared_ptr(rp);
+                    break;
+                }
+                case org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE: {
+                    osgeo::proj::common::UnitOfMeasurePtr rp = factory->createUnitOfMeasure(code_utf).as_nullable();
                     result = wrap_shared_ptr(rp);
                     break;
                 }
@@ -404,25 +487,14 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeo
                     break;
                 }
                 default: {
-                    jclass c = env->FindClass("org/opengis/util/FactoryException");
+                    jclass c = env->FindClass(FACTORY_EXCEPTION);
                     if (c) env->ThrowNew(c, "Unsupported object type.");
                 }
             }
         } catch (const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
-            jclass c = env->FindClass("org/opengis/referencing/NoSuchAuthorityCodeException");
-            if (c) {
-                jmethodID method = env->GetMethodID(c, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-                if (method) {
-                    const char *message = e.what();
-                    jobject jt = env->NewObject(c, method, message ? env->NewStringUTF(message) : NULL,
-                                                                     env->NewStringUTF(e.getAuthority().c_str()),
-                                                                     env->NewStringUTF(e.getAuthorityCode().c_str()));
-                    if (jt) env->Throw(static_cast<jthrowable>(jt));
-                }
-            }
+            rethrow_as_java_exception(env, e);
         } catch (const std::exception &e) {
-            jclass c = env->FindClass("org/opengis/util/FactoryException");
-            if (c) env->ThrowNew(c, e.what());
+            rethrow_as_factory_exception(env, e);
         }
         env->ReleaseStringUTFChars(code, code_utf);
     }

@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.util.FactoryException;
+import org.opengis.util.InternationalString;
 
 import static org.junit.Assert.*;
 
@@ -62,7 +63,7 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testInvalidCode() throws FactoryException {
-        final AuthorityFactory.CS factory = new AuthorityFactory.CS("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         try {
             factory.createCoordinateSystem("-52");
             fail("An exception should have been thrown.");
@@ -79,8 +80,28 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testCreateCoordinateSystem() throws FactoryException {
-        final AuthorityFactory.CS factory = new AuthorityFactory.CS("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         final CoordinateSystem cs = factory.createCoordinateSystem("6422");
         // TODO
+    }
+
+    /**
+     * Tests indirectly {@link AuthorityFactory#getDescriptionText(String)}.
+     *
+     * @throws FactoryException if the operation failed.
+     */
+    @Test
+    public void testGetDescriptionText() throws FactoryException {
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        try {
+            factory.getDescriptionText("-52");
+            fail("An exception should have been thrown.");
+        } catch (NoSuchAuthorityCodeException e) {
+            assertEquals("getAuthority",    "EPSG", e.getAuthority());
+            assertEquals("getAuthorityCode", "-52", e.getAuthorityCode());
+        }
+        final InternationalString text = factory.getDescriptionText("4326");
+        assertNotNull(text);
+        assertFalse(text.toString().isEmpty());
     }
 }
