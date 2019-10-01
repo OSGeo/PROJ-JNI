@@ -6,6 +6,12 @@ This includes cartographic projections as well as geodetic transformations.
 This package exposes PROJ services as implementations of [GeoAPI](http://www.geoapi.org/) interfaces.
 Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
 
+## Developer documentation:
+
+  * [PROJ binding Javadoc](https://kortforsyningen.github.io/PROJ-JNI/index.html)
+  * [GeoAPI 3.0.1 Javadoc](http://www.geoapi.org/3.0/javadoc/index.html)
+
+
 ## Prerequites:
 
   * For building:
