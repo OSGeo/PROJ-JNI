@@ -23,11 +23,11 @@
 #include <string>
 #include <proj.h>
 #include "proj/io.hpp"
-#include "WKTFormat.h"
 #include "org_kortforsyningen_proj_NativeResource.h"
 #include "org_kortforsyningen_proj_Context.h"
 #include "org_kortforsyningen_proj_SharedObject.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
+#include "org_kortforsyningen_proj_WKTFormat$Convention.h"
 
 using osgeo::proj::io::DatabaseContext;
 using osgeo::proj::io::DatabaseContextNNPtr;

@@ -55,7 +55,7 @@ public final strictfp class WKTFormatTest {
     @Test
     public void verifyOrdinalValues() throws IOException {
         final EnumSet<WKTFormat.Convention> remainings = EnumSet.allOf(WKTFormat.Convention.class);
-        for (final String line : Files.readAllLines(Paths.get("src/main/cpp/WKTFormat.h"))) {
+        for (final String line : Files.readAllLines(Paths.get("src/main/cpp/org_kortforsyningen_proj_WKTFormat$Convention.h"))) {
             if (line.startsWith(DEFINE)) {
                 final int s1 = line.indexOf(' ', DEFINE.length());
                 final int s2 = line.lastIndexOf(' ');
