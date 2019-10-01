@@ -44,8 +44,7 @@ import org.opengis.util.FactoryException;
  * try (Context c = Context.acquire()) {
  *     AuthorityFactory factory = c.factory("EPSG");
  *     // Do not use above factory ouside this block.
- * }
- * </pre>
+ * }</pre>
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -118,8 +117,7 @@ final class Context extends NativeResource implements AutoCloseable {
      * try (Context c = Context.acquire()) {
      *     AuthorityFactory factory = c.factory("EPSG");
      *     // Do not use above factory ouside this block.
-     * }
-     * </pre>
+     * }</pre>
      *
      * All objects obtained from {@link Context} shall be used inside the {@code try} block.
      *

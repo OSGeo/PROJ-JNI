@@ -26,7 +26,29 @@
  * coordinates from one coordinate reference system (CRS) to another.
  * This includes cartographic projections as well as geodetic transformations.
  * This package exposes PROJ services as implementations of <a href="http://www.geoapi.org">GeoAPI</a> interfaces.
- * Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
+ * Both PROJ 6 and GeoAPI are modeled according the ISO 19111 international standard.
+ * The use of GeoAPI interfaces allows developers to write their software in an implementation independent way,
+ * using the {@link org.kortforsyningen.proj.Proj} class only as a starting point or for PROJ-specific actions.
+ *
+ * <p>This package requires installation of native libraries.
+ * The presence of those libraries can be tested as below:</p>
+ *
+ * <blockquote><pre>
+ * {@linkplain org.kortforsyningen.proj.Proj#version()}.isPresent()</pre>
+ * </blockquote>
+ *
+ * <p>Coordinate operations can be performed as below. In this example, only the first line is PROJ-specific.
+ * All other lines should work in the same way with any GeoAPI implementations.</p>
+ *
+ * <blockquote><pre>
+ * CRSAuthorityFactory       factory   = Proj.getAuthorityFactory("EPSG");
+ * CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
+ * CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("3395");   // WGS 84 / World Mercator
+ * // TODO: complete.</pre>
+ * </blockquote>
+ *
+ * <p>Unless otherwise noted in Javadoc, all classes in this package are safe for use in multi-thread environment.
+ * The main exception is {@link org.kortforsyningen.proj.WKTFormat}.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0

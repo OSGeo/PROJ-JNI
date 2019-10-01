@@ -22,14 +22,17 @@
 package org.kortforsyningen.proj;
 
 import java.util.Objects;
+import org.opengis.referencing.IdentifiedObject;
 
 
 /**
  * Parses and format geodetic objects in <cite>Well Known Text</cite> format.
+ * WKT formatting can be done more easily by invoking the {@link IdentifiedObject#toWKT()} method.
+ * This {@code WKTFormat} can be used when more control is desired on the formatting process,
+ * for example by {@linkplain #setConvention selecting which WKT version is desired}.
  *
- * <p>{@code WKTFormat} is not thread-safe. If used in a multi-thread environment,
- * then each thread should have its own instance of synchronization should be done
- * by the user.</p>
+ * <p>{@code WKTFormat} is <strong>not</strong> thread-safe. If used in a multi-thread environment,
+ * then each thread should have its own instance, or synchronization should be done by the user.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -55,16 +58,18 @@ public class WKTFormat {
 
     /**
      * Creates a new formatter initialized to default configuration.
-     * The default configuration uses {@link Convention#WKT2} and
+     * The default configuration uses {@link Convention#WKT} and
      * formats the WKT in a multi-lines layout.
      */
     public WKTFormat() {
-        convention = Convention.WKT2;
+        convention = Convention.WKT;
         multiline  = true;
     }
 
     /**
      * Returns the current convention used by this formatter.
+     * The default value is {@link Convention#WKT}, which stands for the
+     * latest supported WKT version (currently WKT 2 as published in 2019).
      *
      * @return the current convention.
      */
@@ -74,7 +79,9 @@ public class WKTFormat {
 
     /**
      * Sets the convention to use for this formatter.
-     * If this setter is not invoked, then the default value is {@link Convention#WKT2}.
+     * This method allows the conventions can be set to {@link Convention#WKT1_ESRI} if
+     * the legacy WKT format is desired instead than the one standardized by ISO 19162.
+     * If this setter is not invoked, then the default value is {@link Convention#WKT}.
      *
      * @param  convention  the new convention to apply.
      */
@@ -144,6 +151,12 @@ public class WKTFormat {
 
     /**
      * Controls some aspects in formatting of geodetic objects as <cite>Well Known Text</cite>.
+     * The WKT format has two major versions (WKT 1 and WKT 2), with WKT 2 defined by ISO 19162.
+     * The legacy WKT 1 format had various interpretations with some incompatibilities between
+     * them (e.g. regarding units of measurement).
+     * The WKT 2 format is consistent between all flavors in this enumeration.
+     * The {@link #WKT} and {@link #WKT_SIMPLIFIED} fields are aliases to the most recent WKT
+     * versions supported by current implementation.
      *
      * @author  Martin Desruisseaux (Geomatys)
      * @version 1.0
@@ -159,12 +172,18 @@ public class WKTFormat {
          *   <li>{@code WKT2_2019} uses {@code GEOGCRS} / {@code BASEGEOGCRS} keywords
          *       for {@link org.opengis.referencing.crs.GeographicCRS}.</li>
          * </ul>
+         *
+         * @see <a href="http://docs.opengeospatial.org/is/18-010r7/18-010r7.html">Well-known
+         *      text representation of coordinate reference systems (2019)</a>
          */
         WKT2_2019,
 
         /**
          * Full Well Known Text version 2 string, conforming to ISO 19162:2015(E) / OGC 12-063r5.
          * The output contains all possible nodes and new keyword names.
+         *
+         * @see <a href="http://docs.opengeospatial.org/is/12-063r5/12-063r5.html">Well-known
+         *      text representation of coordinate reference systems (2015)</a>
          */
         WKT2_2015,
 
@@ -202,21 +221,23 @@ public class WKTFormat {
         /**
          * Well Known Text version 1 as traditionally written by ESRI software.
          * This is derived from OGC 01-009.
+         *
+         * @see <a href="http://www.opengeospatial.org/standards/ct">Coordinate Transformation Service (2001)</a>
          */
         WKT1_ESRI;
 
         /**
-         * The most recent version of WKT 2 supported by current implementation.
+         * The most recent version of WKT supported by current implementation.
          * This is currently set as an alias to {@link #WKT2_2019}.
          * This alias may be changed in a future version if a new revision of WKT 2 specification is published.
          */
-        public static final Convention WKT2 = WKT2_2019;
+        public static final Convention WKT = WKT2_2019;
 
         /**
-         * The most recent version of "simplified" WKT 2 supported by current implementation.
+         * The most recent version of "simplified" WKT supported by current implementation.
          * This is currently set as an alias to {@link #WKT2_2019_SIMPLIFIED}.
          * This alias may be changed in a future version if a new revision of WKT 2 specification is published.
          */
-        public static final Convention WKT2_SIMPLIFIED = WKT2_2019_SIMPLIFIED;
+        public static final Convention WKT_SIMPLIFIED = WKT2_2019_SIMPLIFIED;
     }
 }

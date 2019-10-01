@@ -77,8 +77,8 @@ public final class Proj {
      *
      * <blockquote><pre>
      * CRSAuthorityFactory factory = Proj.getAuthorityFactory("EPSG");
-     * CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
-     * </pre></blockquote>
+     * CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");</pre>
+     * </blockquote>
      *
      * <p>The {@link CRSAuthorityFactory} interface provides an implementation-neutral way to create
      * coordinate reference systems. In above example, only the first line is PROJ-specific.
