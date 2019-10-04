@@ -45,3 +45,13 @@ export PROJ_LIB=$PROJ_DIR/data
 ```
 
 Then, follow the same instructions than the ones for standard directories.
+
+
+## Troubleshooting
+For checking if the system finds all dependencies required by the native file
+(replace `linux` by `windows` or `darwin` if the operating system is Windows
+or MacOS respectively):
+
+```
+ldd src/main/resources/org/kortforsyningen/proj/linux/libproj-binding.so
+```

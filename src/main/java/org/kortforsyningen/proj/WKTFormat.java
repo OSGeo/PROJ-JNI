@@ -45,8 +45,8 @@ public class WKTFormat {
     private Convention convention;
 
     /**
-     * Whether the WKT result should by one many lines.
-     * If {@code false}, then the output will be on a single line.
+     * Whether the WKT result should by in many lines.
+     * If {@code false}, then the output will be in a single line.
      */
     private boolean multiline;
 
@@ -79,9 +79,11 @@ public class WKTFormat {
 
     /**
      * Sets the convention to use for this formatter.
-     * This method allows the conventions can be set to {@link Convention#WKT1_ESRI} if
-     * the legacy WKT format is desired instead than the one standardized by ISO 19162.
-     * If this setter is not invoked, then the default value is {@link Convention#WKT}.
+     * This method allows to select a different version or flavor of WKT format.
+     * For example the conventions can be set to {@link Convention#WKT1_ESRI WKT1_ESRI}
+     * if the legacy WKT format is desired instead than the one standardized by ISO 19162.
+     *
+     * <p>If this setter is not invoked, then the default value is {@link Convention#WKT}.</p>
      *
      * @param  convention  the new convention to apply.
      */
@@ -100,7 +102,7 @@ public class WKTFormat {
 
     /**
      * Sets whether the output will be written in many lines.
-     * If if setter is not invoked, then the default value is {@code true}.
+     * If this setter is not invoked, then the default value is {@code true}.
      *
      * @param  multiline  whether the WKT will use multi-line layout.
      */

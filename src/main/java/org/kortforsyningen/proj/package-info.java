@@ -50,6 +50,15 @@
  * <p>Unless otherwise noted in Javadoc, all classes in this package are safe for use in multi-thread environment.
  * The main exception is {@link org.kortforsyningen.proj.WKTFormat}.</p>
  *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li><a href="http://docs.opengeospatial.org/as/18-005r4/18-005r4.html">OGC Abstract Specification Topic 2: Referencing by coordinates</a>
+ *   <li><a href="https://www.geoapi.org/3.0/index.html">OGC GeoAPI 3.0.1</a> (derived from OGC Topic 2)</li>
+ *   <li><a href="https://proj.org/development/reference/cpp/index.html">PROJ C++ API</a> (derived from OGC Topic 2)</li>
+ *   <li><a href="https://github.com/Kortforsyningen/PROJ-JNI">PROJ-JNI Source code</a></li>
+ *   <li><a href="https://docs.oracle.com/en/java/javase/12/docs/specs/jni/index.html">Java Native Interface (JNI) Specification</a></li>
+ * </ul>
+ *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
