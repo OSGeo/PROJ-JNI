@@ -75,7 +75,7 @@ public final strictfp class WKTFormatTest {
     }
 
     /**
-     * Tests {@link IdentifiedObject#toWKT()}.
+     * Tests {@link IdentifiableObject#toWKT()}.
      *
      * @throws FactoryException if an error occurred while creating the test CRS.
      */

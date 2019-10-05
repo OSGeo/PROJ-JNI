@@ -74,14 +74,6 @@ final class AuthorityFactory extends NativeResource {
             COORDINATE_OPERATION        = 15;
 
     /**
-     * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
-     * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
-     * unless potential usage of this field is also verified in the C/C++ source code.
-     */
-    @Native
-    private final long ptr;
-
-    /**
      * Creates a new factory for the given authority.
      * This constructor should not be invoked directly; use {@link Context#factory(String)} instead.
      *
@@ -94,7 +86,7 @@ final class AuthorityFactory extends NativeResource {
      * @see Context#factory(String)
      */
     AuthorityFactory(final long context, final String authority, final AuthorityFactory sibling) throws FactoryException {
-        ptr = newInstance(context, Objects.requireNonNull(authority), sibling);
+        super(newInstance(context, Objects.requireNonNull(authority), sibling));
     }
 
     /**
@@ -123,15 +115,15 @@ final class AuthorityFactory extends NativeResource {
     private native String getDescriptionText(String code) throws FactoryException;
 
     /**
-     * Returns the pointer to an {@code osgeo::proj::common::IdentifiedObject} from the specified code.
+     * Creates an {@code osgeo::proj::common::IdentifiedObject} from the specified code.
      * The PROJ method invoked by this function is determined by the {@code type} argument.
      *
      * @param  type  one of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, <i>etc.</i> constants.
      * @param  code  object code allocated by authority.
-     * @return pointer to the PROJ {@code osgeo::proj::cs::CoordinateSystem}, or 0 if out of memory.
+     * @return wrapper for the PROJ shared object, or {@code null} if out of memory.
      * @throws FactoryException if no object can be created for the given code.
      */
-    private native long createGeodeticObject(int type, String code) throws FactoryException;
+    private native IdentifiableObject createGeodeticObject(int type, String code) throws FactoryException;
 
     /**
      * Releases resources used by this factory. This method decrements the {@code object.use_count()}
@@ -177,14 +169,24 @@ final class AuthorityFactory extends NativeResource {
          *
          * @param  type  one of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, <i>etc.</i> constants.
          * @param  code  object code allocated by authority.
-         * @return pointer to the PROJ object, or 0 if out of memory.
+         * @return wrapper for the PROJ object.
          * @throws FactoryException if no object can be created for the given code.
          */
-        private long createGeodeticObject(final int type, final String code) throws FactoryException {
+        private IdentifiableObject createGeodeticObject(final int type, final String code) throws FactoryException {
             Objects.requireNonNull(code);
+            final IdentifiableObject result;
             try (Context c = Context.acquire()) {
-                return c.factory(authority).createGeodeticObject(type, code);
+                result = c.factory(authority).createGeodeticObject(type, code);
             }
+            if (result != null) {
+                return result;
+            }
+            /*
+             * Following exception should happen only in case of out of memory.
+             * If the operation failed for another reason, a more descriptive
+             * exception should have been thrown from the native code.
+             */
+            throw new FactoryException("Can not get PROJ object.");
         }
 
         /**
@@ -258,6 +260,7 @@ final class AuthorityFactory extends NativeResource {
 
         /**
          * Returns a coordinate system axis from a code.
+         * As of PROJ 6.2.0, there is no method for creating an individual axis.
          *
          * @param  code  value allocated by authority.
          * @return the coordinate system axis for the given code.
@@ -276,8 +279,9 @@ final class AuthorityFactory extends NativeResource {
          * @throws FactoryException if the object creation failed.
          */
         @Override
+        @SuppressWarnings("OverlyStrongTypeCast")
         public CoordinateSystem createCoordinateSystem(final String code) throws FactoryException {
-            return new CS(createGeodeticObject(COORDINATE_SYSTEM, code));
+            return (CS) createGeodeticObject(COORDINATE_SYSTEM, code);
         }
 
         @Override
@@ -363,8 +367,9 @@ final class AuthorityFactory extends NativeResource {
          * @throws FactoryException if the object creation failed.
          */
         @Override
+        @SuppressWarnings("OverlyStrongTypeCast")
         public CoordinateReferenceSystem createCoordinateReferenceSystem(final String code) throws FactoryException {
-            return new CRS(createGeodeticObject(COORDINATE_REFERENCE_SYSTEM, code));
+            return (CRS) createGeodeticObject(COORDINATE_REFERENCE_SYSTEM, code);
         }
 
         @Override
@@ -425,13 +430,42 @@ final class AuthorityFactory extends NativeResource {
          * @throws FactoryException if the object creation failed.
          */
         @Override
+        @SuppressWarnings("OverlyStrongTypeCast")
         public CoordinateOperation createCoordinateOperation(final String code) throws FactoryException {
-            return new Operation(createGeodeticObject(COORDINATE_OPERATION, code));
+            return (Operation) createGeodeticObject(COORDINATE_OPERATION, code);
         }
 
         @Override
         public Set<CoordinateOperation> createFromCoordinateReferenceSystemCodes(final String source, final String target) throws FactoryException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
+    }
+
+    /**
+     * Creates an object of the given type. This method is invoked by native code; it shall not be moved,
+     * renamed or have method signature modified unless the C++ bindings are updated accordingly.
+     * If an exception is thrown in this Java method, the native method will release the memory allocated
+     * for {@code ptr}.
+     *
+     * @param  type  one of the {@link #COORDINATE_REFERENCE_SYSTEM}, {@link #DATUM}, <i>etc.</i> constants.
+     * @param  ptr   pointer to the object allocated by PROJ.
+     * @return the Java object wrapping the PROJ object.
+     * @throws FactoryException if the given type is not recognized.
+     */
+    private static IdentifiableObject wrapGeodeticObject(final int type, final long ptr) throws FactoryException {
+        final org.kortforsyningen.proj.IdentifiableObject obj;
+        switch (type) {
+            case GEODETIC_CRS:
+            case GEOGRAPHIC_CRS:
+            case VERTICAL_CRS:
+            case PROJECTED_CRS:
+            case COMPOUND_CRS:
+            case COORDINATE_REFERENCE_SYSTEM: obj = new CRS      (ptr); break;
+            case COORDINATE_SYSTEM:           obj = new CS       (ptr); break;
+            case COORDINATE_OPERATION:        obj = new Operation(ptr); break;
+            default: throw new FactoryException("Unknown object type.");
+        }
+        obj.cleanWhenUnreachable();
+        return obj;
     }
 }

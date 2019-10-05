@@ -33,7 +33,7 @@ import org.opengis.referencing.cs.CoordinateSystem;
  * @version 1.0
  * @since   1.0
  */
-class CRS extends IdentifiedObject implements CoordinateReferenceSystem {
+class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::crs::CRS}.
      *

@@ -22,10 +22,9 @@
 #include <assert.h>
 #include <string>
 #include <proj.h>
-#include "proj/io.hpp"
+#include "proj/crs.hpp"
 #include "org_kortforsyningen_proj_NativeResource.h"
 #include "org_kortforsyningen_proj_Context.h"
-#include "org_kortforsyningen_proj_SharedObject.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
 #include "org_kortforsyningen_proj_WKTFormat$Convention.h"
 
@@ -161,8 +160,8 @@ template <class T> void release_shared_ptr(jlong ptr) {
  * This method is invoked for implementation of `release()` or `destroy()` methods.
  * In theory we are not allowed to change the value of a final field. But no Java
  * code should use this field and the Java object should be garbage collected soon
- * anyway. We set this field to zero because the consequence of accidentally uses
- * of outdated value from C++ code is potentially worst.
+ * anyway. We set this field to zero because the consequence of accidentally using
+ * an outdated value from C++ code is potentially worst.
  *
  * @param  env     The JNI environment.
  * @param  object  The Java object wrapping the PROJ structure (not allowed to be null).
@@ -233,6 +232,74 @@ void rethrow_as_factory_exception(JNIEnv *env, const std::exception &e) {
 }
 
 
+/**
+ * Wraps the given PROJ object into the most specific Java object provided by the PROJ-JNI bindings.
+ * This method tries to find a more specialized type for the given object, then calls the Java method
+ * `wrapGeodeticObject(…)` with that type in argument. If the type is unknown, then this method returns
+ * null and an exception is thrown in Java code.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  Shared pointer to wrap.
+ * @param  type    Base type of the object to wrap. This method will use a more specialized type if possible.
+ * @return Wrapper for a PROJ object, or null if out of memory.
+ */
+jobject specific_subclass(JNIEnv *env, BaseObjectPtr &object, jint type) {
+rd: switch (type) {
+        case org_kortforsyningen_proj_AuthorityFactory_ANY: {
+            BaseObject *ptr = object.get();
+                 if (dynamic_cast<osgeo::proj::crs::CRS                       *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM;
+            else if (dynamic_cast<osgeo::proj::operation::CoordinateOperation *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION;
+            else if (dynamic_cast<osgeo::proj::datum::Datum                   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_DATUM;
+            else if (dynamic_cast<osgeo::proj::datum::Ellipsoid               *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID;
+            else if (dynamic_cast<osgeo::proj::datum::PrimeMeridian           *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN;
+            else if (dynamic_cast<osgeo::proj::cs::CoordinateSystem           *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM;
+            else if (dynamic_cast<osgeo::proj::common::UnitOfMeasure          *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE;
+            else break;
+            goto rd;
+        }
+        case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION: {
+            BaseObject *ptr = object.get();
+            if (dynamic_cast<osgeo::proj::operation::Conversion *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_CONVERSION;
+            break;
+        }
+        case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: {
+            BaseObject *ptr = object.get();
+                 if (dynamic_cast<osgeo::proj::crs::CompoundCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::ProjectedCRS  *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::GeographicCRS *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::GeodeticCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::VerticalCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS;
+            break;
+        }
+        case org_kortforsyningen_proj_AuthorityFactory_DATUM: {
+            BaseObject *ptr = object.get();
+                 if (dynamic_cast<osgeo::proj::datum::GeodeticReferenceFrame *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME;
+            else if (dynamic_cast<osgeo::proj::datum::VerticalReferenceFrame *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME;
+            break;
+        }
+    }
+    /*
+     * At this point `type` is either unchanged, or modified to a more specialized code reflecting the
+     * actual PROJ object type. Now delegate to wrapGeodeticObject(…) Java method for creating the Java
+     * object of that type. If a Java exception is thrown, we release the PROJ resource and return null.
+     * The exception will be propagated in Java code.
+     */
+    jclass c = env->FindClass("org/kortforsyningen/proj/AuthorityFactory");
+    if (c) {
+        jmethodID method = env->GetStaticMethodID(c, "wrapGeodeticObject", "(IJ)Lorg/kortforsyningen/proj/IdentifiableObject;");
+        if (method) {
+            jlong ptr = wrap_shared_ptr(object);
+            jobject result = env->CallStaticObjectMethod(c, method, type, ptr);
+            if (result && !env->ExceptionCheck()) {
+                return result;
+            }
+            release_shared_ptr<BaseObject>(ptr);
+        }
+    }
+    return nullptr;
+}
+
+
 
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -265,6 +332,33 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *env, jobject object) {
     jlong ctxPtr = get_and_clear_ptr(env, object);
     proj_context_destroy(as_context(ctxPtr));           // Does nothing if ctxPtr is null.
+}
+
+
+/**
+ * Instantiate a geodetic object from a user specified text.
+ * The returned object will typically by a subtype of CoordinateReferenceSystem.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserInput(JNIEnv *env, jobject object, jstring text) {
+    BaseObjectPtr result = nullptr;
+    const char *text_utf = env->GetStringUTFChars(text, nullptr);
+    if (text_utf) {
+        jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
+        if (id) {
+            PJ_CONTEXT *ctx = as_context(env->GetLongField(object, id));
+            try {
+                result = osgeo::proj::io::createFromUserInput(text_utf, ctx).as_nullable();
+            } catch (const std::exception &e) {
+                jclass c = env->FindClass(FACTORY_EXCEPTION);
+                if (c) env->ThrowNew(c, e.what());
+            }
+        }
+        env->ReleaseStringUTFChars(text, text_utf);     // Must be after the catch block in case an exception happens.
+    }
+    if (result) {
+        return specific_subclass(env, result, org_kortforsyningen_proj_AuthorityFactory_ANY);
+    }
+    return nullptr;
 }
 
 
@@ -331,6 +425,19 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
 }
 
 
+/**
+ * Decrements the references count of the shared pointer. This method is invoked automatically
+ * when an instance of IdentifiableObject class is garbage collected.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the shared object to release.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_run(JNIEnv *env, jobject object) {
+    jlong ptr = get_and_clear_ptr(env, object);
+    release_shared_ptr<BaseObject>(ptr);
+}
+
+
 
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -374,6 +481,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
 
 /**
  * Releases the osgeo::proj::io::AuthorityFactory wrapped by the given Java object.
+ * This method decrements the object.use_count() value of the shared pointer.
  *
  * @param  env     The JNI environment.
  * @param  object  The Java object wrapping the authority factory to release.
@@ -438,105 +546,41 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDesc
 
 
 /**
- * Returns the pointer to an osgeo::proj::common::IdentifiedObject from the specified code.
+ * Returns the wrapper for an osgeo::proj::common::IdentifiedObject from the specified code.
  * The PROJ method invoked by this function is determined by the type argument.
  *
  * @param  env     The JNI environment.
  * @param  object  The Java object wrapping the authority factory to use.
  * @param  type    One of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, etc. constants.
  * @param  code    Object code allocated by authority.
- * @return Pointer to an osgeo::proj::common::IdentifiedObject subtype, or 0 if out of memory.
+ * @return Wrapper for a PROJ object, or null if out of memory.
  * @throws FactoryException if no object can be created for the given code.
  */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
     (JNIEnv *env, jobject object, jint type, jstring code)
 {
-    jlong result = 0;
     const char *code_utf = env->GetStringUTFChars(code, nullptr);
     if (code_utf) {
+        BaseObjectPtr rp = nullptr;
         try {
             AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
             switch (type) {
-                case org_kortforsyningen_proj_AuthorityFactory_ANY: {
-                    osgeo::proj::util::BaseObjectPtr rp = factory->createObject(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN: {
-                    osgeo::proj::datum::PrimeMeridianPtr rp = factory->createPrimeMeridian(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID: {
-                    osgeo::proj::datum::EllipsoidPtr rp = factory->createEllipsoid(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_DATUM: {
-                    osgeo::proj::datum::DatumPtr rp = factory->createDatum(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME: {
-                    osgeo::proj::datum::GeodeticReferenceFramePtr rp = factory->createGeodeticDatum(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME: {
-                    osgeo::proj::datum::VerticalReferenceFramePtr rp = factory->createVerticalDatum(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE: {
-                    osgeo::proj::common::UnitOfMeasurePtr rp = factory->createUnitOfMeasure(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM: {
-                    osgeo::proj::cs::CoordinateSystemPtr rp = factory->createCoordinateSystem(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: {
-                    osgeo::proj::crs::CRSPtr rp = factory->createCoordinateReferenceSystem(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS: {
-                    osgeo::proj::crs::GeodeticCRSPtr rp = factory->createGeodeticCRS(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS: {
-                    osgeo::proj::crs::GeographicCRSPtr rp = factory->createGeographicCRS(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS: {
-                    osgeo::proj::crs::VerticalCRSPtr rp = factory->createVerticalCRS(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS: {
-                    osgeo::proj::crs::ProjectedCRSPtr rp = factory->createProjectedCRS(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS: {
-                    osgeo::proj::crs::CompoundCRSPtr rp = factory->createCompoundCRS(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_CONVERSION: {
-                    osgeo::proj::operation::ConversionPtr rp = factory->createConversion(code_utf).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
-                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION: {
-                    osgeo::proj::operation::CoordinateOperationPtr rp = factory->createCoordinateOperation(code_utf, false).as_nullable();
-                    result = wrap_shared_ptr(rp);
-                    break;
-                }
+                case org_kortforsyningen_proj_AuthorityFactory_ANY:                         rp = factory->createObject                    (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN:              rp = factory->createPrimeMeridian             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID:                   rp = factory->createEllipsoid                 (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_DATUM:                       rp = factory->createDatum                     (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME:    rp = factory->createGeodeticDatum             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME:    rp = factory->createVerticalDatum             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE:             rp = factory->createUnitOfMeasure             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM:           rp = factory->createCoordinateSystem          (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: rp = factory->createCoordinateReferenceSystem (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS:                rp = factory->createGeodeticCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS:              rp = factory->createGeographicCRS             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS:                rp = factory->createVerticalCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS:               rp = factory->createProjectedCRS              (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS:                rp = factory->createCompoundCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_CONVERSION:                  rp = factory->createConversion                (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION:        rp = factory->createCoordinateOperation(code_utf, false).as_nullable(); break;
                 default: {
                     jclass c = env->FindClass(FACTORY_EXCEPTION);
                     if (c) env->ThrowNew(c, "Unsupported object type.");
@@ -548,6 +592,9 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeo
             rethrow_as_factory_exception(env, e);
         }
         env->ReleaseStringUTFChars(code, code_utf);
+        if (rp) {
+            return specific_subclass(env, rp, type);
+        }
     }
-    return result;
+    return nullptr;
 }

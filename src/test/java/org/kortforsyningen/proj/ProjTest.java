@@ -23,6 +23,7 @@ package org.kortforsyningen.proj;
 
 import java.util.Optional;
 import org.junit.Test;
+import org.opengis.util.FactoryException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -46,5 +47,17 @@ public final strictfp class ProjTest {
         final Optional<String> version = Proj.version();
         assumeTrue("PROJ library not found.", version.isPresent());
         assertTrue(version.get().matches(".*\\d+\\.\\d+\\.\\d+.*"));
+    }
+
+    /**
+     * Tests {@link Proj#createFromUserInput(String)}.
+     *
+     * @throws FactoryException if the object creation failed.
+     */
+    @Test
+    @org.junit.Ignore
+    public void testCreateFromUserInput() throws FactoryException {
+        final Object obj = Proj.createFromUserInput("EPSG:3395");
+        assertTrue(obj instanceof CRS);
     }
 }

@@ -67,17 +67,6 @@ final class Context extends NativeResource implements AutoCloseable {
     private static final Deque<Context> CONTEXTS = new ConcurrentLinkedDeque<>();
 
     /**
-     * The raw (not managed) pointer to the {@code PJ_CONTEXT} allocated in the C/C++ heap.
-     * This value has no meaning in Java code. <strong>Do not modify</strong> since this value
-     * is required for using PROJ. Do not rename neither, unless potential usage of this field
-     * is also verified in the C/C++ source code.
-     *
-     * <p>This pointer is not managed by {@code std::shared_ptr} library, so we must be careful
-     * about when to invoke {@link #destroyPJ()}.</p>
-     */
-    private final long ptr;
-
-    /**
      * Timestamp (as given by {@link System#nanoTime()}) of last use of this context.
      * Used for determining if the {@link #TIMEOUT} has been elapsed for this context.
      */
@@ -88,17 +77,13 @@ final class Context extends NativeResource implements AutoCloseable {
      * Keys are authority names and values are wrappers for corresponding PROJ factories.
      * Values shall be used inside a try-with-resource block as documented in class javadoc.
      */
-    private final Map<String,AuthorityFactory> factories;
+    private final Map<String,AuthorityFactory> factories = new HashMap<>();
 
     /**
      * Creates and wraps a new {@code PJ_CONTEXT}.
      */
     private Context() {
-        factories = new HashMap<>();
-        ptr = create();                 // Should be last for avoiding memory leak if construction fail.
-        if (ptr == 0) {
-            throw new OutOfMemoryError("Can not allocate PJ_CONTEXT.");
-        }
+        super(create());
     }
 
     /**
@@ -152,7 +137,12 @@ final class Context extends NativeResource implements AutoCloseable {
         AuthorityFactory factory = factories.get(authority);
         if (factory == null) {
             factory = new AuthorityFactory(ptr, authority, any(factories.values()));
-            factories.put(authority, factory);
+            try {
+                factories.put(authority, factory);
+            } catch (Throwable e) {
+                factory.release();                  // For releasing native resource if OutOfMemoryError.
+                throw e;
+            }
         }
         return factory;
     }
@@ -162,6 +152,8 @@ final class Context extends NativeResource implements AutoCloseable {
      *
      * @param  text  the text to parse. It is caller responsibility to ensure that this argument is non-null.
      * @return a coordinate reference system or other kind of object created from the given text.
+     *
+     * @see Proj#createFromUserInput(String)
      */
     native Object createFromUserInput(final String text);
 

@@ -139,8 +139,8 @@ public class WKTFormat {
      */
     public String format(final Object object) throws FormattingException {
         Objects.requireNonNull(object);
-        if (object instanceof SharedObject) {
-            final String wkt = ((SharedObject) object).impl.toWKT(convention.ordinal(), multiline, strict);
+        if (object instanceof IdentifiableObject) {
+            final String wkt = ((IdentifiableObject) object).impl.toWKT(convention.ordinal(), multiline, strict);
             if (wkt != null) {
                 return wkt;
             }

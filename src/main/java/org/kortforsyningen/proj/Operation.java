@@ -38,7 +38,7 @@ import org.opengis.referencing.operation.MathTransform;
  * @version 1.0
  * @since   1.0
  */
-class Operation extends IdentifiedObject implements CoordinateOperation {
+class Operation extends IdentifiableObject implements CoordinateOperation {
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::operation::CoordinateOperation}.
      *

@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.lang.annotation.Native;
 
 
 /**
@@ -36,11 +37,21 @@ import java.nio.file.StandardCopyOption;
  * The resource is referenced in a pointer of type {@code long} and named {@code "ptr"}.
  * The field name matter, since native code searches for a field having exactly that name.
  *
+ * <p>{@code NativeResource} can be {@linkplain IdentifiableObject#cleanWhenUnreachable() registered}
+ * for automatic release of C++ shared pointer when an instance of another object is garbage collected.
+ * The other object is usually {@link IdentifiableObject}, but other objects could be used as well.
+ * The navigation shall be in only one direction, from {@link IdentifiableObject} to {@code NativeResource}.
+ * See {@link java.lang.ref.Cleaner} for explanation about why this class shall not contains any reference
+ * to the {@code IdentifiableObject}.</p>
+ *
+ * <p>If above-cited automatic release is not used, then it is subclass or caller responsibility
+ * to manage the release of the resource referenced by {@link #ptr} when no longer referenced.</p>
+ *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
  */
-abstract class NativeResource {
+class NativeResource implements Runnable {
     /**
      * Name of the logger to use for all warnings or debug messages emitted by this package.
      */
@@ -53,9 +64,25 @@ abstract class NativeResource {
     static final String UNSUPPORTED = "Not supported.";
 
     /**
-     * For subclass constructors.
+     * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
+     * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
+     * unless potential usage of this field is also verified in the C/C++ source code.
      */
-    NativeResource() {
+    @Native
+    final long ptr;
+
+    /**
+     * Wraps the PROJ resource at the given address.
+     * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
+     *
+     * @param  ptr  pointer to the PROJ resource, or 0 if out of memory.
+     * @throws OutOfMemoryError if {@code ptr} is 0.
+     */
+    NativeResource(final long ptr) {
+        this.ptr = ptr;
+        if (ptr == 0) {
+            throw new OutOfMemoryError("Can not allocate PROJ object.");
+        }
     }
 
     /**
@@ -148,7 +175,7 @@ abstract class NativeResource {
 
     /**
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
-     * This is allowed only if this object implements {@code osgeo::proj::io::IWKTExportable}.
+     * This is allowed only if the wrapped PROJ object implements {@code osgeo::proj::io::IWKTExportable}.
      *
      * @param  convention  ordinal value of the {@link WKTFormat.Convention} to use.
      * @param  multiline   whether the WKT will use multi-line layout.
@@ -158,4 +185,11 @@ abstract class NativeResource {
      * @throws FormattingException if an error occurred during formatting.
      */
     native String toWKT(int convention, boolean multiline, boolean strict);
+
+    /**
+     * Invoked by the cleaner thread when the {@link IdentifiableObject} has been garbage collected.
+     * This method is invoked by the cleaner thread and shall never been invoked directly by us.
+     */
+    @Override
+    public native void run();
 }
