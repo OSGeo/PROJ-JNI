@@ -45,12 +45,12 @@ using osgeo::proj::io::IWKTExportable;
 // │                          HELPER FUNCTIONS (not invoked from Java)                          │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
-#define PJ_FIELD_NAME              "ptr"
-#define PJ_FIELD_TYPE              "J"
-#define FACTORY_EXCEPTION          "org/opengis/util/FactoryException"
-#define NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
-#define FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
-#define ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
+#define JPJ_POINTER_FIELD_NAME         "ptr"
+#define JPJ_POINTER_FIELD_TYPE         "J"
+#define JPJ_FACTORY_EXCEPTION          "org/opengis/util/FactoryException"
+#define JPJ_NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
+#define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
+#define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
 
 /*
  * NOTE ON CHARACTER ENCODING: this implementation assumes that the PROJ library expects strings
@@ -169,7 +169,7 @@ template <class T> void release_shared_ptr(jlong ptr) {
  *         (for example because the `ptr` field has not been found).
  */
 jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
-    jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
+    jfieldID id = env->GetFieldID(env->GetObjectClass(object), JPJ_POINTER_FIELD_NAME, JPJ_POINTER_FIELD_TYPE);
     if (id) {
         jlong ptr = env->GetLongField(object, id);
         env->SetLongField(object, id, (jlong) 0);
@@ -200,7 +200,7 @@ jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
  */
 template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject object) {
     if (object) {
-        jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
+        jfieldID id = env->GetFieldID(env->GetObjectClass(object), JPJ_POINTER_FIELD_NAME, JPJ_POINTER_FIELD_TYPE);
         if (id) {
             jlong ptr = env->GetLongField(object, id);
             if (ptr) {
@@ -225,7 +225,7 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
  */
 void rethrow_as_factory_exception(JNIEnv *env, const std::exception &e) {
     if (!env->ExceptionCheck()) {
-        jclass c = env->FindClass(FACTORY_EXCEPTION);
+        jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
         if (c) env->ThrowNew(c, e.what());
         // If c was null, the appropriate Java exception is thrown by JNI.
     }
@@ -343,13 +343,13 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
     BaseObjectPtr result = nullptr;
     const char *text_utf = env->GetStringUTFChars(text, nullptr);
     if (text_utf) {
-        jfieldID id = env->GetFieldID(env->GetObjectClass(object), PJ_FIELD_NAME, PJ_FIELD_TYPE);
+        jfieldID id = env->GetFieldID(env->GetObjectClass(object), JPJ_POINTER_FIELD_NAME, JPJ_POINTER_FIELD_TYPE);
         if (id) {
             PJ_CONTEXT *ctx = as_context(env->GetLongField(object, id));
             try {
                 result = osgeo::proj::io::createFromUserInput(text_utf, ctx).as_nullable();
             } catch (const std::exception &e) {
-                jclass c = env->FindClass(FACTORY_EXCEPTION);
+                jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
                 if (c) env->ThrowNew(c, e.what());
             }
         }
@@ -403,7 +403,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
         case WKTFormat_WKT1_GDAL:            c = WKTFormatter::Convention::WKT1_GDAL;            break;
         case WKTFormat_WKT1_ESRI:            c = WKTFormatter::Convention::WKT1_ESRI;            break;
         default: {
-            jclass c = env->FindClass(ILLEGAL_ARGUMENT_EXCEPTION);
+            jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
             if (c) env->ThrowNew(c, std::to_string(convention).c_str());
             return nullptr;
         }
@@ -418,7 +418,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
             return non_empty_string(env, exportable->exportToWKT(formatter.get()));
         }
     } catch (const std::exception &e) {
-        jclass c = env->FindClass(FORMATTING_EXCEPTION);
+        jclass c = env->FindClass(JPJ_FORMATTING_EXCEPTION);
         if (c) env->ThrowNew(c, e.what());
     }
     return nullptr;
@@ -470,7 +470,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
             AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_utf).as_nullable();
             result = wrap_shared_ptr(factory);
         } catch (const std::exception &e) {
-            jclass c = env->FindClass(FACTORY_EXCEPTION);
+            jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
             if (c) env->ThrowNew(c, e.what());
         }
         env->ReleaseStringUTFChars(authority, authority_utf);       // Must be after the catch block in case an exception happens.
@@ -500,7 +500,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JN
  * @param  e    The C++ exception to rethrow in Java.
  */
 void rethrow_as_java_exception(JNIEnv *env, const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
-    jclass c = env->FindClass(NO_SUCH_AUTHORITY_CODE);
+    jclass c = env->FindClass(JPJ_NO_SUCH_AUTHORITY_CODE);
     if (c) {
         jmethodID method = env->GetMethodID(c, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
         if (method) {
@@ -582,7 +582,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
                 case org_kortforsyningen_proj_AuthorityFactory_CONVERSION:                  rp = factory->createConversion                (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION:        rp = factory->createCoordinateOperation(code_utf, false).as_nullable(); break;
                 default: {
-                    jclass c = env->FindClass(FACTORY_EXCEPTION);
+                    jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
                     if (c) env->ThrowNew(c, "Unsupported object type.");
                 }
             }
