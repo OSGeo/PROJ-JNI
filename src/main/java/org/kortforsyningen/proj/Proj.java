@@ -57,7 +57,7 @@ public final class Proj {
             return Optional.of(NativeResource.version());
         } catch (UnsatisfiedLinkError e) {
             // Thrown the first time that we try to use the library.
-            level = System.Logger.Level.WARNING;
+            level = System.Logger.Level.ERROR;
             error = e;
         } catch (NoClassDefFoundError e) {
             // Thrown on attempts after the first one if the exception was not caught.

@@ -148,16 +148,15 @@ class NativeResource implements Runnable {
     }
 
     /**
-     * Loads the native library. If this initialization fails, a message is logged at fatal error level
-     * (because the library will be unusable) but no exception is thrown.  We do not throw an exception
-     * from this static initializer because doing so would result in {@link NoClassDefFoundError} to be
-     * thrown on all subsequent attempts to use this class, which may be confusing.
+     * Loads the native library. If this initialization fails, an {@link UnsatisfiedLinkError} is thrown.
+     * This will usually cause the application to terminate, but if that error was caught then subsequent
+     * attempts to use this class will result in {@link NoClassDefFoundError}.
      */
     static {
         try {
             System.load(libraryPath().toAbsolutePath().toString());
-        } catch (UnsatisfiedLinkError | Exception e) {
-            System.getLogger(LOGGER_NAME).log(System.Logger.Level.ERROR, e);
+        } catch (URISyntaxException | IOException e) {
+            throw (UnsatisfiedLinkError) new UnsatisfiedLinkError("Can not get path to native file.").initCause(e);
         }
     }
 
