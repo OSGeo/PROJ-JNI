@@ -66,10 +66,12 @@ class NativeResource implements Runnable {
     /**
      * The pointer to PROJ structure allocated in the C/C++ heap. This value has no meaning in Java code.
      * <strong>Do not modify</strong>, since this value is required for using PROJ. Do not rename neither,
-     * unless potential usage of this field is also verified in the C/C++ source code.
+     * unless usage of this field is also updated in the C/C++ source code.
+     *
+     * @see #initialize()
      */
     @Native
-    final long ptr;
+    private final long ptr;
 
     /**
      * Wraps the PROJ resource at the given address.
@@ -158,7 +160,19 @@ class NativeResource implements Runnable {
         } catch (URISyntaxException | IOException e) {
             throw (UnsatisfiedLinkError) new UnsatisfiedLinkError("Can not get path to native file.").initCause(e);
         }
+        initialize();
     }
+
+    /**
+     * Invoked at class initialization time for setting global variables in native code.
+     * The native code caches an identifier used to access the {@link #ptr} field.
+     * If this operation fails, then {@link NativeResource} class initialization should
+     * fail since attempt to use native method in that class may cause JVM crash.
+     *
+     * @throws NoSuchFieldError if this method can not find the {@link #ptr} field identifier.
+     *         Such error would be a programming error in PROJ-JNI rather than a user error.
+     */
+    private static native void initialize();
 
     /**
      * Invoked by native code for logging a message. This method should not be invoked from Java code

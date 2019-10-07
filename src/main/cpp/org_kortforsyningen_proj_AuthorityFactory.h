@@ -42,10 +42,10 @@ extern "C" {
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    newInstance
- * Signature: (JLjava/lang/String;Lorg/kortforsyningen/proj/AuthorityFactory;)J
+ * Signature: (Lorg/kortforsyningen/proj/Context;Ljava/lang/String;Lorg/kortforsyningen/proj/AuthorityFactory;)J
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
-  (JNIEnv *, jclass, jlong, jstring, jobject);
+  (JNIEnv *, jclass, jobject, jstring, jobject);
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory

@@ -136,7 +136,7 @@ final class Context extends NativeResource implements AutoCloseable {
     final AuthorityFactory factory(final String authority) throws FactoryException {
         AuthorityFactory factory = factories.get(authority);
         if (factory == null) {
-            factory = new AuthorityFactory(ptr, authority, any(factories.values()));
+            factory = new AuthorityFactory(this, authority, any(factories.values()));
             try {
                 factories.put(authority, factory);
             } catch (Throwable e) {

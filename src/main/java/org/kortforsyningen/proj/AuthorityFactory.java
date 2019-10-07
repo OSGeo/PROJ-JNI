@@ -85,7 +85,7 @@ final class AuthorityFactory extends NativeResource {
      *
      * @see Context#factory(String)
      */
-    AuthorityFactory(final long context, final String authority, final AuthorityFactory sibling) throws FactoryException {
+    AuthorityFactory(final Context context, final String authority, final AuthorityFactory sibling) throws FactoryException {
         super(newInstance(context, Objects.requireNonNull(authority), sibling));
     }
 
@@ -101,7 +101,7 @@ final class AuthorityFactory extends NativeResource {
      * @return shared pointer to the factory, or 0 if out of memory.
      * @throws FactoryException if the factory can not be created.
      */
-    private static native long newInstance(long context, String authority, AuthorityFactory sibling) throws FactoryException;
+    private static native long newInstance(Context context, String authority, AuthorityFactory sibling) throws FactoryException;
 
     /**
      * Gets a description of the object corresponding to a code.

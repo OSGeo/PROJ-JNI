@@ -42,11 +42,46 @@ using osgeo::proj::io::IWKTExportable;
 
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                                       INITIALIZATION                                       │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+/**
+ * Identifier of the Java field which will contain the pointer to PROJ structure in Java class.
+ * We get this field at initialization time and reuse it every time we need the pointer value.
+ * According JNI specification, jfieldID and jmethodID are valid until the class is unloaded.
+ *
+ * In principle we should keep a reference to NativeResource class for preventing unloading.
+ * We don't on the assumption that if the class was unloaded, next use of PROJ would require
+ * reloading the class and initialize it again, in which case the values below would be updated.
+ *
+ * We use this identifier in calls to `env->GetLongField(object, java_field_for_pointer)` where
+ * `object` can be a subclass of NativeResource. The JNI specification does not said explicitly
+ * if `env->GetField` is compatible with class inheritance or if we need to get a new `jfieldID`
+ * for each specific class, but tests suggest that inheritance works.
+ */
+jfieldID java_field_for_pointer;
+
+
+/**
+ * Invoked at initialization time for setting the values of global variables.
+ * This function must be invoked from the class which contains the "ptr" field.
+ * If this operation fails, a NoSuchFieldError will be thrown in Java code.
+ *
+ * @param  env     The JNI environment.
+ * @param  caller  The class from which this function has been invoked.
+ *                 Must be the class containing the pointer fields.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize(JNIEnv *env, jclass caller) {
+    java_field_for_pointer = env->GetFieldID(caller, "ptr", "J");
+}
+
+
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                          HELPER FUNCTIONS (not invoked from Java)                          │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
-#define JPJ_POINTER_FIELD_NAME         "ptr"
-#define JPJ_POINTER_FIELD_TYPE         "J"
 #define JPJ_FACTORY_EXCEPTION          "org/opengis/util/FactoryException"
 #define JPJ_NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
@@ -99,18 +134,6 @@ void log(JNIEnv *env, const std::string &text) {
         }
     }
     // Java exception already thrown if any above JNI functions failed.
-}
-
-
-/**
- * Casts the given address as a pointer to PJ_CONTEXT.
- * This function is defined for type safety.
- *
- * @param  ctxPtr  The address of the PJ_CONTEXT for the current thread.
- * @return The given ctxPtr as a pointer to PJ_CONTEXT, or null if ctxPtr is zero.
- */
-inline PJ_CONTEXT* as_context(jlong ctxPtr) {
-    return reinterpret_cast<PJ_CONTEXT*>(ctxPtr);
 }
 
 
@@ -169,14 +192,9 @@ template <class T> void release_shared_ptr(jlong ptr) {
  *         (for example because the `ptr` field has not been found).
  */
 jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
-    jfieldID id = env->GetFieldID(env->GetObjectClass(object), JPJ_POINTER_FIELD_NAME, JPJ_POINTER_FIELD_TYPE);
-    if (id) {
-        jlong ptr = env->GetLongField(object, id);
-        env->SetLongField(object, id, (jlong) 0);
-        return ptr;
-    }
-    // java.lang.NoSuchFieldError already thrown by GetFieldID(…).
-    return 0;
+    jlong ptr = env->GetLongField(object, java_field_for_pointer);
+    env->SetLongField(object, java_field_for_pointer, (jlong) 0);
+    return ptr;
 }
 
 
@@ -200,15 +218,11 @@ jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
  */
 template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject object) {
     if (object) {
-        jfieldID id = env->GetFieldID(env->GetObjectClass(object), JPJ_POINTER_FIELD_NAME, JPJ_POINTER_FIELD_TYPE);
-        if (id) {
-            jlong ptr = env->GetLongField(object, id);
-            if (ptr) {
-                std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
-                return *wrapper;
-            }
+        jlong ptr = env->GetLongField(object, java_field_for_pointer);
+        if (ptr) {
+            std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
+            return *wrapper;
         }
-        // java.lang.NoSuchFieldError already thrown by GetFieldID(…).
     }
     throw std::invalid_argument("Null pointer to PROJ object.");
 }
@@ -323,6 +337,19 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env
 
 
 /**
+ * Returns the pointer to PJ_CONTEXT for the given Context object in Java.
+ *
+ * @param  env      The JNI environment.
+ * @param  context  The Context object for the current thread.
+ * @return The pointer to PJ_CONTEXT, or null if none.
+ */
+inline PJ_CONTEXT* get_context(JNIEnv *env, jobject context) {
+    jlong ctxPtr = env->GetLongField(context, java_field_for_pointer);
+    return reinterpret_cast<PJ_CONTEXT*>(ctxPtr);
+}
+
+
+/**
  * Releases a PJ_CONTEXT. This function sets the `ptr` field in the Java object to zero as a safety
  * in case there is two attempts to destroy the same object.
  *
@@ -331,7 +358,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env
  */
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *env, jobject object) {
     jlong ctxPtr = get_and_clear_ptr(env, object);
-    proj_context_destroy(as_context(ctxPtr));           // Does nothing if ctxPtr is null.
+    proj_context_destroy(reinterpret_cast<PJ_CONTEXT*>(ctxPtr));    // Does nothing if ctxPtr is null.
 }
 
 
@@ -343,15 +370,12 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
     BaseObjectPtr result = nullptr;
     const char *text_utf = env->GetStringUTFChars(text, nullptr);
     if (text_utf) {
-        jfieldID id = env->GetFieldID(env->GetObjectClass(object), JPJ_POINTER_FIELD_NAME, JPJ_POINTER_FIELD_TYPE);
-        if (id) {
-            PJ_CONTEXT *ctx = as_context(env->GetLongField(object, id));
-            try {
-                result = osgeo::proj::io::createFromUserInput(text_utf, ctx).as_nullable();
-            } catch (const std::exception &e) {
-                jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
-                if (c) env->ThrowNew(c, e.what());
-            }
+        PJ_CONTEXT *ctx = get_context(env, object);
+        try {
+            result = osgeo::proj::io::createFromUserInput(text_utf, ctx).as_nullable();
+        } catch (const std::exception &e) {
+            jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
+            if (c) env->ThrowNew(c, e.what());
         }
         env->ReleaseStringUTFChars(text, text_utf);     // Must be after the catch block in case an exception happens.
     }
@@ -451,14 +475,14 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_run(JNIEnv *
  *
  * @param  env        The JNI environment.
  * @param  caller     The class from which this function has been invoked.
- * @param  ctxPtr     The address of the PJ_CONTEXT for the current thread.
+ * @param  context    The wrapper of the PJ_CONTEXT for the current thread.
  * @param  authority  Name of the authority for which to create the factory.
  * @param  sibling    if another factory has been created for the same context, that factory.
  *                    Otherwise zero. This is used for sharing the same database context.
  * @return The address of the new authority factory, or 0 in case of failure.
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
-    (JNIEnv *env, jclass caller, jlong ctxPtr, jstring authority, jobject sibling)
+    (JNIEnv *env, jclass caller, jobject context, jstring authority, jobject sibling)
 {
     jlong result = 0;
     const char *authority_utf = env->GetStringUTFChars(authority, nullptr);
@@ -466,7 +490,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
         try {
             DatabaseContextNNPtr db = (sibling)
                     ? get_and_unwrap_ptr<AuthorityFactory>(env, sibling)->databaseContext()
-                    : DatabaseContext::create(std::string(), std::vector<std::string>(), as_context(ctxPtr));
+                    : DatabaseContext::create(std::string(), std::vector<std::string>(), get_context(env, context));
             AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_utf).as_nullable();
             result = wrap_shared_ptr(factory);
         } catch (const std::exception &e) {

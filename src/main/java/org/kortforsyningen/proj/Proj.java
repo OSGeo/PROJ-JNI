@@ -55,7 +55,7 @@ public final class Proj {
         final LinkageError error;
         try {
             return Optional.of(NativeResource.version());
-        } catch (UnsatisfiedLinkError e) {
+        } catch (UnsatisfiedLinkError | NoSuchFieldError e) {
             // Thrown the first time that we try to use the library.
             level = System.Logger.Level.ERROR;
             error = e;

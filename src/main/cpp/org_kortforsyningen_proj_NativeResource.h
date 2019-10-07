@@ -17,6 +17,14 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version
 
 /*
  * Class:     org_kortforsyningen_proj_NativeResource
+ * Method:    initialize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     org_kortforsyningen_proj_NativeResource
  * Method:    toWKT
  * Signature: (IZZ)Ljava/lang/String;
  */
