@@ -79,14 +79,12 @@ final class AuthorityFactory extends NativeResource {
      *
      * @param  context    pointer to the PROJ thread context.
      * @param  authority  the authority name, for example {@code "EPSG"}.
-     * @param  sibling    if another factory has been created for the same context, that factory.
-     *                    Otherwise {@code null}. This is used for sharing the same database context.
      * @throws FactoryException if the factory can not be created.
      *
      * @see Context#factory(String)
      */
-    AuthorityFactory(final Context context, final String authority, final AuthorityFactory sibling) throws FactoryException {
-        super(newInstance(context, Objects.requireNonNull(authority), sibling));
+    AuthorityFactory(final Context context, final String authority) throws FactoryException {
+        super(newInstance(context, Objects.requireNonNull(authority)));
     }
 
     /**
@@ -96,19 +94,17 @@ final class AuthorityFactory extends NativeResource {
      *
      * @param  context    pointer to the PROJ thread context.
      * @param  authority  name of the authority. Shall not be null.
-     * @param  sibling    if another factory has been created for the same context, that factory.
-     *                    Otherwise {@code null}. This is used for sharing the same database context.
      * @return shared pointer to the factory, or 0 if out of memory.
      * @throws FactoryException if the factory can not be created.
      */
-    private static native long newInstance(Context context, String authority, AuthorityFactory sibling) throws FactoryException;
+    private static native long newInstance(Context context, String authority) throws FactoryException;
 
     /**
      * Gets a description of the object corresponding to a code.
      * In case of several objects of different types with the same code,
      * one of them will be arbitrarily selected.
      *
-     * @param  code  object code allocated by authority. (e.g. "4326").
+     * @param  code  object code allocated by authority (e.g. "4326").
      * @return description of the identified object, or null if that object has no description.
      * @throws FactoryException if the description can not be obtained for the given code.
      */

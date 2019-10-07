@@ -29,6 +29,7 @@
 #include "org_kortforsyningen_proj_WKTFormat$Convention.h"
 
 using osgeo::proj::io::DatabaseContext;
+using osgeo::proj::io::DatabaseContextPtr;
 using osgeo::proj::io::DatabaseContextNNPtr;
 using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryPtr;
@@ -73,6 +74,21 @@ jfieldID java_field_for_pointer;
  */
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize(JNIEnv *env, jclass caller) {
     java_field_for_pointer = env->GetFieldID(caller, "ptr", "J");
+}
+
+
+/**
+ * Returns the identifier of the Context.database field. We current don't cache this field because
+ * it is not used often. This function provides a single place if we want to revisit this choice
+ * in the future.
+ *
+ * @param  env     The JNI environment.
+ * @param  context An instance of the Context class.
+ * @return The database field ID, or 0 if not found.
+ *         In the later case, an exception will be thrown in Java code.
+ */
+inline jfieldID get_database_field(JNIEnv *env, jobject context) {
+    return env->GetFieldID(env->GetObjectClass(context), "database", "J");
 }
 
 
@@ -121,15 +137,21 @@ inline jstring non_empty_string(JNIEnv *env, const std::string &text) {
  *
  * @param  env   The JNI environment.
  * @param  text  The text to log.
+ * @throw  std::exception if a problem occurred while logging the message.
  */
 void log(JNIEnv *env, const std::string &text) {
-    jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
-    if (c) {
-        jmethodID method = env->GetStaticMethodID(c, "log", "(Ljava/lang/String;)V");
-        if (method) {
-            jstring str = env->NewStringUTF(text.c_str());
-            if (str) {
-                env->CallStaticVoidMethod(c, method, str);
+    if (!env->ExceptionCheck()) {
+        jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
+        if (c) {
+            jmethodID method = env->GetStaticMethodID(c, "log", "(Ljava/lang/String;)V");
+            if (method) {
+                jstring str = env->NewStringUTF(text.c_str());
+                if (str) {
+                    env->CallStaticVoidMethod(c, method, str);
+                    if (env->ExceptionCheck()) {
+                        throw std::exception();     // Should never happen.
+                    }
+                }
             }
         }
     }
@@ -158,6 +180,19 @@ template <class T> jlong wrap_shared_ptr(std::shared_ptr<T> &object) {
     }
     static_assert(sizeof(wrapper) <= sizeof(jlong), "Can not store pointer in a jlong.");
     return reinterpret_cast<jlong>(wrapper);
+}
+
+
+/**
+ * Returns the shared pointer for the given ptr field value in a Java object.
+ * The given ptr shall not be null (this is not verified).
+ *
+ * @param  ptr  Address returned by wrap_shared_ptr(…).
+ * @return The shared pointer.
+ */
+template <class T> inline std::shared_ptr<T> unwrap_shared_ptr(jlong ptr) {
+    std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
+    return *wrapper;
 }
 
 
@@ -220,8 +255,7 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
     if (object) {
         jlong ptr = env->GetLongField(object, java_field_for_pointer);
         if (ptr) {
-            std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
-            return *wrapper;
+            return unwrap_shared_ptr<T>(ptr);
         }
     }
     throw std::invalid_argument("Null pointer to PROJ object.");
@@ -229,17 +263,18 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
 
 
 /**
- * Rethrows the given C++ exception as an org.opengis.util.FactoryException with the same message.
- * If a Java exception is already pending (this may happen if the exception was thrown by the JNI
- * framework), then this method does nothing. This method returns normally; the exception will be
- * thrown only when execution returns to Java code.
+ * Rethrows the given C++ exception as a Java exception with the same message. If a Java exception
+ * is already pending (this may happen if the exception was thrown by the JNI framework), then this
+ * method does nothing. This method returns normally; the exception will be thrown only when execution
+ * returns to Java code.
  *
- * @param  env  The JNI environment.
- * @param  e    The C++ exception to rethrow in Java.
+ * @param  env   The JNI environment.
+ * @param  type  Java class name of the exception to throw.
+ * @param  e     The C++ exception to rethrow in Java.
  */
-void rethrow_as_factory_exception(JNIEnv *env, const std::exception &e) {
+void rethrow_as_java_exception(JNIEnv *env, const char *type, const std::exception &e) {
     if (!env->ExceptionCheck()) {
-        jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
+        jclass c = env->FindClass(type);
         if (c) env->ThrowNew(c, e.what());
         // If c was null, the appropriate Java exception is thrown by JNI.
     }
@@ -350,14 +385,50 @@ inline PJ_CONTEXT* get_context(JNIEnv *env, jobject context) {
 
 
 /**
- * Releases a PJ_CONTEXT. This function sets the `ptr` field in the Java object to zero as a safety
- * in case there is two attempts to destroy the same object.
+ * Gets the database context from a given Context. The database is created when first needed
+ * and will be released when destroyPJ(…) will be invoked.
  *
- * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the context to release.
+ * @param  env      The JNI environment.
+ * @param  context  The Context object for the current thread.
+ * @return Pointer to shared database.
+ * @throw  std::exception if the database creation failed.
  */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *env, jobject object) {
-    jlong ctxPtr = get_and_clear_ptr(env, object);
+DatabaseContextPtr get_database_context(JNIEnv *env, jobject context) {
+    jfieldID fid = get_database_field(env, context);
+    if (fid) {
+        DatabaseContextPtr db;
+        jlong dbPtr = env->GetLongField(context, fid);
+        if (dbPtr) {
+            db = unwrap_shared_ptr<DatabaseContext>(dbPtr);
+        } else {
+            log(env, "Creating PROJ database context.");
+            db = DatabaseContext::create(std::string(), std::vector<std::string>(), get_context(env, context)).as_nullable();
+            dbPtr = wrap_shared_ptr(db);
+            env->SetLongField(context, fid, dbPtr);
+        }
+#ifndef NDEBUG
+        log(env, "Database context use count: " + std::to_string(db.use_count()));
+#endif
+        return db;
+    }
+    throw std::exception();     // Should never happen.
+}
+
+
+/**
+ * Releases a PJ_CONTEXT and its associated database context. This function sets the `ptr` and `database`
+ * fields in the Java object to zero as a safety in case there is two attempts to destroy the same object.
+ *
+ * @param  env      The JNI environment.
+ * @param  context  The Java object wrapping the context to release.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *env, jobject context) {
+    jfieldID fid = get_database_field(env, context);
+    if (fid) {
+        release_shared_ptr<DatabaseContext>(env->GetLongField(context, fid));
+        env->SetLongField(context, fid, (jlong) 0);
+    }
+    jlong ctxPtr = get_and_clear_ptr(env, context);
     proj_context_destroy(reinterpret_cast<PJ_CONTEXT*>(ctxPtr));    // Does nothing if ctxPtr is null.
 }
 
@@ -365,17 +436,20 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Context_destroyPJ(JNIEnv *e
 /**
  * Instantiate a geodetic object from a user specified text.
  * The returned object will typically by a subtype of CoordinateReferenceSystem.
+ *
+ * @param  env      The JNI environment.
+ * @param  context  An instance of Context for the current thread.
+ * @return the user specified object, or null if the operation failed.
  */
-JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserInput(JNIEnv *env, jobject object, jstring text) {
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserInput(JNIEnv *env, jobject context, jstring text) {
     BaseObjectPtr result = nullptr;
     const char *text_utf = env->GetStringUTFChars(text, nullptr);
     if (text_utf) {
-        PJ_CONTEXT *ctx = get_context(env, object);
         try {
-            result = osgeo::proj::io::createFromUserInput(text_utf, ctx).as_nullable();
+            DatabaseContextNNPtr db = NN_CHECK_THROW(get_database_context(env, context));
+            result = osgeo::proj::io::createFromUserInput(text_utf, db).as_nullable();
         } catch (const std::exception &e) {
-            jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
-            if (c) env->ThrowNew(c, e.what());
+            rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
         env->ReleaseStringUTFChars(text, text_utf);     // Must be after the catch block in case an exception happens.
     }
@@ -442,8 +516,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
             return non_empty_string(env, exportable->exportToWKT(formatter.get()));
         }
     } catch (const std::exception &e) {
-        jclass c = env->FindClass(JPJ_FORMATTING_EXCEPTION);
-        if (c) env->ThrowNew(c, e.what());
+        rethrow_as_java_exception(env, JPJ_FORMATTING_EXCEPTION, e);
     }
     return nullptr;
 }
@@ -477,25 +550,20 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_run(JNIEnv *
  * @param  caller     The class from which this function has been invoked.
  * @param  context    The wrapper of the PJ_CONTEXT for the current thread.
  * @param  authority  Name of the authority for which to create the factory.
- * @param  sibling    if another factory has been created for the same context, that factory.
- *                    Otherwise zero. This is used for sharing the same database context.
  * @return The address of the new authority factory, or 0 in case of failure.
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstance
-    (JNIEnv *env, jclass caller, jobject context, jstring authority, jobject sibling)
+    (JNIEnv *env, jclass caller, jobject context, jstring authority)
 {
     jlong result = 0;
     const char *authority_utf = env->GetStringUTFChars(authority, nullptr);
     if (authority_utf) {
         try {
-            DatabaseContextNNPtr db = (sibling)
-                    ? get_and_unwrap_ptr<AuthorityFactory>(env, sibling)->databaseContext()
-                    : DatabaseContext::create(std::string(), std::vector<std::string>(), get_context(env, context));
+            DatabaseContextNNPtr db = NN_CHECK_THROW(get_database_context(env, context));
             AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_utf).as_nullable();
             result = wrap_shared_ptr(factory);
         } catch (const std::exception &e) {
-            jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
-            if (c) env->ThrowNew(c, e.what());
+            rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
         env->ReleaseStringUTFChars(authority, authority_utf);       // Must be after the catch block in case an exception happens.
     }
@@ -561,7 +629,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDesc
         } catch (const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
             rethrow_as_java_exception(env, e);
         } catch (const std::exception &e) {
-            rethrow_as_factory_exception(env, e);
+            rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
         env->ReleaseStringUTFChars(code, code_utf);
     }
@@ -613,7 +681,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
         } catch (const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
             rethrow_as_java_exception(env, e);
         } catch (const std::exception &e) {
-            rethrow_as_factory_exception(env, e);
+            rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
         env->ReleaseStringUTFChars(code, code_utf);
         if (rp) {

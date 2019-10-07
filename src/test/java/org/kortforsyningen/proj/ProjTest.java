@@ -55,7 +55,6 @@ public final strictfp class ProjTest {
      * @throws FactoryException if the object creation failed.
      */
     @Test
-    @org.junit.Ignore
     public void testCreateFromUserInput() throws FactoryException {
         final Object obj = Proj.createFromUserInput("EPSG:3395");
         assertTrue(obj instanceof CRS);

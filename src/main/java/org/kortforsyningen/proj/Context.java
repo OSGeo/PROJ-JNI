@@ -24,8 +24,8 @@ package org.kortforsyningen.proj;
 import java.util.Map;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.lang.annotation.Native;
 import org.opengis.util.FactoryException;
 
 
@@ -73,6 +73,13 @@ final class Context extends NativeResource implements AutoCloseable {
     private long lastUse;
 
     /**
+     * Wrapper around the {@code osgeo::proj::io::DatabaseContext}, created when first needed.
+     * Database contexts are needed by {@link #factories} and by {@link #createFromUserInput(String)} method.
+     */
+    @Native
+    private long database;
+
+    /**
      * Wrappers for {@code osgeo::proj::io::AuthorityFactory}, created when first needed.
      * Keys are authority names and values are wrappers for corresponding PROJ factories.
      * Values shall be used inside a try-with-resource block as documented in class javadoc.
@@ -114,18 +121,6 @@ final class Context extends NativeResource implements AutoCloseable {
     }
 
     /**
-     * Returns an arbitrary element of the given collection, or {@code null} if none.
-     *
-     * @param  <E>         the of elements in the collection.
-     * @param  collection  the collection from which to get an arbitrary element.
-     * @return an arbitrary element from the given collection, or {@code null} if none.
-     */
-    private static <E> E any(final Iterable<E> collection) {
-        final Iterator<E> it = collection.iterator();
-        return it.hasNext() ? it.next() : null;
-    }
-
-    /**
      * Returns a factory for the given authority, creating it when first needed.
      * The factory shall be used inside a try-with-resource block as shown in class javadoc.
      *
@@ -136,7 +131,7 @@ final class Context extends NativeResource implements AutoCloseable {
     final AuthorityFactory factory(final String authority) throws FactoryException {
         AuthorityFactory factory = factories.get(authority);
         if (factory == null) {
-            factory = new AuthorityFactory(this, authority, any(factories.values()));
+            factory = new AuthorityFactory(this, authority);
             try {
                 factories.put(authority, factory);
             } catch (Throwable e) {
