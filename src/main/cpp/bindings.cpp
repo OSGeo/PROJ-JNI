@@ -35,9 +35,16 @@ using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryPtr;
 using osgeo::proj::io::WKTFormatter;
 using osgeo::proj::io::WKTFormatterNNPtr;
+using osgeo::proj::io::IWKTExportable;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
-using osgeo::proj::io::IWKTExportable;
+using osgeo::proj::crs::CRS;
+using osgeo::proj::crs::CRSNNPtr;
+using osgeo::proj::operation::CoordinateOperationNNPtr;
+using osgeo::proj::operation::CoordinateOperationFactory;
+using osgeo::proj::operation::CoordinateOperationFactoryNNPtr;
+using osgeo::proj::operation::CoordinateOperationContext;
+using osgeo::proj::operation::CoordinateOperationContextNNPtr;
 
 
 
@@ -575,11 +582,11 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
  * Releases the osgeo::proj::io::AuthorityFactory wrapped by the given Java object.
  * This method decrements the object.use_count() value of the shared pointer.
  *
- * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the authority factory to release.
+ * @param  env      The JNI environment.
+ * @param  factory  The Java object wrapping the authority factory to release.
  */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JNIEnv *env, jobject object) {
-    jlong ptr = get_and_clear_ptr(env, object);
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JNIEnv *env, jobject factory) {
+    jlong ptr = get_and_clear_ptr(env, factory);
     release_shared_ptr<AuthorityFactory>(ptr);
 }
 
@@ -610,21 +617,20 @@ void rethrow_as_java_exception(JNIEnv *env, const osgeo::proj::io::NoSuchAuthori
 /**
  * Gets a description of the object corresponding to a code.
  *
- * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the authority factory to use.
- * @param  code    Object code allocated by authority.
+ * @param  env      The JNI environment.
+ * @param  factory  The Java object wrapping the authority factory to use.
+ * @param  code     Object code allocated by authority.
  * @return Description of the identified object, or null if that object has no description.
- * @throws FactoryException if the description can not be obtained for the given code.
  */
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDescriptionText
-    (JNIEnv *env, jobject object, jstring code)
+    (JNIEnv *env, jobject factory, jstring code)
 {
     jstring result = nullptr;
     const char *code_utf = env->GetStringUTFChars(code, nullptr);
     if (code_utf) {
         try {
-            AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
-            std::string desc = factory->getDescriptionText(code_utf);
+            AuthorityFactoryPtr pf = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
+            std::string desc = pf->getDescriptionText(code_utf);
             if (!desc.empty()) result = env->NewStringUTF(desc.c_str());
         } catch (const osgeo::proj::io::NoSuchAuthorityCodeException &e) {
             rethrow_as_java_exception(env, e);
@@ -641,38 +647,37 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDesc
  * Returns the wrapper for an osgeo::proj::common::IdentifiedObject from the specified code.
  * The PROJ method invoked by this function is determined by the type argument.
  *
- * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the authority factory to use.
- * @param  type    One of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, etc. constants.
- * @param  code    Object code allocated by authority.
+ * @param  env      The JNI environment.
+ * @param  factory  The Java object wrapping the authority factory to use.
+ * @param  type     One of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, etc. constants.
+ * @param  code     Object code allocated by authority.
  * @return Wrapper for a PROJ object, or null if out of memory.
- * @throws FactoryException if no object can be created for the given code.
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
-    (JNIEnv *env, jobject object, jint type, jstring code)
+    (JNIEnv *env, jobject factory, jint type, jstring code)
 {
     const char *code_utf = env->GetStringUTFChars(code, nullptr);
     if (code_utf) {
         BaseObjectPtr rp = nullptr;
         try {
-            AuthorityFactoryPtr factory = get_and_unwrap_ptr<AuthorityFactory>(env, object);
+            AuthorityFactoryPtr pf = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
             switch (type) {
-                case org_kortforsyningen_proj_AuthorityFactory_ANY:                         rp = factory->createObject                    (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN:              rp = factory->createPrimeMeridian             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID:                   rp = factory->createEllipsoid                 (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_DATUM:                       rp = factory->createDatum                     (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME:    rp = factory->createGeodeticDatum             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME:    rp = factory->createVerticalDatum             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE:             rp = factory->createUnitOfMeasure             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM:           rp = factory->createCoordinateSystem          (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: rp = factory->createCoordinateReferenceSystem (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS:                rp = factory->createGeodeticCRS               (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS:              rp = factory->createGeographicCRS             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS:                rp = factory->createVerticalCRS               (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS:               rp = factory->createProjectedCRS              (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS:                rp = factory->createCompoundCRS               (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_CONVERSION:                  rp = factory->createConversion                (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION:        rp = factory->createCoordinateOperation(code_utf, false).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_ANY:                         rp = pf->createObject                    (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_PRIME_MERIDIAN:              rp = pf->createPrimeMeridian             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_ELLIPSOID:                   rp = pf->createEllipsoid                 (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_DATUM:                       rp = pf->createDatum                     (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME:    rp = pf->createGeodeticDatum             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME:    rp = pf->createVerticalDatum             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE:             rp = pf->createUnitOfMeasure             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM:           rp = pf->createCoordinateSystem          (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: rp = pf->createCoordinateReferenceSystem (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS:                rp = pf->createGeodeticCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS:              rp = pf->createGeographicCRS             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS:                rp = pf->createVerticalCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS:               rp = pf->createProjectedCRS              (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS:                rp = pf->createCompoundCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_CONVERSION:                  rp = pf->createConversion                (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION:        rp = pf->createCoordinateOperation(code_utf, false).as_nullable(); break;
                 default: {
                     jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
                     if (c) env->ThrowNew(c, "Unsupported object type.");
@@ -687,6 +692,47 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
         if (rp) {
             return specific_subclass(env, rp, type);
         }
+    }
+    return nullptr;
+}
+
+
+/**
+ * Finds a list of coordinate operation between the given source and target CRS.
+ * The operations are sorted with the most relevant ones first: by descending area
+ * (intersection of the transformation area with the area of interest, or intersection
+ * of the transformation with the area of use of the CRS), and by increasing accuracy.
+ * Operations with unknown accuracy are sorted last, whatever their area.
+ *
+ * @param  env                The JNI environment.
+ * @param  factory            The Java object wrapping the authority factory to use.
+ * @param  sourceCRS          Input coordinate reference system.
+ * @param  targetCRS          Output coordinate reference system.
+ * @param  desiredAccuracy    Desired accuracy (in metres), or 0 for the best accuracy available.
+ * @param  discardSuperseded  Whether transformations that are superseded (but not deprecated) should be discarded.
+ * @return The coordinate operations.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createOperation
+    (JNIEnv *env, jobject factory, jobject sourceCRS, jobject targetCRS,
+     jdouble desiredAccuracy, jboolean discardSuperseded)
+{
+    try {
+        CRSNNPtr source = NN_CHECK_THROW(get_and_unwrap_ptr<CRS>(env, sourceCRS));
+        CRSNNPtr target = NN_CHECK_THROW(get_and_unwrap_ptr<CRS>(env, targetCRS));
+        AuthorityFactoryPtr pf = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
+        CoordinateOperationContextNNPtr context = CoordinateOperationContext::create(pf, nullptr, desiredAccuracy);
+        context->setDiscardSuperseded(discardSuperseded);
+        /*
+         * At this time, it does not seem worth to cache the CoordinateOperationFactory instance.
+         */
+        CoordinateOperationFactoryNNPtr opf = CoordinateOperationFactory::create();
+        std::vector<CoordinateOperationNNPtr> operations = opf->createOperations(source, target, context);
+        if (!operations.empty()) {
+            BaseObjectPtr op = operations[0].as_nullable();
+            return specific_subclass(env, op, org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION);
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
     }
     return nullptr;
 }

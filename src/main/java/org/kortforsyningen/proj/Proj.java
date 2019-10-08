@@ -102,13 +102,14 @@ public final class Proj {
      *
      * @param  authority  authority name of the factory (e.g. {@code "EPSG"}).
      * @return factory for the given authority.
+     * @throws NullPointerException if {@code authority} is {@code null}.
      */
     public static CRSAuthorityFactory getAuthorityFactory(final String authority) {
         /*
          * No need to cache since AuthorityFactory.API is a very lightweight object.
          * The costly object is AuthorityFactory, which is cached by Context class.
          */
-        return new AuthorityFactory.API(Objects.requireNonNull(authority));
+        return new AuthorityFactory.API(authority.trim());    // Intentional NullPointerException if authority is null.
     }
 
     /**

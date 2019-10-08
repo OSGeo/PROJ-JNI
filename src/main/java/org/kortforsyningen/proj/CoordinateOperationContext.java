@@ -117,9 +117,10 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
      * The default value is {@code "default"}.
      *
      * @param  name  name of the new authority.
+     * @throws NullPointerException if {@code name} is {@code null}.
      */
     public void setAuthority(final String name) {
-        authority = Objects.requireNonNull(name);
+        authority = name.trim();                    // Intentional NullPointerException if name is null.
     }
 
     /**

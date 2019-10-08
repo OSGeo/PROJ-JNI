@@ -21,52 +21,50 @@
  */
 package org.kortforsyningen.proj;
 
+import org.junit.Test;
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.operation.CoordinateOperation;
+
+import static org.junit.Assert.*;
 
 
 /**
- * Wrappers around {@code osgeo::proj::crs::CRS} subtypes.
- * Each subtype is represented by an inner class in this file.
+ * Tests {@link OperationFactory}.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
  */
-class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
+public final strictfp class OperationFactoryTest {
     /**
-     * Casts the given value to {@link CRS}.
-     *
-     * @param  name   argument name, used only for formatting error message.
-     * @param  value  value to cast.
-     * @return the given CRS as a PROJ implementation.
-     * @throws IllegalArgumentException if the given value is {@code null}
-     *         or is not a PROJ implementation.
+     * The factory to test.
      */
-    static CRS cast(final String name, final CoordinateReferenceSystem value) {
-        if (value instanceof CRS) {
-            return (CRS) value;
-        } else {
-            throw new IllegalArgumentException(unsupportedImplementation(name, value));
-        }
+    private final OperationFactory factory;
+
+    /**
+     * The factory for creating CRS using EPSG codes.
+     */
+    private final AuthorityFactory.API crsFactory;
+
+    /**
+     * Creates a new test case.
+     */
+    public OperationFactoryTest() {
+        factory = new OperationFactory(null);
+        crsFactory = new AuthorityFactory.API("EPSG");
     }
 
     /**
-     * Creates a new wrapper for the given {@code osgeo::proj::crs::CRS}.
+     * Tests the requests for Mercator projection.
      *
-     * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if an error occurred while creating a CRS or the operation.
      */
-    CRS(final long ptr) {
-        super(ptr);
-    }
-
-    /**
-     * Returns the coordinate system of a single CRS, or a view over all coordinate systems of a compound CRS.
-     *
-     * @return the coordinate system.
-     */
-    @Override
-    public CoordinateSystem getCoordinateSystem() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    @Test
+    public void testMercator() throws FactoryException {
+        final CoordinateReferenceSystem source = crsFactory.createCoordinateReferenceSystem("4326");
+        final CoordinateReferenceSystem target = crsFactory.createCoordinateReferenceSystem("3395");
+        final CoordinateOperation operation = factory.createOperation(source, target);
+        assertNotNull(operation);
     }
 }

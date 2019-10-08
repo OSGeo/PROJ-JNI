@@ -128,8 +128,8 @@ final class AuthorityFactory extends NativeResource {
      * of the transformation with the area of use of the CRS), and by increasing accuracy.
      * Operations with unknown accuracy are sorted last, whatever their area.
      *
-     * @param  source             input coordinate reference system.
-     * @param  target             output coordinate reference system.
+     * @param  sourceCRS          input coordinate reference system.
+     * @param  targetCRS          output coordinate reference system.
      * @param  desiredAccuracy    desired accuracy (in metres), or 0 for the best accuracy available.
      * @param  discardSuperseded  whether transformations that are superseded (but not deprecated) should be discarded.
      * @return the coordinate operations.
@@ -137,7 +137,8 @@ final class AuthorityFactory extends NativeResource {
      *
      * @todo add missing parameters, returns a list.
      */
-    native Operation createOperation(CRS source, CRS target, double desiredAccuracy, boolean discardSuperseded)
+    native Operation createOperation(NativeResource sourceCRS, NativeResource targetCRS,
+            double desiredAccuracy, boolean discardSuperseded)
             throws FactoryException;
 
     /**
@@ -465,6 +466,7 @@ final class AuthorityFactory extends NativeResource {
             case COMPOUND_CRS:
             case COORDINATE_REFERENCE_SYSTEM: obj = new CRS      (ptr); break;
             case COORDINATE_SYSTEM:           obj = new CS       (ptr); break;
+            case CONVERSION:
             case COORDINATE_OPERATION:        obj = new Operation(ptr); break;
             default: throw new FactoryException("Unknown object type.");
         }
