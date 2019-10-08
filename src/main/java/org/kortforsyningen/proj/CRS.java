@@ -35,6 +35,22 @@ import org.opengis.referencing.cs.CoordinateSystem;
  */
 class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     /**
+     * Casts the given value to {@link CRS}.
+     *
+     * @param  name   argument name, used only for formatting error message.
+     * @param  value  value to cast.
+     * @throws IllegalArgumentException if the given value is {@code null}
+     *         or is not a PROJ implementation.
+     */
+    static CRS cast(final String name, final CoordinateReferenceSystem value) {
+        if (value instanceof CRS) {
+            return (CRS) value;
+        } else {
+            throw new IllegalArgumentException(unsupportedImplementation(name, value));
+        }
+    }
+
+    /**
      * Creates a new wrapper for the given {@code osgeo::proj::crs::CRS}.
      *
      * @param  ptr  pointer to the wrapped PROJ object.

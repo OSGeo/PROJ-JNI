@@ -65,6 +65,14 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
+ * Method:    createOperation
+ * Signature: (Lorg/kortforsyningen/proj/CRS;Lorg/kortforsyningen/proj/CRS;DZ)Lorg/kortforsyningen/proj/Operation;
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createOperation
+  (JNIEnv *, jobject, jobject, jobject, jdouble, jboolean);
+
+/*
+ * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    release
  * Signature: ()V
  */

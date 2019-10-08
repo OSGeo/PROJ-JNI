@@ -21,15 +21,23 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.CoordinateOperation;
+import org.opengis.referencing.operation.CoordinateOperationFactory;
+import org.opengis.referencing.operation.OperationNotFoundException;
 
 
 /**
  * Static methods for coordinate reference systems and operations.
+ * The methods provided in this class are specific to PROJ implementation.
+ * However the factories obtained by {@link #getAuthorityFactory(String)}
+ * and {@link #getOperationFactory(CoordinateOperationContext)} allow usage
+ * of PROJ in an implementation Independent way.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -71,9 +79,9 @@ public final class Proj {
     /**
      * Returns a factory for creating coordinate reference systems from codes allocated by the given authority.
      * The authority is typically "EPSG", but not necessarily; other authorities like "IAU" are also allowed.
-     * After a factory has been obtained, its {@link CRSAuthorityFactory#createCoordinateReferenceSystem(String)}
-     * method can be invoked for creating a CRS from an authority code. For example the code below creates the
-     * "WGS 84" coordinate reference system for the "EPSG::4326" authority code:
+     * After a factory has been obtained, its {@link CRSAuthorityFactory#createCoordinateReferenceSystem(String)
+     * createCoordinateReferenceSystem(…)} method can be invoked for creating a CRS from an authority code.
+     * For example the code below creates the "WGS 84" coordinate reference system for the "EPSG::4326" code:
      *
      * <blockquote><pre>
      * CRSAuthorityFactory factory = Proj.getAuthorityFactory("EPSG");
@@ -101,6 +109,19 @@ public final class Proj {
          * The costly object is AuthorityFactory, which is cached by Context class.
          */
         return new AuthorityFactory.API(Objects.requireNonNull(authority));
+    }
+
+    /**
+     * Creates a new operation factory for the given context. The context is an optional argument which allows
+     * to specify in particular the {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest}
+     * and {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}. If this argument
+     * is {@code null}, then the default values are {@linkplain #createCoordinateOperation documented here}.
+     *
+     * @param  context in which coordinate operations are to be used, or {@code null} for the default.
+     * @return a factory for creating coordinate operations in the given context.
+     */
+    public static CoordinateOperationFactory getOperationFactory(final CoordinateOperationContext context) {
+        return new OperationFactory(context);
     }
 
     /**
@@ -139,5 +160,75 @@ public final class Proj {
         try (Context c = Context.acquire()) {
             return c.createFromUserInput(text);
         }
+    }
+
+    /**
+     * Returns an operation for conversion or transformation between two coordinate reference systems,
+     * taking in account the given context. If more than one operation exists, the preferred one is returned.
+     * If no operation exists, then an exception is thrown.
+     *
+     * <p>The context is an optional argument which allows to specify in particular the
+     * {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest} and
+     * {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}.
+     * If this argument is {@code null}, then the default setting is:</p>
+     *
+     * <ul>
+     *   <li>Coordinate operations from any authority will be searched,
+     *     with the restrictions set in the {@code "authority_to_authority_preference"} database table.</li>
+     *   <li>Area of interest is unknown.</li>
+     *   <li>Desired accuracy is best accuracy available.</li>
+     *   <li>Source and target CRS extents use is {@link SourceTargetCRSExtentUse#SMALLEST}.</li>
+     *   <li>Criterion for comparing areas of validity is {@link SpatialCriterion#STRICT_CONTAINMENT}.</li>
+     *   <li>Grid availability use is {@link GridAvailabilityUse#USE_FOR_SORTING USE_FOR_SORTING}.</li>
+     *   <li>Use of intermediate pivot CRS is allowed.</li>
+     * </ul>
+     *
+     * @param  sourceCRS  input coordinate reference system.
+     * @param  targetCRS  output coordinate reference system.
+     * @param  context    context in which the coordinate operation is to be used.
+     * @return coordinate operations from {@code sourceCRS} to {@code targetCRS}.
+     * @throws FactoryException if the operation creation failed.
+     */
+    public static CoordinateOperation createCoordinateOperation(
+            final CoordinateReferenceSystem sourceCRS,
+            final CoordinateReferenceSystem targetCRS,
+            final CoordinateOperationContext context) throws FactoryException
+    {
+        final CRS source = CRS.cast("sourceCRS", sourceCRS);
+        final CRS target = CRS.cast("targetCRS", targetCRS);
+        final List<CoordinateOperation> operations = OperationFactory.findOperations(
+                source, target, (context != null) ? context : new CoordinateOperationContext());
+        if (operations.isEmpty()) {
+            throw new OperationNotFoundException(OperationFactory.notFound(source, target));
+        }
+        return operations.get(0);
+    }
+
+    /**
+     * Returns operations for conversion or transformation between two coordinate reference systems,
+     * taking in account the given context. If no coordinate operation is found, then this method
+     * returns an empty list.
+     *
+     * <p>The context is an optional argument which allows to specify in particular the
+     * {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest} and
+     * {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}.
+     * If this argument is {@code null}, then the default values are
+     * {@linkplain #createCoordinateOperation documented here}.</p>
+     *
+     * @param  sourceCRS  input coordinate reference system.
+     * @param  targetCRS  output coordinate reference system.
+     * @param  context    context in which the coordinate operation is to be used.
+     * @return coordinate operations from {@code sourceCRS} to {@code targetCRS}.
+     * @throws FactoryException if the operation creation failed.
+     */
+    public static List<CoordinateOperation> createCoordinateOperations(
+            final CoordinateReferenceSystem sourceCRS,
+            final CoordinateReferenceSystem targetCRS,
+            final CoordinateOperationContext context) throws FactoryException
+    {
+        return OperationFactory.findOperations(
+                CRS.cast("sourceCRS", sourceCRS),
+                CRS.cast("targetCRS", targetCRS),
+                (context != null) ? context : new CoordinateOperationContext());
     }
 }

@@ -122,6 +122,25 @@ final class AuthorityFactory extends NativeResource {
     private native IdentifiableObject createGeodeticObject(int type, String code) throws FactoryException;
 
     /**
+     * Finds a list of coordinate operation between the given source and target CRS.
+     * The operations are sorted with the most relevant ones first: by descending area
+     * (intersection of the transformation area with the area of interest, or intersection
+     * of the transformation with the area of use of the CRS), and by increasing accuracy.
+     * Operations with unknown accuracy are sorted last, whatever their area.
+     *
+     * @param  source             input coordinate reference system.
+     * @param  target             output coordinate reference system.
+     * @param  desiredAccuracy    desired accuracy (in metres), or 0 for the best accuracy available.
+     * @param  discardSuperseded  whether transformations that are superseded (but not deprecated) should be discarded.
+     * @return the coordinate operations.
+     * @throws FactoryException if an error occurred while searching the coordinate operations.
+     *
+     * @todo add missing parameters, returns a list.
+     */
+    native Operation createOperation(CRS source, CRS target, double desiredAccuracy, boolean discardSuperseded)
+            throws FactoryException;
+
+    /**
      * Releases resources used by this factory. This method decrements the {@code object.use_count()}
      * value of the shared pointer. The authority factory is not necessarily immediately destroyed;
      * it depends on whether it is still used by other C++ code.
@@ -193,19 +212,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public Citation getVendor() {
-            return new SimpleCitation("PROJ") {
-                @Override public InternationalString getEdition() {
-                    try {
-                        final String version = version();
-                        if (version != null) {
-                            return new SimpleCitation(version);
-                        }
-                    } catch (UnsatisfiedLinkError e) {
-                        // Ignore.
-                    }
-                    return null;
-                }
-            };
+            return SimpleCitation.PROJ();
         }
 
         /**

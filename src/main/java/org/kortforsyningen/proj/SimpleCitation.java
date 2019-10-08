@@ -50,6 +50,28 @@ import org.opengis.metadata.citation.Series;
  */
 class SimpleCitation implements Citation, InternationalString {
     /**
+     * Returns a citation for the PROJ project.
+     * {@link Citation#getEdition()} contains the PROJ version string.
+     *
+     * @return a citation for "PROJ".
+     */
+    static Citation PROJ() {
+        return new SimpleCitation("PROJ") {
+            @Override public InternationalString getEdition() {
+                try {
+                    final String version = NativeResource.version();
+                    if (version != null) {
+                        return new SimpleCitation(version);
+                    }
+                } catch (UnsatisfiedLinkError e) {
+                    // Ignore.
+                }
+                return null;
+            }
+        };
+    }
+
+    /**
      * The citation title to be returned by {@link #getTitle()} as an {@link InternationalString}.
      * This is also the value returned by the {@code InternationalString} methods like
      * {@link #toString(Locale)} and {@link #toString()}.
