@@ -65,6 +65,6 @@ public final strictfp class OperationFactoryTest {
         final CoordinateReferenceSystem source = crsFactory.createCoordinateReferenceSystem("4326");
         final CoordinateReferenceSystem target = crsFactory.createCoordinateReferenceSystem("3395");
         final CoordinateOperation operation = factory.createOperation(source, target);
-        assertNotNull(operation);
+        assertTrue(operation.toWKT().startsWith("CONVERSION[\"World Mercator\","));
     }
 }

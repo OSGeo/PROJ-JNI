@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.lang.annotation.Native;
 import org.opengis.util.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 
 /**
@@ -151,6 +152,16 @@ final class Context extends NativeResource implements AutoCloseable {
      * @see Proj#createFromUserInput(String)
      */
     native Object createFromUserInput(final String text);
+
+    /**
+     * Creates the PROJ {@code PJ} object for the given coordinate operation.
+     * The {@code PJ} shall be used in the same thread than this {@code Context}.
+     *
+     * @param  operation  the operation for which to create a {@code PJ}.
+     * @return address of the {@code PJ} created by this method, or 0 if out of memory.
+     * @throws TransformException if the construction failed.
+     */
+    native long createPJ(Operation operation) throws TransformException;
 
     /**
      * Disposes this context. This method returns the {@code PJ_CONTEXT} structure to the pool,

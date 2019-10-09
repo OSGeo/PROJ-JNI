@@ -28,6 +28,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.Transformation;
 import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
 
 /**
@@ -96,5 +97,44 @@ class Operation extends IdentifiableObject implements CoordinateOperation {
     @Override
     public MathTransform getMathTransform() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Transforms an array of coordinate tuples.
+     *
+     * @param  srcPts  the array containing the source point coordinates.
+     * @param  srcOff  the offset to the first point to be transformed in the source array.
+     * @param  dstPts  the array into which the transformed point coordinates are returned.
+     *                 May be the same than {@code srcPts}.
+     * @param  dstOff  the offset to the location of the first transformed point that is stored in the destination array.
+     * @param  numPts  the number of point objects to be transformed.
+     * @throws TransformException if a point can not be transformed.
+     */
+    public void transform(final double[] srcPts, final int srcOff,
+                          final double[] dstPts, final int dstOff,
+                          final int numPts) throws TransformException
+    {
+        final int srcDim = 2; // TODO source.getDimension();
+        final int tgtDim = 2; // TODO target.getDimension();
+        if (srcDim == tgtDim) {
+            if (srcPts != dstPts || srcOff != dstOff) {
+                final int length = tgtDim * numPts;
+                System.arraycopy(srcPts, srcOff, dstPts, dstOff, length);
+            }
+        } else {
+            // TODO: need special check for overlapping arrays.
+            throw new TransformException("Transformation between CRS of different dimensions not yet supported.");
+        }
+        /*
+         * TODO: Creation of Transform object is potentially expensive. Should cache.
+         */
+        try (Context c = Context.acquire()) {
+            final Transform tr = new Transform(this, c);
+            try {
+                tr.transform(tgtDim, dstPts, dstOff, numPts);
+            } finally {
+                tr.destroy();
+            }
+        }
     }
 }

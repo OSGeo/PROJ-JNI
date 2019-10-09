@@ -201,6 +201,7 @@ class NativeResource implements Runnable {
     /**
      * Invoked by the cleaner thread when the {@link IdentifiableObject} has been garbage collected.
      * This method is invoked by the cleaner thread and shall never been invoked directly by us.
+     * This implementation assumes that {@link #ptr} points to a C++ shared pointer.
      */
     @Override
     public native void run();

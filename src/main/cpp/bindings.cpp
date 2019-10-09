@@ -27,6 +27,7 @@
 #include "org_kortforsyningen_proj_Context.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
 #include "org_kortforsyningen_proj_WKTFormat$Convention.h"
+#include "org_kortforsyningen_proj_Transform.h"
 
 using osgeo::proj::io::DatabaseContext;
 using osgeo::proj::io::DatabaseContextPtr;
@@ -36,10 +37,13 @@ using osgeo::proj::io::AuthorityFactoryPtr;
 using osgeo::proj::io::WKTFormatter;
 using osgeo::proj::io::WKTFormatterNNPtr;
 using osgeo::proj::io::IWKTExportable;
+using osgeo::proj::io::PROJStringFormatter;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
 using osgeo::proj::crs::CRS;
 using osgeo::proj::crs::CRSNNPtr;
+using osgeo::proj::operation::CoordinateOperation;
+using osgeo::proj::operation::CoordinateOperationPtr;
 using osgeo::proj::operation::CoordinateOperationNNPtr;
 using osgeo::proj::operation::CoordinateOperationFactory;
 using osgeo::proj::operation::CoordinateOperationFactoryNNPtr;
@@ -131,6 +135,7 @@ inline jfieldID get_database_field(JNIEnv *env, jobject context) {
 
 #define JPJ_FACTORY_EXCEPTION          "org/opengis/util/FactoryException"
 #define JPJ_NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
+#define JPJ_TRANSFORM_EXCEPTION        "org/opengis/referencing/operation/TransformException"
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
 
@@ -179,7 +184,7 @@ void log(JNIEnv *env, const std::string &text) {
     jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
     if (c) {
         jobject logger = env->CallStaticObjectMethod(c, java_method_getLogger);
-        if (!env->ExceptionCheck() && logger) {
+        if (!env->ExceptionCheck() && logger) {                         // ExceptionCheck() must be always invoked.
             c = env->FindClass("java/lang/System$Logger$Level");
             if (c) {
                 jobject level = env->GetStaticObjectField(c, java_field_debug_level);
@@ -384,7 +389,7 @@ rd: switch (type) {
         if (method) {
             jlong ptr = wrap_shared_ptr(object);
             jobject result = env->CallStaticObjectMethod(c, method, type, ptr);
-            if (result && !env->ExceptionCheck()) {
+            if (!env->ExceptionCheck() && result) {                                 // ExceptionCheck() must be always invoked.
                 return result;
             }
             release_shared_ptr<BaseObject>(ptr);
@@ -777,4 +782,102 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
         rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
     }
     return nullptr;
+}
+
+
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                                      CLASS Transform                                       │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+/**
+ * Creates the PJ object from a coordinate operation, to be wrapped in a Transform.
+ * The PJ creation may be costly, so the result should be cached.
+ *
+ * @param  env          The JNI environment.
+ * @param  context      The thread context in which the operation is applied.
+ * @param  operation    The Java object wrapping the coordinate operation to use.
+ * @return pointer to the PJ object, or null if the creation failed.
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_createPJ(JNIEnv *env, jobject context, jobject operation) {
+    try {
+        PJ_CONTEXT *ctx = get_context(env, context);
+        DatabaseContextPtr dbContext = get_database_context(env, context);
+        CoordinateOperationPtr cop = get_and_unwrap_ptr<CoordinateOperation>(env, operation);
+        PROJStringFormatter *formatter = PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_5, dbContext).get();
+        const std::string &projString = cop->exportToPROJString(formatter);
+        PJ *pj = proj_create(ctx, projString.c_str());
+        return reinterpret_cast<jlong>(pj);
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_TRANSFORM_EXCEPTION, e);
+    }
+    return 0;
+}
+
+
+/**
+ * Transforms in-place the coordinates in the given array.
+ * The coordinates array shall contain (x,y,z,t,…) tuples,
+ * where the z and any additional dimensions are optional.
+ * Note that any dimension after the t value are ignored.
+ *
+ * Note that PJ are context-dependent. If the method is invoked in
+ * a context different than the one for which PJ has been created,
+ * then the following method shall be invoked first:
+ *
+ *    void proj_assign_context(PJ* pj, PJ_CONTEXT* ctx);
+ *
+ * @param  env          The JNI environment.
+ * @param  transform    The Java object wrapping the PJ to use.
+ * @param  dimension    The dimension of each coordinate value.
+ * @param  coordinates  The coordinates to transform, as a sequence of (x,y,z,…) tuples.
+ * @param  offset       Offset of the first coordinate in the given array.
+ * @param  numPts       Number of points to transform.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_transform
+    (JNIEnv *env, jobject transform, const jint dimension, jdoubleArray coordinates, jint offset, jint numPts)
+{
+    PJ *pj = reinterpret_cast<PJ*>(env->GetLongField(transform, java_field_for_pointer));
+    if (pj) {
+        const size_t stride = sizeof(jdouble) * dimension;
+        /*
+         * Using GetPrimitiveArrayCritical/ReleasePrimitiveArrayCritical rather than
+         * GetDoubleArrayElements/ReleaseDoubleArrayElements increase the chances that
+         * the JVM returns direct reference to its internal array without copying data.
+         * However we must promise to run the "critical" code fast, to not make any
+         * system call that may wait for the JVM and to not invoke any other JNI method.
+         */
+        double *data = reinterpret_cast<jdouble*>(env->GetPrimitiveArrayCritical(coordinates, nullptr));
+        if (data) {
+            double *x = data + offset;
+            double *y = (dimension >= 2) ? x+1 : nullptr;
+            double *z = (dimension >= 3) ? x+2 : nullptr;
+            double *t = (dimension >= 4) ? x+3 : nullptr;
+            proj_trans_generic(pj, PJ_FWD,
+                    x, stride, numPts,
+                    y, stride, numPts,
+                    z, stride, numPts,
+                    t, stride, numPts);
+            env->ReleasePrimitiveArrayCritical(coordinates, data, 0);
+            const int err = proj_errno(pj);
+            if (err) {
+                jclass c = env->FindClass(JPJ_TRANSFORM_EXCEPTION);
+                if (c) env->ThrowNew(c, proj_errno_string(err));
+            }
+        }
+    }
+}
+
+
+/**
+ * Destroys the PJ object.
+ *
+ * @param  env        The JNI environment.
+ * @param  transform  The Java object wrapping the PJ to use.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_destroy(JNIEnv *env, jobject transform) {
+    jlong pjPtr = get_and_clear_ptr(env, transform);
+    proj_destroy(reinterpret_cast<PJ*>(pjPtr));         // Does nothing if pjPtr is null.
 }
