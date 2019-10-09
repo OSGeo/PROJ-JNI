@@ -175,15 +175,14 @@ class NativeResource implements Runnable {
     private static native void initialize();
 
     /**
-     * Invoked by native code for logging a message. This method should not be invoked from Java code
-     * in order to allow the logging system to infer more accurately the source Java class and method.
+     * Invoked by native code for getting the logger where to send a message.
      * If this method is renamed, then the native C++ code needs to be updated accordingly.
      *
-     * @param  message  the message to log.
+     * @return the logger.
      */
     @SuppressWarnings("unused")
-    private static void log(String message) {
-        System.getLogger(LOGGER_NAME).log(System.Logger.Level.DEBUG, message);
+    private static System.Logger logger() {
+        return System.getLogger(LOGGER_NAME);
     }
 
     /**

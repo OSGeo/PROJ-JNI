@@ -67,7 +67,10 @@ using osgeo::proj::operation::CoordinateOperationContextNNPtr;
  * if `env->GetField` is compatible with class inheritance or if we need to get a new `jfieldID`
  * for each specific class, but tests suggest that inheritance works.
  */
-jfieldID java_field_for_pointer;
+jfieldID  java_field_for_pointer;
+jfieldID  java_field_debug_level;
+jmethodID java_method_getLogger;
+jmethodID java_method_log;
 
 
 /**
@@ -81,6 +84,27 @@ jfieldID java_field_for_pointer;
  */
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize(JNIEnv *env, jclass caller) {
     java_field_for_pointer = env->GetFieldID(caller, "ptr", "J");
+    if (java_field_for_pointer) {
+        /*
+         * Following fields and methods are used for logging purpose only.
+         * If any operation fail, `java_method_getLogger` will be left to
+         * null. We use that as a sentinel value for determining that the
+         * logging system is not available.
+         */
+        jclass c = env->FindClass("java/lang/System$Logger");
+        if (c) {
+            java_method_log = env->GetMethodID(c, "log", "(Ljava/lang/System$Logger$Level;Ljava/lang/String;)V");
+            if (java_method_log) {
+                c = env->FindClass("java/lang/System$Logger$Level");
+                if (c) {
+                    java_field_debug_level = env->GetStaticFieldID(c, "DEBUG", "Ljava/lang/System$Logger$Level;");
+                    if (java_field_debug_level) {
+                        java_method_getLogger = env->GetStaticMethodID(caller, "logger", "()Ljava/lang/System$Logger;");
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -138,31 +162,45 @@ inline jstring non_empty_string(JNIEnv *env, const std::string &text) {
  * instead of C++ std::cout is for avoiding conflicts caused by different
  * languages writing to the same standard output stream.
  *
- * If this function can not print, than it silently ignores the given text.
- * Such failure could happen if the Java method has moved but this C++
- * function has not been updated accordingly.
+ * Design note: a simpler strategy would be to invoke a Java method which
+ * would do most of the work done with JNI here. The inconvenient is that
+ * the logger would report that helper Java method as the source of the
+ * log message. By avoiding that alternative strategy, we get slightly
+ * more informative log records from the logging system.
  *
  * @param  env   The JNI environment.
  * @param  text  The text to log.
  * @throw  std::exception if a problem occurred while logging the message.
  */
 void log(JNIEnv *env, const std::string &text) {
-    if (!env->ExceptionCheck()) {
-        jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
-        if (c) {
-            jmethodID method = env->GetStaticMethodID(c, "log", "(Ljava/lang/String;)V");
-            if (method) {
+    if (!java_method_getLogger) {
+        return;                         // Logging system not available.
+    }
+    jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
+    if (c) {
+        jobject logger = env->CallStaticObjectMethod(c, java_method_getLogger);
+        if (!env->ExceptionCheck() && logger) {
+            c = env->FindClass("java/lang/System$Logger$Level");
+            if (c) {
+                jobject level = env->GetStaticObjectField(c, java_field_debug_level);
                 jstring str = env->NewStringUTF(text.c_str());
                 if (str) {
-                    env->CallStaticVoidMethod(c, method, str);
-                    if (env->ExceptionCheck()) {
-                        throw std::exception();     // Should never happen.
+                    env->CallObjectMethod(logger, java_method_log, level, str);
+                    if (!env->ExceptionCheck()) {
+                        return;                             // Success.
                     }
                 }
             }
         }
     }
-    // Java exception already thrown if any above JNI functions failed.
+    /*
+     * Java exception already thrown if any above JNI functions failed.
+     * But we also want a C++ exception in order to interrupt the caller.
+     * We could consider that failure to log should be silently ignored,
+     * but in this case a failure would be caused by a bug in above JNI calls,
+     * not a problem with logging system. We want to be informed of such bugs.
+     */
+    throw std::exception();
 }
 
 
@@ -413,9 +451,6 @@ DatabaseContextPtr get_database_context(JNIEnv *env, jobject context) {
             dbPtr = wrap_shared_ptr(db);
             env->SetLongField(context, fid, dbPtr);
         }
-#ifndef NDEBUG
-        log(env, "Database context use count: " + std::to_string(db.use_count()));
-#endif
         return db;
     }
     throw std::exception();     // Should never happen.
@@ -566,9 +601,16 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
     const char *authority_utf = env->GetStringUTFChars(authority, nullptr);
     if (authority_utf) {
         try {
+            const std::string authority_str = authority_utf;
             DatabaseContextNNPtr db = NN_CHECK_THROW(get_database_context(env, context));
-            AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_utf).as_nullable();
+            AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_str).as_nullable();
             result = wrap_shared_ptr(factory);
+            /*
+             * Log a message at debug level about the factory we just created.
+             * The -1 in use count is for ignoring the reference in this block.
+             */
+            log(env, "Created factory for \"" + authority_str + "\" authority."
+                  + " Database context use count is " + std::to_string(db.as_nullable().use_count() - 1) + '.');
         } catch (const std::exception &e) {
             rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
