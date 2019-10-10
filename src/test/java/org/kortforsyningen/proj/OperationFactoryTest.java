@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
+import org.opengis.referencing.operation.TransformException;
+import org.opengis.test.referencing.TransformTestCase;
 
 import static org.junit.Assert.*;
 
@@ -36,7 +38,7 @@ import static org.junit.Assert.*;
  * @version 1.0
  * @since   1.0
  */
-public final strictfp class OperationFactoryTest {
+public final strictfp class OperationFactoryTest extends TransformTestCase {
     /**
      * The factory to test.
      */
@@ -53,18 +55,33 @@ public final strictfp class OperationFactoryTest {
     public OperationFactoryTest() {
         factory = new OperationFactory(null);
         crsFactory = new AuthorityFactory.API("EPSG");
+
+        // Disable tests of unsupported features.
+        isFloatToFloatSupported     = false;
+        isDoubleToFloatSupported    = false;
+        isFloatToDoubleSupported    = false;
+        isOverlappingArraySupported = false;
+        isInverseTransformSupported = false;
     }
 
     /**
-     * Tests the requests for Mercator projection.
+     * Tests the requests for Mercator projection and the conversion of a coordinate.
      *
      * @throws FactoryException if an error occurred while creating a CRS or the operation.
+     * @throws TransformException if an error occurred while transforming a coordinate.
      */
     @Test
-    public void testMercator() throws FactoryException {
+    public void testMercator() throws FactoryException, TransformException {
         final CoordinateReferenceSystem source = crsFactory.createCoordinateReferenceSystem("4326");
         final CoordinateReferenceSystem target = crsFactory.createCoordinateReferenceSystem("3395");
         final CoordinateOperation operation = factory.createOperation(source, target);
         assertTrue(operation.toWKT().startsWith("CONVERSION[\"World Mercator\","));
+        assertSame("sourceCRS", source, operation.getSourceCRS());
+        assertSame("targetCRS", target, operation.getTargetCRS());
+
+        transform = operation.getMathTransform();
+        tolerance = 0.01;                                           // Request one centimetre accuracy.
+        verifyTransform(new double[] {40, 60},                      // (latitude, longitude) point to transform.
+                        new double[] {6679169.45, 4838471.40});     // Expected (easting, northing) values.
     }
 }

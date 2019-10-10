@@ -38,11 +38,11 @@ final class Transform extends NativeResource {
     /**
      * Creates a new {@code PJ}.
      *
-     * @param  operation  the operation for which to create a transform.
+     * @param  operation  wrapper for the operation for which to create a transform.
      * @param  context    the thread context in which the operation will be executed.
      * @throws TransformException if the construction failed.
      */
-    Transform(final Operation operation, final Context context) throws TransformException {
+    Transform(final NativeResource operation, final Context context) throws TransformException {
         super(context.createPJ(operation));
     }
 

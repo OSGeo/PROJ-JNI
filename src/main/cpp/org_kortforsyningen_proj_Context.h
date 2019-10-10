@@ -28,7 +28,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 /*
  * Class:     org_kortforsyningen_proj_Context
  * Method:    createPJ
- * Signature: (Lorg/kortforsyningen/proj/Operation;)J
+ * Signature: (Lorg/kortforsyningen/proj/NativeResource;)J
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_createPJ
   (JNIEnv *, jobject, jobject);

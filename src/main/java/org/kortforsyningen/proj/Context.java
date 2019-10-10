@@ -157,11 +157,11 @@ final class Context extends NativeResource implements AutoCloseable {
      * Creates the PROJ {@code PJ} object for the given coordinate operation.
      * The {@code PJ} shall be used in the same thread than this {@code Context}.
      *
-     * @param  operation  the operation for which to create a {@code PJ}.
+     * @param  operation  wrapper for the operation for which to create a {@code PJ}.
      * @return address of the {@code PJ} created by this method, or 0 if out of memory.
      * @throws TransformException if the construction failed.
      */
-    native long createPJ(Operation operation) throws TransformException;
+    native long createPJ(NativeResource operation) throws TransformException;
 
     /**
      * Disposes this context. This method returns the {@code PJ_CONTEXT} structure to the pool,

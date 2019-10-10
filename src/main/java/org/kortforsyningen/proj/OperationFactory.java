@@ -102,7 +102,8 @@ final class OperationFactory implements CoordinateOperationFactory {
         final Operation result;
         try (Context c = Context.acquire()) {
             result = c.factory(authority).createOperation(sourceCRS.impl, targetCRS.impl,
-                    desiredAccuracy, discardSuperseded);
+                        desiredAccuracy, discardSuperseded);
+            result.setCRSs(sourceCRS, targetCRS);
         }
         return java.util.Collections.singletonList(result);
     }

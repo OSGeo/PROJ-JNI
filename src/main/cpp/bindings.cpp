@@ -38,6 +38,7 @@ using osgeo::proj::io::WKTFormatter;
 using osgeo::proj::io::WKTFormatterNNPtr;
 using osgeo::proj::io::IWKTExportable;
 using osgeo::proj::io::PROJStringFormatter;
+using osgeo::proj::io::PROJStringFormatterNNPtr;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
 using osgeo::proj::crs::CRS;
@@ -806,8 +807,8 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_createPJ(JNIEnv *e
         PJ_CONTEXT *ctx = get_context(env, context);
         DatabaseContextPtr dbContext = get_database_context(env, context);
         CoordinateOperationPtr cop = get_and_unwrap_ptr<CoordinateOperation>(env, operation);
-        PROJStringFormatter *formatter = PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_5, dbContext).get();
-        const std::string &projString = cop->exportToPROJString(formatter);
+        PROJStringFormatterNNPtr formatter = PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_5, dbContext);
+        std::string projString = cop->exportToPROJString(formatter.get());
         PJ *pj = proj_create(ctx, projString.c_str());
         return reinterpret_cast<jlong>(pj);
     } catch (const std::exception &e) {
