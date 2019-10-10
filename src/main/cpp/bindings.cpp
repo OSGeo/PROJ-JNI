@@ -819,6 +819,35 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_createPJ(JNIEnv *e
 
 
 /**
+ * Returns the pointer to PJ for the given Transform object in Java.
+ *
+ * @param  env      The JNI environment.
+ * @param  context  The Transform object.
+ * @return The pointer to PJ, or null if none.
+ */
+inline PJ* get_PJ(JNIEnv *env, jobject transform) {
+    return reinterpret_cast<PJ*>(env->GetLongField(transform, java_field_for_pointer));
+}
+
+
+/**
+ * Assigns a PJ_CONTEXT to the PJ wrapped by the Transform.
+ * This function must be invoked before and after call to transform method.
+ *
+ * @param  env        The JNI environment.
+ * @param  transform  The Java object wrapping the PJ to use.
+ * @param  Context    The context to assign, or null for removing context assignment.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_assign(JNIEnv *env, jobject transform, jobject context) {
+    PJ *pj = get_PJ(env, transform);
+    if (pj) {
+        PJ_CONTEXT *ctx = context ? get_context(env, context) : nullptr;
+//      proj_assign_context(pj, ctx);   // TODO: seems not available in PROJ 6.2.0.
+    }
+}
+
+
+/**
  * Transforms in-place the coordinates in the given array.
  * The coordinates array shall contain (x,y,z,t,…) tuples,
  * where the z and any additional dimensions are optional.
@@ -840,7 +869,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_createPJ(JNIEnv *e
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_transform
     (JNIEnv *env, jobject transform, const jint dimension, jdoubleArray coordinates, jint offset, jint numPts)
 {
-    PJ *pj = reinterpret_cast<PJ*>(env->GetLongField(transform, java_field_for_pointer));
+    PJ *pj = get_PJ(env, transform);
     if (pj) {
         const size_t stride = sizeof(jdouble) * dimension;
         /*

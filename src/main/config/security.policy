@@ -1,0 +1,7 @@
+//
+// Security policy for running PROJ-JNI in a security-constrained environment.
+//
+grant {
+  permission java.util.PropertyPermission  "org.kortforsyningen.proj.optimalNumThreads", "read";
+  permission java.lang.RuntimePermission   "loadLibrary.libproj-binding";
+};

@@ -47,6 +47,14 @@ final class Transform extends NativeResource {
     }
 
     /**
+     * Assigns a {@code PJ_CONTEXT} to the {@code PJ} wrapped by this {@code Transform}.
+     * This method must be invoked before and after call to {@link #transform} method.
+     *
+     * @param  context  the context to assign, or {@code null} for removing context assignment.
+     */
+    native void assign(Context context);
+
+    /**
      * Transforms in-place the coordinates in the given array.
      * The coordinates array shall contain (<var>x</var>,<var>y</var>,<var>z</var>,<var>t</var>,…) tuples,
      * where the <var>z</var> and any additional dimensions are optional.

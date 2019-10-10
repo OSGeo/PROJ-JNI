@@ -27,11 +27,19 @@ import org.opengis.metadata.extent.Extent;
 
 
 /**
- * Context in which a coordinate operation is to be used.
- * Context can modify the coordinate operations given by a call to
- * {@link Proj#createCoordinateOperation Proj.createCoordinateOperation(…)},
- * in particular by specifying an {@linkplain #setAreaOfInterest(Extent) area of interest}
- * and {@linkplain #setDesiredAccuracy(double) desired accuracy}.
+ * Optional information about the context in which a coordinate operation will be used.
+ * When given to {@link Proj#createCoordinateOperation Proj.createCoordinateOperation(…)} method,
+ * {@code CoordinateOperationContext} can modify the criterion by which PROJ will select the "best"
+ * coordinate operation. Some criterion are:
+ *
+ * <ul>
+ *   <li>The {@linkplain #setAreaOfInterest(Extent) area of interest}.</li>
+ *   <li>The {@linkplain #setDesiredAccuracy(double) desired accuracy}.</li>
+ * </ul>
+ *
+ * {@code CoordinateOperationContext} is <em>not</em> thread-safe.
+ * It is only a temporary object for creating coordinate operations
+ * and rarely need to be shared between different threads.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0

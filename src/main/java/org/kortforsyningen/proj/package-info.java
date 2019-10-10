@@ -28,13 +28,13 @@
  * This package exposes PROJ services as implementations of <a href="http://www.geoapi.org">GeoAPI</a> interfaces.
  * Both PROJ 6 and GeoAPI are modeled according the ISO 19111 international standard.
  * The use of GeoAPI interfaces allows developers to write their software in an implementation independent way,
- * using the {@link org.kortforsyningen.proj.Proj} class only as a starting point or for PROJ-specific actions.
+ * using the {@link Proj} class only as a starting point or for PROJ-specific actions.
  *
  * <p>This package requires installation of native libraries.
  * The presence of those libraries can be tested as below:</p>
  *
  * <blockquote><pre>
- * {@linkplain org.kortforsyningen.proj.Proj#version()}.isPresent()</pre>
+ * {@linkplain Proj#version()}.isPresent()</pre>
  * </blockquote>
  *
  * <p>Coordinate operations can be performed as below. In this example, only the first line is PROJ-specific.
@@ -47,8 +47,20 @@
  * // TODO: complete.</pre>
  * </blockquote>
  *
- * <p>Unless otherwise noted in Javadoc, all classes in this package are safe for use in multi-thread environment.
- * The main exception is {@link org.kortforsyningen.proj.WKTFormat}.</p>
+ * <p><b>Multi-threading:</b></p>
+ * <p>Unless otherwise noted in Javadoc, all classes are safe for use in multi-thread environment.
+ * However there is a limit in the number of concurrent threads which can use efficiently the same
+ * {@link org.opengis.referencing.operation.MathTransform}. This limit can be controlled by assigning an
+ * integer to the "{@systemProperty org.kortforsyningen.proj.optimalNumThreads}" system property at startup time.
+ * A low value does not necessarily block more threads from using a
+ * {@link org.opengis.referencing.operation.MathTransform} concurrently,
+ * but the extra threads may observe a performance degradation.
+ * Conversely a too high value may retain more resources than necessary.
+ * The current default value is 4.</p>
+ *
+ * <p><b>Security:</b></p>
+ * <p>PROJ-JNI can be executed in a security constrained environment if the {@code "loadLibrary.libproj-binding"}
+ * runtime permission is granted. An example is given in the {@code security.policy} file.</p>
  *
  * <p><b>References:</b></p>
  * <ul>

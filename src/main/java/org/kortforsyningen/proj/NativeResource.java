@@ -30,6 +30,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.lang.annotation.Native;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 
 /**
@@ -155,11 +157,21 @@ class NativeResource implements Runnable {
      * attempts to use this class will result in {@link NoClassDefFoundError}.
      */
     static {
+        final String path;
         try {
-            System.load(libraryPath().toAbsolutePath().toString());
+            path = libraryPath().toAbsolutePath().toString();
         } catch (URISyntaxException | IOException e) {
             throw (UnsatisfiedLinkError) new UnsatisfiedLinkError("Can not get path to native file.").initCause(e);
         }
+        /*
+         * The AccessController is used for loading native code in a security constrained environment.
+         * It has no effect on the common case where no security manager is enforced. We must promise
+         * to not use any user-supplied parameter in the privileged block.
+         */
+        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+            System.load(path);
+            return null;
+        });
         initialize();
     }
 
@@ -180,8 +192,7 @@ class NativeResource implements Runnable {
      *
      * @return the logger.
      */
-    @SuppressWarnings("unused")
-    private static System.Logger logger() {
+    static System.Logger logger() {
         return System.getLogger(LOGGER_NAME);
     }
 

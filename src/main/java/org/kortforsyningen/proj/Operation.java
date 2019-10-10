@@ -24,6 +24,10 @@ package org.kortforsyningen.proj;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.metadata.quality.PositionalAccuracy;
@@ -46,9 +50,51 @@ import org.opengis.referencing.operation.TransformException;
  */
 class Operation extends IdentifiableObject implements CoordinateOperation, MathTransform {
     /**
+     * The maximum number of {@link Transform} instances to cache. This maximum should be the expected
+     * maximum number of threads (or the "optimal" number of threads) using the same {@link Operation}
+     * concurrently. A low value does not necessarily block more threads from using {@code Operation},
+     * but the extra threads may observe a performance degradation.
+     */
+    private static final int NUM_THREADS;
+    static {
+        Integer n = null;
+        try {
+            /*
+             * The AccessController is used for reading the property value in a security constrained environment.
+             * It has no effect on the common case where no security manager is enforced. We must promise to not
+             * execute any user-supplied parameter in the privileged block.
+             */
+            n = AccessController.doPrivileged((PrivilegedAction<Integer>) () ->
+                    Integer.getInteger("org.kortforsyningen.proj.optimalNumThreads"));
+        } catch (SecurityException e) {
+            /*
+             * If we do not have the authorization to read the property value, this is not a big issue.
+             * We can work with the default value.
+             */
+            NativeResource.logger().log(System.Logger.Level.DEBUG, e.getLocalizedMessage(), e);
+        }
+        /*
+         * The default value below (4) is arbitrary. If that default value is modified,
+         * then the documentation in package-info.java file should be updated accordingly.
+         */
+        NUM_THREADS = (n != null) ? Math.max(1, Math.min(100, n)) : 4;
+    }
+
+    /**
      * The source and target coordinate reference systems, or {@code null} if unspecified.
      */
     private CRS sourceCRS, targetCRS;
+
+    /**
+     * The objects which will perform the actual coordinate operations.
+     * Each {@code Transform} instance can be used by only one thread at a time.
+     * We cache the {@code Transform} instances after use so they can be reused
+     * by the same thread or another thread. We put an arbitrary limit on the number
+     * of instances to cache, but this will not limit the number of concurrent threads
+     * doing transformations. It only means that the additional threads will go through
+     * the most costly process of creating new {@link Transform} instances.
+     */
+    private final Queue<Transform> transforms = new ArrayBlockingQueue<>(NUM_THREADS);
 
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::operation::CoordinateOperation}.
@@ -158,6 +204,39 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     }
 
     /**
+     * Returns a {@code PJ} wrapper, creating a new one if none exist in the cache.
+     * The returned wrapper shall be used in a single thread.
+     * The {@link #release(Transform)} method must be invoked after usage,
+     * even on failure.
+     *
+     * @param  c  the current thread context.
+     * @return the {@code PJ} wrapper for the current thread.
+     * @throws TransformException if the {@code PJ} object can not be created.
+     */
+    private Transform acquire(final Context c) throws TransformException {
+        Transform tr = transforms.poll();
+        if (tr == null) {
+            tr = new Transform(impl, c);
+        } else {
+            tr.assign(c);
+        }
+        return tr;
+    }
+
+    /**
+     * Releases the {@code PJ} wrapper, or destroys it if the cache is full.
+     *
+     * @param  tr  wrapper of the {@code PJ} to cache for reuse or to destroy.
+     */
+    private void release(final Transform tr) {
+        if (transforms.offer(tr)) {
+            tr.assign(null);
+        } else {
+            tr.destroy();
+        }
+    }
+
+    /**
      * Transforms the specified {@code ptSrc} and stores the result in {@code ptDst}.
      * If {@code ptDst} is {@code null}, a new {@link DirectPosition} object is allocated
      * and then the result of the transformation is stored in this object. In either case,
@@ -183,11 +262,11 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
             ordinates[i] = ptSrc.getOrdinate(i);
         }
         try (Context c = Context.acquire()) {
-            final Transform tr = new Transform(impl, c);        // TODO: should use cached instance.
+            final Transform tr = acquire(c);
             try {
                 tr.transform(ordinates.length, ordinates, 0, 1);
             } finally {
-                tr.destroy();
+                release(tr);
             }
         }
         if (ptDst != null) {
@@ -233,15 +312,12 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
             // TODO: need special check for overlapping arrays.
             throw new TransformException("Transformation between CRS of different dimensions not yet supported.");
         }
-        /*
-         * TODO: Creation of Transform object is potentially expensive. Should cache.
-         */
         try (Context c = Context.acquire()) {
-            final Transform tr = new Transform(impl, c);
+            final Transform tr = acquire(c);
             try {
                 tr.transform(tgtDim, dstPts, dstOff, numPts);
             } finally {
-                tr.destroy();
+                release(tr);
             }
         }
     }

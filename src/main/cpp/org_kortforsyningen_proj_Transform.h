@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_kortforsyningen_proj_Transform
+ * Method:    assign
+ * Signature: (Lorg/kortforsyningen/proj/Context;)V
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_assign
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     org_kortforsyningen_proj_Transform
  * Method:    transform
  * Signature: (I[DII)V
  */
