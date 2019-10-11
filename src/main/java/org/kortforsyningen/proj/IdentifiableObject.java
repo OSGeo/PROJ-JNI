@@ -81,6 +81,18 @@ abstract class IdentifiableObject {
     }
 
     /**
+     * Creates an {@code IdentifiableObject} using a predetermined wrapper to a PROJ structure.
+     * This is a variant of {@link #IdentifiableObject(long)} constructor for the cases when a
+     * subclass of {@link SharedPointer} is desired. It still caller's responsibility to invoke
+     * {@link #cleanWhenUnreachable()} after construction.
+     *
+     * @param  ptr  wrapper to a pointer to the PROJ structure.
+     */
+    IdentifiableObject(final SharedPointer ptr) {
+        impl = ptr;
+    }
+
+    /**
      * Registers a cleaner which will release PROJ resources when this {@code IdentifiableObject}
      * is garbage collected. This method shall be invoked exactly once after construction.
      */

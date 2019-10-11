@@ -24,8 +24,6 @@ package org.kortforsyningen.proj;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import org.opengis.geometry.DirectPosition;
@@ -76,8 +74,12 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
         /*
          * The default value below (4) is arbitrary. If that default value is modified,
          * then the documentation in package-info.java file should be updated accordingly.
+         * The maximum is also arbitrary; we need to put a relatively low maximum because
+         * the simple algorithm used for the `transforms` array does not scale to a large
+         * number of entries. It should not be necessary to allow high numbers because it
+         * is only the maximum number of threads per Operation instance, not a global maximum.
          */
-        NUM_THREADS = (n != null) ? Math.max(1, Math.min(100, n)) : 4;
+        NUM_THREADS = (n != null) ? Math.max(1, Math.min(16, n)) : 4;
     }
 
     /**
@@ -89,12 +91,67 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * The objects which will perform the actual coordinate operations.
      * Each {@code Transform} instance can be used by only one thread at a time.
      * We cache the {@code Transform} instances after use so they can be reused
-     * by the same thread or another thread. We put an arbitrary limit on the number
-     * of instances to cache, but this will not limit the number of concurrent threads
-     * doing transformations. It only means that the additional threads will go through
-     * the most costly process of creating new {@link Transform} instances.
+     * by the same thread or another thread.
+     *
+     * <p>The array length is an arbitrary limit on the number of instances to cache,
+     * but this will not limit the number of concurrent threads doing transformations.
+     * It only means that the additional threads will go through the most costly process
+     * of creating new {@link Transform} instances.</p>
+     *
+     * <p><b>Design note:</b> the use of {@link java.util.concurrent.ArrayBlockingQueue}
+     * would be more efficient, but it is also a relatively heavy class for this simple need.
+     * We use an array for now, with the requirement that all accesses to this array must be
+     * synchronized of {@code transforms}.</p>
      */
-    private final Queue<Transform> transforms = new ArrayBlockingQueue<>(NUM_THREADS);
+    private final Transform[] transforms;
+
+    /**
+     * Task executed when the enclosing {@link Operation} is garbage collected.
+     * This task destroys all {@link Transform} cached by the enclosing class.
+     *
+     * <b>Reminder:</b> this class shall not contain any reference to {@link Operation}.
+     */
+    private static final class Cleaner extends SharedPointer {
+        /**
+         * A copy of the {@link Operation#transforms} reference.
+         * They are the references to {@code PJ} objects to destroy.
+         */
+        private final Transform[] transforms;
+
+        /**
+         * Wraps the shared pointer at the given address.
+         * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
+         *
+         * @param  ptr  pointer to the {@code std::shared_ptr}, or 0 if out of memory.
+         * @throws OutOfMemoryError if {@code ptr} is 0.
+         */
+        Cleaner(final long ptr) {
+            super(ptr);
+            transforms = new Transform[NUM_THREADS];
+        }
+
+        /**
+         * Invoked by the cleaner thread when the {@link Operation} has been garbage collected.
+         * This method destroy all @code PJ} objects, then the PROJ {@code CoordinateOperation}.
+         */
+        @Override
+        public void run() {
+            /*
+             * Synchronization should not be needed since the array should not be used anymore.
+             * But we still want the memory barrier effect, and the synchronization is a safety.
+             */
+            synchronized (transforms) {
+                for (int i=transforms.length; --i >= 0;) {
+                    final Transform tr = transforms[i];
+                    if (tr != null) {
+                        transforms[i] = null;       // Theoretically not needed but done as a safety.
+                        tr.destroy();
+                    }
+                }
+            }
+            super.run();
+        }
+    }
 
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::operation::CoordinateOperation}.
@@ -103,7 +160,8 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @param  ptr  pointer to the wrapped PROJ object.
      */
     Operation(final long ptr) {
-        super(ptr);
+        super(new Cleaner(ptr));
+        transforms = ((Cleaner) impl).transforms;
     }
 
     /**
@@ -214,13 +272,17 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @throws TransformException if the {@code PJ} object can not be created.
      */
     private Transform acquire(final Context c) throws TransformException {
-        Transform tr = transforms.poll();
-        if (tr == null) {
-            tr = new Transform(impl, c);
-        } else {
-            tr.assign(c);
+        synchronized (transforms) {
+            for (int i=transforms.length; --i >= 0;) {
+                final Transform tr = transforms[i];
+                if (tr != null) {
+                    transforms[i] = null;
+                    tr.assign(c);
+                    return tr;
+                }
+            }
         }
-        return tr;
+        return new Transform(impl, c);
     }
 
     /**
@@ -229,11 +291,16 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @param  tr  wrapper of the {@code PJ} to cache for reuse or to destroy.
      */
     private void release(final Transform tr) {
-        if (transforms.offer(tr)) {
-            tr.assign(null);
-        } else {
-            tr.destroy();
+        synchronized (transforms) {
+            for (int i=transforms.length; --i >= 0;) {
+                if (transforms[i] == null) {
+                    transforms[i] = tr;
+                    tr.assign(null);
+                    return;
+                }
+            }
         }
+        tr.destroy();
     }
 
     /**
