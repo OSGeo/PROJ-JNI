@@ -101,25 +101,6 @@ abstract class IdentifiableObject {
     }
 
     /**
-     * Formats an error message for an illegal argument. Example:
-     * <cite>"Argument sourceCRS expects a PROJ implementation, but got an instance of Foo class."</cite>
-     *
-     * @param  name   argument name.
-     * @param  value  argument value.
-     * @return message to give to {@link IllegalArgumentException}.
-     */
-    static String unsupportedImplementation(final String name, final Object value) {
-        final StringBuilder message = new StringBuilder(100)
-                .append("Argument ").append(name).append(" expects a PROJ implementation, but got ");
-        if (value == null) {
-            message.append("a null value.");
-        } else {
-            message.append("an instance of ").append(value.getClass().getSimpleName()).append(" class.");
-        }
-        return message.toString();
-    }
-
-    /**
      * Returns a non-null label identifying this object.
      * This is used for formatting error messages only.
      *

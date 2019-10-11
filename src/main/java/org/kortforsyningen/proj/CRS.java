@@ -35,6 +35,11 @@ import org.opengis.referencing.cs.CoordinateSystem;
  */
 class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     /**
+     * Default number of dimensions when we can not infer it.
+     */
+    static final int DEFAULT_DIMENSION = 2;
+
+    /**
      * Casts the given value to {@link CRS}.
      *
      * @param  name   argument name, used only for formatting error message.
@@ -47,7 +52,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
         if (value instanceof CRS) {
             return (CRS) value;
         } else {
-            throw new IllegalArgumentException(unsupportedImplementation(name, value));
+            throw new UnsupportedImplementationException(UnsupportedImplementationException.message(name, value));
         }
     }
 
@@ -58,6 +63,18 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
      */
     CRS(final long ptr) {
         super(ptr);
+    }
+
+    /**
+     * Returns the number of dimensions of this CRS.
+     * This is a shortcut for {@code getCoordinateSystem().getDimension}.
+     *
+     * @return number of dimensions in this CRS.
+     *
+     * @see CoordinateSystem#getDimension()
+     */
+    final int getDimension() {
+        return DEFAULT_DIMENSION;                   // TODO
     }
 
     /**

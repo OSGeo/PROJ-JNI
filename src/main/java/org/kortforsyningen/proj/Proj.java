@@ -25,12 +25,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.opengis.util.FactoryException;
+import org.opengis.geometry.DirectPosition;
+import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.CoordinateOperationFactory;
 import org.opengis.referencing.operation.OperationNotFoundException;
+import org.opengis.referencing.operation.MathTransform;
 
 
 /**
@@ -228,6 +231,8 @@ public final class Proj {
      * @param  targetCRS  output coordinate reference system.
      * @param  context    context in which the coordinate operation is to be used.
      * @return coordinate operations from {@code sourceCRS} to {@code targetCRS}.
+     * @throws NullPointerException if {@code sourceCRS} or {@code targetCRS} is {@code null}.
+     * @throws UnsupportedImplementationException if a CRS is not a PROJ-JNI implementation.
      * @throws FactoryException if the operation creation failed.
      *
      * @see #getOperationFactory(CoordinateOperationContext)
@@ -263,6 +268,8 @@ public final class Proj {
      * @param  targetCRS  output coordinate reference system.
      * @param  context    context in which the coordinate operation is to be used.
      * @return coordinate operations from {@code sourceCRS} to {@code targetCRS}.
+     * @throws NullPointerException if {@code sourceCRS} or {@code targetCRS} is {@code null}.
+     * @throws UnsupportedImplementationException if a CRS is not a PROJ-JNI implementation.
      * @throws FactoryException if the operation creation failed.
      */
     public static List<CoordinateOperation> createCoordinateOperations(
@@ -274,5 +281,44 @@ public final class Proj {
                 CRS.cast("sourceCRS", sourceCRS),
                 CRS.cast("targetCRS", targetCRS),
                 (context != null) ? context : new CoordinateOperationContext());
+    }
+
+    /**
+     * Creates a position with the given coordinate values and an optional CRS.
+     * If a CRS is provided, its number of dimensions must match the number of coordinate values.
+     *
+     * <p>A {@link DirectPosition} instance can be transformed to another CRS by a call to
+     * <code>factory.{@linkplain CoordinateOperationFactory#createOperation(CoordinateReferenceSystem,
+     * CoordinateReferenceSystem) createOperation}(position.{@linkplain DirectPosition#getCoordinateReferenceSystem()
+     * getCoordinateReferenceSystem()})</code> for fetching the coordinate operation, then
+     * <code>operation.getMathTransform().{@linkplain MathTransform#transform(DirectPosition, DirectPosition)
+     * transform}(position, null)</code> for executing that operation.
+     * However those steps are costly and should be applied for only a small number of points.
+     * For large number of points, consider using coordinate tuples in {@code float[]} or {@code double[]}
+     * arrays instead.
+     *
+     * <p><b>Serialization:</b></p>
+     * The {@code DirectPosition} returned by this method is {@linkplain java.io.Serializable serializable},
+     * but the CRS is lost in the serialization process because we do not serialize native PROJ objects.
+     *
+     * @param  crs          the coordinate reference system, or {@code null} is unspecified.
+     * @param  coordinates  the coordinate values.
+     * @return a direct position for the given coordinate values and optional CRS.
+     * @throws NullPointerException if {@code coordinates} is {@code null}.
+     * @throws UnsupportedImplementationException if the given CRS is not a PROJ-JNI implementation.
+     * @throws MismatchedDimensionException if the given CRS is non-null but its number of dimensions
+     *         is not equal to the length of the {@code coordinates} array..
+     *
+     * @see MathTransform#transform(DirectPosition, DirectPosition)
+     */
+    public static DirectPosition createPosition(final CoordinateReferenceSystem crs, double... coordinates) {
+        CRS impl = null;
+        if (crs != null) {
+            impl = CRS.cast("crs", crs);
+            if (impl.getDimension() != coordinates.length) {
+                throw new MismatchedDimensionException("Number of dimensions in the CRS does not match the number of coordinate values.");
+            }
+        }
+        return new SimpleDirectPosition(impl, coordinates.clone());
     }
 }
