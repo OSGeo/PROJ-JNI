@@ -35,7 +35,3 @@ div.block ol > li {
   margin-top:    0;
   margin-bottom: 0;
 }
-
-:not(td) > div.block {
-  text-align: justify;
-}
