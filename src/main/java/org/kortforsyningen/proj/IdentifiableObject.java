@@ -217,4 +217,30 @@ abstract class IdentifiableObject {
         }
         return super.toString();
     }
+
+    /**
+     * Returns a hash code value for this object.
+     * This method is defined for consistency with {@link #equals(Object)}.
+     *
+     * @return a hash code value for this object.
+     */
+    @Override
+    public int hashCode() {
+        return Long.hashCode(impl.rawPointer());
+    }
+
+    /**
+     * Returns {@code true} if this native resource is wrapping the same PROJ object than {@code other}.
+     *
+     * @param  other  the other object to compare with this native resource.
+     * @return whether the two objects are wrapping the same PROJ object.
+     */
+    @Override
+    public boolean equals(final Object other) {
+        if (other == this) {
+            return true;
+        }
+        return (other != null) && other.getClass().equals(getClass()) &&
+                ((IdentifiableObject) other).impl.rawPointer() == impl.rawPointer();
+    }
 }

@@ -582,6 +582,24 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_toWKT
 
 
 /**
+ * Returns the memory address of the PROJ object wrapped by the NativeResource.
+ * This is used for computing hash codes and object comparisons only.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the PROJ object.
+ * @return Memory address of the wrapper PROJ object.
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer(JNIEnv *env, jobject object) {
+    jlong ptr = env->GetLongField(object, java_field_for_pointer);
+    if (ptr) {
+        BaseObjectPtr sp = unwrap_shared_ptr<BaseObject>(ptr);
+        if (sp) return reinterpret_cast<jlong>(sp.get());
+    }
+    return 0;
+}
+
+
+/**
  * Decrements the references count of the shared pointer. This method is invoked automatically
  * when an instance of IdentifiableObject class is garbage collected.
  *

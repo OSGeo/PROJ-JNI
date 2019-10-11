@@ -24,9 +24,9 @@ package org.kortforsyningen.proj;
 import java.util.Optional;
 import org.junit.Test;
 import org.opengis.util.FactoryException;
+import org.opengis.referencing.IdentifiedObject;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assert.*;
 
 
 /**
@@ -45,7 +45,7 @@ public final strictfp class ProjTest {
     @Test
     public void testVersion() {
         final Optional<String> version = Proj.version();
-        assumeTrue("PROJ library not found.", version.isPresent());
+        assertTrue("PROJ library not found.", version.isPresent());
         assertTrue(version.get().matches(".*\\d+\\.\\d+\\.\\d+.*"));
     }
 
@@ -56,7 +56,10 @@ public final strictfp class ProjTest {
      */
     @Test
     public void testCreateFromUserInput() throws FactoryException {
-        final Object obj = Proj.createFromUserInput("EPSG:3395");
+        final IdentifiedObject obj = Proj.createFromUserInput("EPSG:3395");
         assertTrue(obj instanceof CRS);
+
+        // Verify that the hash code value is stable.
+        assertEquals(obj.hashCode(), obj.hashCode());
     }
 }

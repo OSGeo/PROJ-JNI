@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    rawPointer
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    toWKT
  * Signature: (IZZ)Ljava/lang/String;
  */

@@ -48,6 +48,15 @@ class SharedPointer extends NativeResource implements Runnable {
     }
 
     /**
+     * Returns the memory address of the PROJ object wrapped by this {@code NativeResource}.
+     * This method is used for {@link IdentifiableObject#hashCode()} and
+     * {@link IdentifiableObject#equals(Object)} implementations only.
+     *
+     * @return memory address of the wrapper PROJ object.
+     */
+    final native long rawPointer();
+
+    /**
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
      * This is allowed only if the wrapped PROJ object implements {@code osgeo::proj::io::IWKTExportable}.
      *
@@ -58,7 +67,7 @@ class SharedPointer extends NativeResource implements Runnable {
      *         does not implement the {@code osgeo::proj::io::IWKTExportable} interface.
      * @throws FormattingException if an error occurred during formatting.
      */
-    native String toWKT(int convention, boolean multiline, boolean strict);
+    final native String toWKT(int convention, boolean multiline, boolean strict);
 
     /**
      * Invoked by the cleaner thread when the {@link IdentifiableObject} has been garbage collected.

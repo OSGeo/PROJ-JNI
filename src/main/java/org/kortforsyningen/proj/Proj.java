@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.opengis.util.FactoryException;
+import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
@@ -150,17 +151,22 @@ public final class Proj {
      *   <li>PROJJSON string.</li>
      * </ul>
      *
-     * @param  text  One of the above mentioned text format.
+     * @param  text  one of the above mentioned text format.
      * @return a coordinate reference system or other kind of object created from the given text.
      * @throws FactoryException if the given text can not be parsed.
      *
      * @see <a href="https://proj.org/development/reference/cpp/io.html#_CPPv4N5osgeo4proj2io19createFromUserInputERKNSt6stringEP10PJ_CONTEXT">PROJ C++ API</a>
      */
-    public static Object createFromUserInput(final String text) throws FactoryException {
+    public static IdentifiedObject createFromUserInput(final String text) throws FactoryException {
         Objects.requireNonNull(text);
+        final Object result;
         try (Context c = Context.acquire()) {
-            return c.createFromUserInput(text);
+            result = c.createFromUserInput(text);
         }
+        if (result instanceof IdentifiedObject) {
+            return (IdentifiedObject) result;
+        }
+        throw new FactoryException("Given input does not describe an IdentifiedObject.");
     }
 
     /**
