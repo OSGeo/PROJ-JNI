@@ -65,7 +65,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
              * execute any user-supplied parameter in the privileged block.
              */
             n = AccessController.doPrivileged((PrivilegedAction<Integer>) () ->
-                    Integer.getInteger("org.kortforsyningen.proj.optimalNumThreads"));
+                    Integer.getInteger("org.kortforsyningen.proj.maxThreadsPerTransform"));
         } catch (SecurityException e) {
             /*
              * If we do not have the authorization to read the property value, this is not a big issue.

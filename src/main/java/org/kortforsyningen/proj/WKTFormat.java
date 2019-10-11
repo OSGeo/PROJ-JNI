@@ -31,6 +31,7 @@ import org.opengis.referencing.IdentifiedObject;
  * This {@code WKTFormat} can be used when more control is desired on the formatting process,
  * for example by {@linkplain #setConvention selecting which WKT version is desired}.
  *
+ * <p><b>Limitations:</b></p>
  * <p>{@code WKTFormat} is <em>not</em> thread-safe. If used in a multi-thread environment,
  * then each thread should have its own instance, or synchronization shall be done by the user.</p>
  *

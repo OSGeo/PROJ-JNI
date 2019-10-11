@@ -37,7 +37,7 @@ import org.opengis.referencing.operation.OperationNotFoundException;
  * The methods provided in this class are specific to PROJ implementation.
  * However the factories obtained by {@link #getAuthorityFactory(String)}
  * and {@link #getOperationFactory(CoordinateOperationContext)} allow usage
- * of PROJ in an implementation Independent way.
+ * of PROJ in an implementation independent way.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0

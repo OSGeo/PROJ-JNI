@@ -50,13 +50,17 @@
  * <p><b>Multi-threading:</b></p>
  * <p>Unless otherwise noted in Javadoc, all classes are safe for use in multi-thread environment.
  * However there is a limit in the number of concurrent threads which can use efficiently the same
- * {@link org.opengis.referencing.operation.MathTransform}. This limit can be controlled by assigning an
- * integer to the "{@systemProperty org.kortforsyningen.proj.optimalNumThreads}" system property at startup time.
+ * {@link org.opengis.referencing.operation.MathTransform} instance.
+ * This limit can be controlled by assigning an integer to the
+ * "{@systemProperty org.kortforsyningen.proj.maxThreadsPerTransform}" system property at startup time.
  * A low value does not necessarily block more threads from using a
  * {@link org.opengis.referencing.operation.MathTransform} concurrently,
  * but the extra threads may observe a performance degradation.
  * Conversely a too high value may retain more resources than necessary.
  * The current default value is 4.</p>
+ *
+ * <p>Note that there is no limit on Java side in the amount of threads that can use <em>different</em>
+ * {@link org.opengis.referencing.operation.MathTransform} instances concurrently.</p>
  *
  * <p><b>Security:</b></p>
  * <p>PROJ-JNI can be executed in a security constrained environment if the {@code "loadLibrary.libproj-binding"}
