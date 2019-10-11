@@ -67,7 +67,7 @@ abstract class IdentifiableObject {
     /**
      * Provides access to the PROJ implementation.
      */
-    final NativeResource impl;
+    final SharedPointer impl;
 
     /**
      * Creates a wrapper for the given pointer to a PROJ structure.
@@ -77,7 +77,7 @@ abstract class IdentifiableObject {
      * @throws OutOfMemoryError if {@code ptr} is 0.
      */
     IdentifiableObject(final long ptr) {
-        impl = new NativeResource(ptr);
+        impl = new SharedPointer(ptr);
     }
 
     /**

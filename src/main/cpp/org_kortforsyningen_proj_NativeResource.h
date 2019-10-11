@@ -23,22 +23,6 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize
   (JNIEnv *, jclass);
 
-/*
- * Class:     org_kortforsyningen_proj_NativeResource
- * Method:    toWKT
- * Signature: (IZZ)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
-  (JNIEnv *, jobject, jint, jboolean, jboolean);
-
-/*
- * Class:     org_kortforsyningen_proj_NativeResource
- * Method:    run
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_run
-  (JNIEnv *, jobject);
-
 #ifdef __cplusplus
 }
 #endif

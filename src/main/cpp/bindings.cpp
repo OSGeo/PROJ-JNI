@@ -25,6 +25,7 @@
 #include "proj/crs.hpp"
 #include "org_kortforsyningen_proj_NativeResource.h"
 #include "org_kortforsyningen_proj_Context.h"
+#include "org_kortforsyningen_proj_SharedPointer.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
 #include "org_kortforsyningen_proj_WKTFormat$Convention.h"
 #include "org_kortforsyningen_proj_Transform.h"
@@ -406,7 +407,27 @@ rd: switch (type) {
 
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
-// │                                       CLASS Context                                        │
+// │                        CLASS NativeResource (except initialization)                        │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+/**
+ * Returns the PROJ release number.
+ *
+ * @param  env     The JNI environment.
+ * @param  caller  The class from which this function has been invoked.
+ * @return The PROJ release number, or null.
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(JNIEnv *env, jclass caller) {
+    const char *desc = pj_release;
+    return (desc) ? env->NewStringUTF(desc) : nullptr;
+}
+
+
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                              CLASS Context (except createPJ)                               │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -514,21 +535,8 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
-// │                                    CLASS NativeResource                                    │
+// │                                    CLASS SharedPointer                                     │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
-
-
-/**
- * Returns the PROJ release number.
- *
- * @param  env     The JNI environment.
- * @param  caller  The class from which this function has been invoked.
- * @return The PROJ release number, or null.
- */
-JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(JNIEnv *env, jclass caller) {
-    const char *desc = pj_release;
-    return (desc) ? env->NewStringUTF(desc) : nullptr;
-}
 
 
 /**
@@ -540,7 +548,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
  * @param  convention  One of WKTFormat constants.
  * @return The Well-Known Text (WKT) for this object, or null if the object is not IWKTExportable.
  */
-JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_toWKT
     (JNIEnv *env, jobject object, jint convention, jboolean multiline, jboolean strict)
 {
     WKTFormatter::Convention c;
@@ -580,7 +588,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_toWKT
  * @param  env     The JNI environment.
  * @param  object  The Java object wrapping the shared object to release.
  */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_run(JNIEnv *env, jobject object) {
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_SharedPointer_run(JNIEnv *env, jobject object) {
     jlong ptr = get_and_clear_ptr(env, object);
     release_shared_ptr<BaseObject>(ptr);
 }

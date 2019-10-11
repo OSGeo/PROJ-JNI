@@ -38,22 +38,14 @@ import java.security.PrivilegedAction;
  * Base class of all objects having a reference to a native resource.
  * The resource is referenced in a pointer of type {@code long} and named {@code "ptr"}.
  * The field name matter, since native code searches for a field having exactly that name.
- *
- * <p>{@code NativeResource} can be {@linkplain IdentifiableObject#cleanWhenUnreachable() registered}
- * for automatic release of C++ shared pointer when an instance of another object is garbage collected.
- * The other object is usually {@link IdentifiableObject}, but other objects could be used as well.
- * The navigation shall be in only one direction, from {@link IdentifiableObject} to {@code NativeResource}.
- * See {@link java.lang.ref.Cleaner} for explanation about why this class shall not contains any reference
- * to the {@code IdentifiableObject}.</p>
- *
- * <p>If above-cited automatic release is not used, then it is subclass or caller responsibility
- * to manage the release of the resource referenced by {@link #ptr} when no longer referenced.</p>
+ * It is subclass or caller responsibility to manage the release of the resource referenced
+ * by {@link #ptr} when no longer referenced.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
  */
-class NativeResource implements Runnable {
+abstract class NativeResource {
     /**
      * Name of the logger to use for all warnings or debug messages emitted by this package.
      */
@@ -195,25 +187,4 @@ class NativeResource implements Runnable {
     static System.Logger logger() {
         return System.getLogger(LOGGER_NAME);
     }
-
-    /**
-     * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
-     * This is allowed only if the wrapped PROJ object implements {@code osgeo::proj::io::IWKTExportable}.
-     *
-     * @param  convention  ordinal value of the {@link WKTFormat.Convention} to use.
-     * @param  multiline   whether the WKT will use multi-line layout.
-     * @param  strict      whether to enforce strictly standard format.
-     * @return the Well-Known Text (WKT) for this object, or {@code null} if the PROJ object
-     *         does not implement the {@code osgeo::proj::io::IWKTExportable} interface.
-     * @throws FormattingException if an error occurred during formatting.
-     */
-    native String toWKT(int convention, boolean multiline, boolean strict);
-
-    /**
-     * Invoked by the cleaner thread when the {@link IdentifiableObject} has been garbage collected.
-     * This method is invoked by the cleaner thread and shall never been invoked directly by us.
-     * This implementation assumes that {@link #ptr} points to a C++ shared pointer.
-     */
-    @Override
-    public native void run();
 }
