@@ -35,10 +35,20 @@ import org.opengis.referencing.operation.OperationNotFoundException;
 
 /**
  * Static methods for coordinate reference systems and operations.
- * The methods provided in this class are specific to PROJ implementation.
- * However the factories obtained by {@link #getAuthorityFactory(String)}
- * and {@link #getOperationFactory(CoordinateOperationContext)} allow usage
- * of PROJ in an implementation independent way.
+ * The methods provided in this class are specific to PROJ implementation,
+ * but the objects returned by those methods can be used in an implementation independent way.
+ * Some entry points are:
+ *
+ * <ul>
+ *   <li>{@link #createFromUserInput(String)} — for creating a {@link CoordinateReferenceSystem}
+ *       from an EPSG code, a WKT string, <i>etc</i>.</li>
+ *   <li>{@link #createCoordinateOperation createCoordinateOperation(…)} — for creating the
+ *       {@link CoordinateOperation} capable to transform coordinate values from one CRS to another.</li>
+ * </ul>
+ *
+ * Alternatively the {@link #getAuthorityFactory(String)} and {@link #getOperationFactory(CoordinateOperationContext)}
+ * methods provide similar functionalities in a more implementation neutral way, at the cost of one indirection level
+ * (need to fetch the factory before to invoke methods on it).
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -54,7 +64,7 @@ public final class Proj {
     /**
      * Returns the version number of the PROJ library.
      * If the PROJ library is not installed on the current system,
-     * then this method logs a warning and return an empty value.
+     * then this method logs an error message and returns an empty value.
      * This method can be used as a way to check if the library is present.
      *
      * @return the PROJ release string, or an empty value if the native library has not been found.
@@ -80,29 +90,41 @@ public final class Proj {
     /**
      * Returns a factory for creating coordinate reference systems from codes allocated by the given authority.
      * The authority is typically "EPSG", but not necessarily; other authorities like "IAU" are also allowed.
+     * Typical values are:
+     *
+     * <ul>
+     *   <li>{@code "EPSG"} — de facto standard for coordinate reference systems on Earth.</li>
+     *   <li>{@code "IAU"} — extraterrestrial coordinate reference systems.</li>
+     *   <li>{@code ""} (empty string) — PROJ default set set of authorities.</li>
+     * </ul>
+     *
      * After a factory has been obtained, its {@link CRSAuthorityFactory#createCoordinateReferenceSystem(String)
      * createCoordinateReferenceSystem(…)} method can be invoked for creating a CRS from an authority code.
-     * For example the code below creates the "WGS 84" coordinate reference system for the "EPSG::4326" code:
+     * For example the code below creates the <cite>"WGS 84"</cite> coordinate reference system
+     * for the <cite>"EPSG::4326"</cite> code.
+     * In that example, only the first line is PROJ-specific;
+     * the remaining lines can be executed with any GeoAPI implementation:
      *
      * <blockquote><pre>
      * CRSAuthorityFactory factory = Proj.getAuthorityFactory("EPSG");
-     * CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");</pre>
+     * CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
+     * System.out.println(crs.toWKT());</pre>
      * </blockquote>
      *
-     * <p>The {@link CRSAuthorityFactory} interface provides an implementation-neutral way to create
-     * coordinate reference systems. In above example, only the first line is PROJ-specific.
-     * The remaining lines can be executed with any GeoAPI implementation.</p>
-     *
-     * <p>The factory returned by this method is safe for concurrent use in multi-threads environment.
+     * The factory returned by this method is safe for concurrent use in multi-threads environment.
      * The object returned by this method implements also the
      * {@link org.opengis.referencing.cs.CSAuthorityFactory},
      * {@link org.opengis.referencing.datum.DatumAuthorityFactory} and
      * {@link org.opengis.referencing.operation.CoordinateOperationAuthorityFactory} interfaces
      * (so it can be casted to any of those interfaces),
-     * but typically only the {@link CRSAuthorityFactory} interface is used.</p>
+     * but typically only the {@link CRSAuthorityFactory} interface is used.
      *
      * @param  authority  authority name of the factory (e.g. {@code "EPSG"}).
-     * @return factory for the given authority.
+     * @return the {@link CRSAuthorityFactory},
+     *         {@link org.opengis.referencing.cs.CSAuthorityFactory},
+     *         {@link org.opengis.referencing.datum.DatumAuthorityFactory} and
+     *         {@link org.opengis.referencing.operation.CoordinateOperationAuthorityFactory}
+     *         for the given authority.
      * @throws NullPointerException if {@code authority} is {@code null}.
      */
     public static CRSAuthorityFactory getAuthorityFactory(final String authority) {
@@ -116,10 +138,20 @@ public final class Proj {
     /**
      * Creates a new operation factory for the given context. The context is an optional argument which allows
      * to specify in particular the {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest}
-     * and {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}. If this argument
-     * is {@code null}, then the default values are {@linkplain #createCoordinateOperation documented here}.
+     * and {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}.
+     * The returned factory can be used for creating {@link CoordinateOperation}s for given pairs of
+     * {@link CoordinateReferenceSystem}s. Example:
      *
-     * @param  context in which coordinate operations are to be used, or {@code null} for the default.
+     * <blockquote><pre>
+     * CoordinateReferenceSystem  sourceCRS = ...;
+     * CoordinateReferenceSystem  targetCRS = ...;
+     * CoordinateOperationFactory opFactory = Proj.getOperationFactory(null);
+     * CoordinateOperation        operation = opFactory.createOperation(sourceCRS, targetCRS);
+     * System.out.println(operation.toWKT());</pre>
+     * </blockquote>
+     *
+     * @param  context in which coordinate operations are to be used, or {@code null}
+     *                 for the {@linkplain #createCoordinateOperation default setting}.
      * @return a factory for creating coordinate operations in the given context.
      */
     public static CoordinateOperationFactory getOperationFactory(final CoordinateOperationContext context) {
@@ -155,6 +187,8 @@ public final class Proj {
      * @return a coordinate reference system or other kind of object created from the given text.
      * @throws FactoryException if the given text can not be parsed.
      *
+     * @see #getAuthorityFactory(String)
+     * @see CRSAuthorityFactory#createObject(String)
      * @see <a href="https://proj.org/development/reference/cpp/io.html#_CPPv4N5osgeo4proj2io19createFromUserInputERKNSt6stringEP10PJ_CONTEXT">PROJ C++ API</a>
      */
     public static IdentifiedObject createFromUserInput(final String text) throws FactoryException {
@@ -195,6 +229,9 @@ public final class Proj {
      * @param  context    context in which the coordinate operation is to be used.
      * @return coordinate operations from {@code sourceCRS} to {@code targetCRS}.
      * @throws FactoryException if the operation creation failed.
+     *
+     * @see #getOperationFactory(CoordinateOperationContext)
+     * @see CoordinateOperationFactory#createOperation(CoordinateReferenceSystem, CoordinateReferenceSystem)
      */
     public static CoordinateOperation createCoordinateOperation(
             final CoordinateReferenceSystem sourceCRS,

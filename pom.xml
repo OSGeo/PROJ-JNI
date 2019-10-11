@@ -156,11 +156,13 @@
           <keywords>true</keywords>
           <breakiterator>true</breakiterator>
           <validateLinks>true</validateLinks>
+          <detectJavaApiLink>false</detectJavaApiLink>
           <links>
+            <link>https://docs.oracle.com/en/java/javase/13/docs/api</link>
             <link>http://www.geoapi.org/3.0/javadoc</link>
           </links>
           <additionalOptions>
-            <additionalOption>--add-stylesheet "${project.basedir}/src/javadoc/customization.css"</additionalOption>
+            <additionalOption>--add-stylesheet "${project.basedir}/src/main/javadoc/customization.css"</additionalOption>
           </additionalOptions>
         </configuration>
       </plugin>

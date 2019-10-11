@@ -37,15 +37,45 @@
  * {@linkplain Proj#version()}.isPresent()</pre>
  * </blockquote>
  *
- * <p>Coordinate operations can be performed as below. In this example, only the first line is PROJ-specific.
- * All other lines should work in the same way with any GeoAPI implementations.</p>
+ * <p>Coordinate operations can be performed as below.
+ * In this example, only the calls to {@link Proj} static methods are specific to this implementation.
+ * All other lines should work in the same way with any GeoAPI implementation.
+ * Note that geographic coordinates are in <var>latitude</var>, <var>longitude</var> order,
+ * as specified in the EPSG database and in agreement with centuries of practice.</p>
  *
  * <blockquote><pre>
  * CRSAuthorityFactory       factory   = Proj.getAuthorityFactory("EPSG");
  * CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
- * CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("3395");   // WGS 84 / World Mercator
- * // TODO: complete.</pre>
+ * CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("3395");   // WGS 84 / World Mercator
+ * CoordinateOperation       operation = Proj.createCoordinateOperation(sourceCRS, targetCRS, null);
+ * double[] coordinates = {
+ *     45.500,  -73.567,                    // Montreal
+ *     49.250, -123.100,                    // Vancouver
+ *     35.653,  139.839,                    // Tokyo
+ *     48.865,    2.349                     // Paris
+ * };
+ * operation.getMathTransform().transform(
+ *         coordinates, 0,                  // Source coordinates.
+ *         coordinates, 0,                  // Target coordinates (in this case, overwrite sources).
+ *         4);                              // Number of points to transform.
+ *
+ * System.out.printf("Montreal:  %11.1f %11.1f%n", coordinates[0], coordinates[1]);
+ * System.out.printf("Vancouver: %11.1f %11.1f%n", coordinates[2], coordinates[3]);
+ * System.out.printf("Tokyo:     %11.1f %11.1f%n", coordinates[4], coordinates[5]);
+ * System.out.printf("Paris:     %11.1f %11.1f%n", coordinates[6], coordinates[7]);</pre>
  * </blockquote>
+ *
+ * <p><b>Performance considerations:</b></p>
+ * <p>Calls to {@code createCoordinateOperation(…)} methods may be costly.
+ * Developers should get a {@link org.opengis.referencing.operation.CoordinateOperation} instance only once
+ * for a given pair of {@link org.opengis.referencing.crs.CoordinateReferenceSystem}s and keep that reference
+ * as long as they may need it.</p>
+ *
+ * <p>Calls to {@code MathTransform.transform(…)} methods may also be costly.
+ * Developers should avoid invoking those methods repeatedly for each point to transform.
+ * For example it is much more efficient to invoke {@code transform(double[], …)} only once
+ * for an array of 4 points than to invoke that method 4 times (once for each point).
+ * Above example shows the recommended way to use a transform.</p>
  *
  * <p><b>Multi-threading:</b></p>
  * <p>Unless otherwise noted in Javadoc, all classes are safe for use in multi-thread environment.
@@ -65,6 +95,13 @@
  * <p><b>Security:</b></p>
  * <p>PROJ-JNI can be executed in a security constrained environment if the {@code "loadLibrary.libproj-binding"}
  * runtime permission is granted. An example is given in the {@code security.policy} file.</p>
+ *
+ * <p><b>Unsupported features:</b></p>
+ * The following method calls will cause an exception to be thrown:
+ * <ul>
+ *   <li>{@link org.opengis.referencing.operation.MathTransform#derivative MathTransform.derivative(DirectPosition)} —
+ *       Jacobian matrix calculation is not yet supported by PROJ.</li>
+ * </ul>
  *
  * <p><b>References:</b></p>
  * <ul>
