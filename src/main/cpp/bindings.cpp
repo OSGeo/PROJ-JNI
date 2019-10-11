@@ -29,6 +29,9 @@
 #include "org_kortforsyningen_proj_WKTFormat$Convention.h"
 #include "org_kortforsyningen_proj_Transform.h"
 
+// TODO: remove after PROJ 6.3 release.
+#include <../src/proj_experimental.h>
+
 using osgeo::proj::io::DatabaseContext;
 using osgeo::proj::io::DatabaseContextPtr;
 using osgeo::proj::io::DatabaseContextNNPtr;
@@ -842,7 +845,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_assign(JNIEnv *en
     PJ *pj = get_PJ(env, transform);
     if (pj) {
         PJ_CONTEXT *ctx = context ? get_context(env, context) : nullptr;
-//      proj_assign_context(pj, ctx);   // TODO: seems not available in PROJ 6.2.0.
+        proj_assign_context(pj, ctx);
     }
 }
 
