@@ -33,29 +33,29 @@ import static org.junit.Assert.*;
 
 
 /**
- * Tests {@link WKTFormat}.
+ * Tests {@link ReferencingFormat}.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
  */
-public final strictfp class WKTFormatTest {
+public final strictfp class ReferencingFormatTest {
     /**
-     * The prefix used in {@code WKTFormat.h} for lines defining constant values.
+     * The prefix used in {@code ReferencingFormat.h} for lines defining constant values.
      */
-    private static final String DEFINE = "#define WKTFormat_";
+    private static final String DEFINE = "#define Format_";
 
     /**
-     * Verifies the {@link WKTFormat.Convention} ordinal values.
-     * This method parses the {@code WKTFormat.h} file
-     * and compares the defined values against {@link WKTFormat.Convention#ordinal()}.
+     * Verifies the {@link ReferencingFormat.Convention} ordinal values.
+     * This method parses the {@code ReferencingFormat.h} file
+     * and compares the defined values against {@link ReferencingFormat.Convention#ordinal()}.
      *
-     * @throws IOException if an error occurred while reading the {@code WKTFormat.h} file.
+     * @throws IOException if an error occurred while reading the {@code ReferencingFormat.h} file.
      */
     @Test
     public void verifyOrdinalValues() throws IOException {
-        final EnumSet<WKTFormat.Convention> remainings = EnumSet.allOf(WKTFormat.Convention.class);
-        for (final String line : Files.readAllLines(Paths.get("src/main/cpp/org_kortforsyningen_proj_WKTFormat$Convention.h"))) {
+        final EnumSet<ReferencingFormat.Convention> remainings = EnumSet.allOf(ReferencingFormat.Convention.class);
+        for (final String line : Files.readAllLines(Paths.get("src/main/cpp/org_kortforsyningen_proj_ReferencingFormat$Convention.h"))) {
             if (line.startsWith(DEFINE)) {
                 final int s1 = line.indexOf(' ', DEFINE.length());
                 final int s2 = line.lastIndexOf(' ');
@@ -64,12 +64,12 @@ public final strictfp class WKTFormatTest {
                 }
                 final String key = line.substring(DEFINE.length(), s1);
                 final int  value = Integer.parseInt(line.substring(s2 + 1));
-                final WKTFormat.Convention c = WKTFormat.Convention.valueOf(key);
+                final ReferencingFormat.Convention c = ReferencingFormat.Convention.valueOf(key);
                 assertTrue(key, remainings.remove(c));
                 assertEquals(key, c.ordinal(), value);
             }
         }
-        for (final WKTFormat.Convention c : remainings) {
+        for (final ReferencingFormat.Convention c : remainings) {
             fail("Missing convention: " + c);
         }
     }
@@ -96,7 +96,7 @@ public final strictfp class WKTFormatTest {
     }
 
     /**
-     * Tests {@link WKTFormat#format(Object)}.
+     * Tests {@link ReferencingFormat#format(Object)}.
      *
      * @throws FactoryException if an error occurred while creating the test CRS.
      */
@@ -104,8 +104,8 @@ public final strictfp class WKTFormatTest {
     public void testFormat() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
-        final WKTFormat formatter = new WKTFormat();
-        formatter.setConvention(WKTFormat.Convention.WKT1_ESRI);
+        final ReferencingFormat formatter = new ReferencingFormat();
+        formatter.setConvention(ReferencingFormat.Convention.WKT1_ESRI);
         final String wkt = formatter.format(crs);
         assertTrue(wkt, wkt.startsWith(
                 "GEOGCS[\"GCS_WGS_1984\",\n" +

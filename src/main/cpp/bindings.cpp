@@ -27,7 +27,7 @@
 #include "org_kortforsyningen_proj_Context.h"
 #include "org_kortforsyningen_proj_SharedPointer.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
-#include "org_kortforsyningen_proj_WKTFormat$Convention.h"
+#include "org_kortforsyningen_proj_ReferencingFormat$Convention.h"
 #include "org_kortforsyningen_proj_Transform.h"
 
 // TODO: remove after PROJ 6.3 release.
@@ -545,7 +545,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
  *
  * @param  env         The JNI environment.
  * @param  object      The Java object wrapping the PROJ object to format.
- * @param  convention  One of WKTFormat constants.
+ * @param  convention  One of ReferencingFormat constants.
  * @return The Well-Known Text (WKT) for this object, or null if the object is not IWKTExportable.
  */
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_toWKT
@@ -553,12 +553,12 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_toWKT
 {
     WKTFormatter::Convention c;
     switch (convention) {
-        case WKTFormat_WKT2_2019:            c = WKTFormatter::Convention::WKT2_2018;            break;      // TODO: rename "2018" as "2019" in next PROJ release.
-        case WKTFormat_WKT2_2015:            c = WKTFormatter::Convention::WKT2_2015;            break;
-        case WKTFormat_WKT2_2019_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2018_SIMPLIFIED; break;
-        case WKTFormat_WKT2_2015_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2015_SIMPLIFIED; break;
-        case WKTFormat_WKT1_GDAL:            c = WKTFormatter::Convention::WKT1_GDAL;            break;
-        case WKTFormat_WKT1_ESRI:            c = WKTFormatter::Convention::WKT1_ESRI;            break;
+        case Format_WKT2_2019:            c = WKTFormatter::Convention::WKT2_2018;            break;      // TODO: rename "2018" as "2019" in next PROJ release.
+        case Format_WKT2_2015:            c = WKTFormatter::Convention::WKT2_2015;            break;
+        case Format_WKT2_2019_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2018_SIMPLIFIED; break;
+        case Format_WKT2_2015_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2015_SIMPLIFIED; break;
+        case Format_WKT1_GDAL:            c = WKTFormatter::Convention::WKT1_GDAL;            break;
+        case Format_WKT1_ESRI:            c = WKTFormatter::Convention::WKT1_ESRI;            break;
         default: {
             jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
             if (c) env->ThrowNew(c, std::to_string(convention).c_str());

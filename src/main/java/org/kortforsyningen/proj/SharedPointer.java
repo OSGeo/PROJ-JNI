@@ -60,7 +60,7 @@ class SharedPointer extends NativeResource implements Runnable {
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
      * This is allowed only if the wrapped PROJ object implements {@code osgeo::proj::io::IWKTExportable}.
      *
-     * @param  convention  ordinal value of the {@link WKTFormat.Convention} to use.
+     * @param  convention  ordinal value of the {@link ReferencingFormat.Convention} to use.
      * @param  multiline   whether the WKT will use multi-line layout.
      * @param  strict      whether to enforce strictly standard format.
      * @return the Well-Known Text (WKT) for this object, or {@code null} if the PROJ object

@@ -184,7 +184,7 @@ abstract class IdentifiableObject {
      * @throws FormattingException if an error occurred during formatting.
      */
     public String toWKT() {
-        final String wkt = impl.toWKT(WKTFormat.Convention.WKT.ordinal(), true, true);
+        final String wkt = impl.toWKT(ReferencingFormat.Convention.WKT.ordinal(), true, true);
         if (wkt != null) {
             return wkt;
         } else {
@@ -201,7 +201,7 @@ abstract class IdentifiableObject {
     @Override
     public String toString() {
         try {
-            final String wkt = impl.toWKT(WKTFormat.Convention.WKT_SIMPLIFIED.ordinal(), true, false);
+            final String wkt = impl.toWKT(ReferencingFormat.Convention.WKT_SIMPLIFIED.ordinal(), true, false);
             if (wkt != null) {
                 return wkt;
             }
