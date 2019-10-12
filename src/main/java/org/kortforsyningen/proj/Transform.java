@@ -60,6 +60,13 @@ final class Transform extends NativeResource {
      * where the <var>z</var> and any additional dimensions are optional.
      * Note that any dimension after the <var>t</var> value are ignored.
      *
+     * <p>It is caller's responsibility to ensure that the following conditions:</p>
+     * <ul>
+     *   <li>{@code coordinates} is non-null.</li>
+     *   <li>{@code offset + numPts*dimension < coordinates.length}.</li>
+     *   <li>{@code dimension}, {@code offset} and {@code numPts} are positive.</li>
+     * </ul>
+     *
      * @param  dimension    the dimension of each coordinate value. Shall be strictly positive and not too large.
      * @param  coordinates  the coordinates to transform, as a sequence of (<var>x</var>,<var>y</var>,<var>z</var>,…) tuples.
      * @param  offset       offset of the first coordinate in the given array.

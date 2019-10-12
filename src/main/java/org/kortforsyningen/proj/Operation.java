@@ -320,11 +320,11 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     @Override
     public DirectPosition transform(final DirectPosition ptSrc, DirectPosition ptDst) throws TransformException {
         final int srcDim = getSourceDimensions();
-        final int tgtDim = getTargetDimensions();
+        final int dstDim = getTargetDimensions();
         if (ptSrc.getDimension() != srcDim) {
             throw new MismatchedDimensionException();
         }
-        double[] ordinates = new double[Math.max(srcDim, tgtDim)];
+        double[] ordinates = new double[Math.max(srcDim, dstDim)];
         for (int i=0; i<srcDim; i++) {
             ordinates[i] = ptSrc.getOrdinate(i);
         }
@@ -337,19 +337,39 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
             }
         }
         if (ptDst != null) {
-            if (ptDst.getDimension() != tgtDim) {
+            if (ptDst.getDimension() != dstDim) {
                 throw new MismatchedDimensionException();
             }
-            for (int i=0; i<tgtDim; i++) {
+            for (int i=0; i<dstDim; i++) {
                 ptDst.setOrdinate(i, ordinates[i]);
             }
         } else {
-            if (ordinates.length != tgtDim) {
-                ordinates = Arrays.copyOf(ordinates, tgtDim);
+            if (ordinates.length != dstDim) {
+                ordinates = Arrays.copyOf(ordinates, dstDim);
             }
             ptDst = new SimpleDirectPosition(targetCRS, ordinates);
         }
         return ptDst;
+    }
+
+    /**
+     * Verifies that the given offset and number of points are valid for the array capacity.
+     *
+     * @param arrayLength  length of the array where to read or write coordinate values.
+     * @param offset       index of the first array element to read or write.
+     * @param numPts       number of points to read or write. Must be positive.
+     * @param dimension    number of dimensions. Must be positive.
+     * @throws IllegalArgumentException if the offset or number of points is out of bounds.
+     */
+    private static void ensureValidRange(final int arrayLength, final int offset, final int numPts, final int dimension) {
+        if (offset < 0 || Math.addExact(offset, Math.multiplyExact(numPts, dimension)) >= arrayLength) {
+            if (offset < 0 || offset >= arrayLength) {
+                throw new IllegalArgumentException("Offset " + offset + " is out of bounds.");
+            } else {
+                throw new IllegalArgumentException("The given number of points exceeds array capacity by "
+                            + (numPts - ((arrayLength - offset) + dimension - 1) / dimension) + " points.");
+            }
+        }
     }
 
     /**
@@ -361,6 +381,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      *                 May be the same than {@code srcPts}.
      * @param  dstOff  the offset to the location of the first transformed point that is stored in the destination array.
      * @param  numPts  the number of point objects to be transformed.
+     * @throws IllegalArgumentException if an offset or number of points argument is invalid.
      * @throws TransformException if a point can not be transformed.
      */
     @Override
@@ -368,23 +389,86 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
                           final double[] dstPts, final int dstOff,
                           final int numPts) throws TransformException
     {
-        final int srcDim = getSourceDimensions();
-        final int tgtDim = getTargetDimensions();
-        if (srcDim == tgtDim) {
-            if (srcPts != dstPts || srcOff != dstOff) {
-                final int length = tgtDim * numPts;
-                System.arraycopy(srcPts, srcOff, dstPts, dstOff, length);
+        if (numPts > 0) {
+            final int srcDim, dstDim;
+            ensureValidRange(srcPts.length, srcOff, numPts, srcDim = getSourceDimensions());
+            ensureValidRange(dstPts.length, dstOff, numPts, dstDim = getTargetDimensions());
+            if (srcDim == dstDim) {
+                if (srcPts != dstPts || srcOff != dstOff) {
+                    final int length = dstDim * numPts;
+                    System.arraycopy(srcPts, srcOff, dstPts, dstOff, length);
+                }
+            } else {
+                // TODO: need special check for overlapping arrays.
+                throw new TransformException("Transformation between CRS of different dimensions not yet supported.");
             }
-        } else {
-            // TODO: need special check for overlapping arrays.
-            throw new TransformException("Transformation between CRS of different dimensions not yet supported.");
+            try (Context c = Context.acquire()) {
+                final Transform tr = acquire(c);
+                try {
+                    tr.transform(dstDim, dstPts, dstOff, numPts);
+                } finally {
+                    release(tr);
+                }
+            }
         }
-        try (Context c = Context.acquire()) {
-            final Transform tr = acquire(c);
-            try {
-                tr.transform(tgtDim, dstPts, dstOff, numPts);
-            } finally {
-                release(tr);
+    }
+
+    /**
+     * Copies an array of float values into a buffer of double values.
+     * The destination may have more dimensions than the source.
+     *
+     * @param srcPts  the array of source coordinates to copy in the buffer.
+     * @param srcDim  number of dimensions of points in the source array.
+     * @param srcOff  index of the first coordinate to read in the source array.
+     * @param dstPts  buffer where to copy the coordinates values.
+     * @param dstDim  number of dimensions of points in the buffer. Must be ≥ {@code srcDim}.
+     * @param dstOff  index of the first coordinate to write in the buffer.
+     * @param n       number of coordinates in the <em>source</em> array.
+     */
+    private static void floatsToDoubles(final float[]  srcPts, final int srcDim, int srcOff,
+                                        final double[] dstPts, final int dstDim, int dstOff, int n)
+    {
+        final int skip = dstDim - srcDim;
+        int nextStop = (skip == 0) ? n : srcDim;
+        nextStop += srcOff;
+        dstOff   -= srcOff;
+        n        += srcOff;
+        for (;;) {
+            dstPts[dstOff + srcOff] = srcPts[srcOff];
+            if (++srcOff == nextStop) {
+                if (srcOff == n) break;
+                nextStop += srcDim;
+                dstOff   += skip;
+            }
+        }
+    }
+
+    /**
+     * Copies a buffer of double values into an array of float values.
+     * The destination may have less dimensions than the source.
+     *
+     * @param srcPts  the buffer from where to read coordinate values.
+     * @param srcDim  number of dimensions of points in the buffer. Must be ≥ {@code dstDim}.
+     * @param srcOff  index of the first coordinate to read in the buffer.
+     * @param dstPts  the target array where to copy coordinate values.
+     * @param dstDim  number of dimensions of points in the target array.
+     * @param dstOff  index of the first coordinate to write in the target array.
+     * @param n       number of coordinates in the <em>destination</em> array.
+     */
+    private static void doublesToFloats(final double[] srcPts, final int srcDim, int srcOff,
+                                        final float[]  dstPts, final int dstDim, int dstOff, int n)
+    {
+        final int skip = srcDim - dstDim;
+        int nextStop = (skip == 0) ? n : dstDim;
+        nextStop += dstOff;
+        srcOff   -= dstOff;
+        n        += dstOff;
+        for (;;) {
+            dstPts[dstOff] = (float) srcPts[srcOff + dstOff];
+            if (++dstOff == nextStop) {
+                if (dstOff == n) break;
+                nextStop += dstDim;
+                srcOff   += skip;
             }
         }
     }
@@ -398,14 +482,31 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      *                 May be the same than {@code srcPts}.
      * @param  dstOff  the offset to the location of the first transformed point that is stored in the destination array.
      * @param  numPts  the number of point objects to be transformed.
+     * @throws IllegalArgumentException if an offset or number of points argument is invalid.
      * @throws TransformException if a point can not be transformed.
      */
     @Override
-    public void transform(final float[] srcPts, int srcOff,
-                          final float[] dstPts, int dstOff,
-                          int numPts) throws TransformException
+    public void transform(final float[] srcPts, final int srcOff,
+                          final float[] dstPts, final int dstOff,
+                          final int numPts) throws TransformException
     {
-        throw new TransformException("Not supported yet.");
+        if (numPts > 0) {
+            final int srcDim, dstDim;
+            ensureValidRange(srcPts.length, srcOff, numPts, srcDim = getSourceDimensions());
+            ensureValidRange(dstPts.length, dstOff, numPts, dstDim = getTargetDimensions());
+            final int dimension = Math.max(srcDim, dstDim);
+            final double[] buffer = new double[dimension * numPts];
+            floatsToDoubles(srcPts, srcDim, srcOff, buffer, dimension, 0, numPts * srcDim);
+            try (Context c = Context.acquire()) {
+                final Transform tr = acquire(c);
+                try {
+                    tr.transform(dimension, buffer, 0, numPts);
+                } finally {
+                    release(tr);
+                }
+            }
+            doublesToFloats(buffer, dimension, 0, dstPts, dstDim, dstOff, numPts * dstDim);
+        }
     }
 
     /**
@@ -416,6 +517,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @param  dstPts  the array into which the transformed point coordinates are returned.
      * @param  dstOff  the offset to the location of the first transformed point that is stored in the destination array.
      * @param  numPts  the number of point objects to be transformed.
+     * @throws IllegalArgumentException if an offset or number of points argument is invalid.
      * @throws TransformException if a point can not be transformed.
      */
     @Override
@@ -434,6 +536,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @param  dstPts  the array into which the transformed point coordinates are returned.
      * @param  dstOff  the offset to the location of the first transformed point that is stored in the destination array.
      * @param  numPts  the number of point objects to be transformed.
+     * @throws IllegalArgumentException if an offset or number of points argument is invalid.
      * @throws TransformException if a point can not be transformed.
      */
     @Override
