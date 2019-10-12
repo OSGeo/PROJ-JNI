@@ -49,8 +49,16 @@ using osgeo::proj::io::JSONFormatter;
 using osgeo::proj::io::JSONFormatterNNPtr;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
+using osgeo::proj::cs::CoordinateSystem;
+using osgeo::proj::cs::CoordinateSystemPtr;
 using osgeo::proj::crs::CRS;
 using osgeo::proj::crs::CRSNNPtr;
+using osgeo::proj::crs::SingleCRS;
+using osgeo::proj::crs::SingleCRSPtr;
+using osgeo::proj::crs::CompoundCRS;
+using osgeo::proj::crs::CompoundCRSPtr;
+using osgeo::proj::crs::BoundCRS;
+using osgeo::proj::crs::BoundCRSPtr;
 using osgeo::proj::operation::CoordinateOperation;
 using osgeo::proj::operation::CoordinateOperationNNPtr;
 using osgeo::proj::operation::CoordinateOperationFactory;
@@ -146,6 +154,7 @@ inline jfieldID get_database_field(JNIEnv *env, jobject context) {
 #define JPJ_TRANSFORM_EXCEPTION        "org/opengis/referencing/operation/TransformException"
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
+#define JPJ_ILLEGAL_STATE_EXCEPTION    "java/lang/IllegalStateException"
 
 /*
  * NOTE ON CHARACTER ENCODING: this implementation assumes that the PROJ library expects strings
@@ -561,6 +570,66 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                                    CLASS SharedPointer                                     │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+/**
+ * Returns the given object as a single CRS if possible, or null otherwise.
+ * If the CRS is a bound CRS, its base CRS is returned.
+ *
+ * @param  crs  The object to get as a single CRS.
+ * @return The object as a single CRS, or null.
+ */
+SingleCRSPtr as_single_crs(BaseObjectPtr &ptr) {
+    SingleCRSPtr crs = std::dynamic_pointer_cast<SingleCRS>(ptr);
+    if (!crs) {
+        BoundCRSPtr bound = std::dynamic_pointer_cast<BoundCRS>(ptr);
+        if (bound) {
+            CRSNNPtr base = bound->baseCRS();
+            crs = std::dynamic_pointer_cast<SingleCRS>(base.as_nullable());
+        }
+    }
+    return crs;
+}
+
+
+/**
+ * Returns the number of dimensions of the wrapped object.
+ * This method can be used with the osgeo::proj::crs::CRS
+ * and osgeo::proj::cs::CoordinateSystem types.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the PROJ object for which to get the number of dimensions.
+ * @return Number of dimensions in wrapped object, or 0 if unknown.
+ */
+JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension(JNIEnv *env, jobject object) {
+    BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
+    CoordinateSystemPtr cs = std::dynamic_pointer_cast<CoordinateSystem>(ptr);
+    if (!cs) {
+        SingleCRSPtr crs = as_single_crs(ptr);
+        if (!crs) {
+            CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(ptr);
+            if (!compound) {
+                jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
+                if (c) env->ThrowNew(c, "Not a recognized CRS type.");
+                return 0;
+            }
+            int dimension = 0;
+            for (CRSNNPtr component : compound->componentReferenceSystems()) {
+                ptr = component.as_nullable();
+                crs = as_single_crs(ptr);
+                if (!crs) {
+                    jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
+                    if (c) env->ThrowNew(c, "Nested CompoundCRS.");
+                    return 0;
+                }
+                dimension += crs->coordinateSystem()->axisList().size();
+            }
+            return dimension;
+        }
+        cs = crs->coordinateSystem().as_nullable();
+    }
+    return cs->axisList().size();
+}
 
 
 /**

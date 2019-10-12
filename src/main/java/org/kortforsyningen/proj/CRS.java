@@ -66,18 +66,6 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     }
 
     /**
-     * Returns the number of dimensions of this CRS.
-     * This is a shortcut for {@code getCoordinateSystem().getDimension}.
-     *
-     * @return number of dimensions in this CRS.
-     *
-     * @see CoordinateSystem#getDimension()
-     */
-    final int getDimension() {
-        return DEFAULT_DIMENSION;                   // TODO
-    }
-
-    /**
      * Returns the coordinate system of a single CRS, or a view over all coordinate systems of a compound CRS.
      *
      * @return the coordinate system.

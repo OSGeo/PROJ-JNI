@@ -285,7 +285,9 @@ public final class Proj {
 
     /**
      * Creates a position with the given coordinate values and an optional CRS.
-     * If a CRS is provided, its number of dimensions must match the number of coordinate values.
+     * At least one of {@code crs} and {@code coordinates} arguments must be non-null.
+     * If both arguments are non-null, then the number of dimensions of the given CRS
+     * must match the number of coordinate values.
      *
      * <p>A {@link DirectPosition} instance can be transformed to another CRS by a call to
      * <code>factory.{@linkplain CoordinateOperationFactory#createOperation(CoordinateReferenceSystem,
@@ -302,23 +304,27 @@ public final class Proj {
      * but the CRS is lost in the serialization process because we do not serialize native PROJ objects.
      *
      * @param  crs          the coordinate reference system, or {@code null} is unspecified.
-     * @param  coordinates  the coordinate values.
+     * @param  coordinates  the coordinate values, or {@code null} for initializing the position to zero.
      * @return a direct position for the given coordinate values and optional CRS.
-     * @throws NullPointerException if {@code coordinates} is {@code null}.
+     * @throws NullPointerException if both {@code crs} and {@code coordinates} are {@code null}.
      * @throws UnsupportedImplementationException if the given CRS is not a PROJ-JNI implementation.
      * @throws MismatchedDimensionException if the given CRS is non-null but its number of dimensions
-     *         is not equal to the length of the {@code coordinates} array..
+     *         is not equal to the length of the {@code coordinates} array.
      *
      * @see MathTransform#transform(DirectPosition, DirectPosition)
      */
     public static DirectPosition createPosition(final CoordinateReferenceSystem crs, double... coordinates) {
-        CRS impl = null;
+        CRS wrapper = null;
         if (crs != null) {
-            impl = CRS.cast("crs", crs);
-            if (impl.getDimension() != coordinates.length) {
+            wrapper = CRS.cast("crs", crs);
+            final int dimension = wrapper.impl.getDimension();
+            if (coordinates == null) {
+                return new SimpleDirectPosition(wrapper, new double[dimension]);
+            }
+            if (dimension != coordinates.length) {
                 throw new MismatchedDimensionException("Number of dimensions in the CRS does not match the number of coordinate values.");
             }
         }
-        return new SimpleDirectPosition(impl, coordinates.clone());
+        return new SimpleDirectPosition(wrapper, coordinates.clone());
     }
 }

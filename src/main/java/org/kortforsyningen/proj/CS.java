@@ -50,7 +50,7 @@ class CS extends IdentifiableObject implements CoordinateSystem {
      */
     @Override
     public int getDimension() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return impl.getDimension();
     }
 
     /**

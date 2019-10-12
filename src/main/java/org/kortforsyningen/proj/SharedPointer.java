@@ -48,6 +48,19 @@ class SharedPointer extends NativeResource implements Runnable {
     }
 
     /**
+     * Returns the number of dimensions of the wrapped object.
+     * This method can be used with the following types:
+     *
+     * <ul>
+     *   <li>{@code osgeo::proj::cs::CoordinateSystem}</li>
+     *   <li>{@code osgeo::proj::crs::CRS}</li>
+     * </ul>
+     *
+     * @return number of dimensions in wrapped object, or 0 if unknown.
+     */
+    final native int getDimension();
+
+    /**
      * Returns the memory address of the PROJ object wrapped by this {@code NativeResource}.
      * This method is used for {@link IdentifiableObject#hashCode()} and
      * {@link IdentifiableObject#equals(Object)} implementations only.

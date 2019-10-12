@@ -196,7 +196,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public final int getSourceDimensions() {
-        return (sourceCRS != null) ? sourceCRS.getDimension() : CRS.DEFAULT_DIMENSION;
+        return (sourceCRS != null) ? sourceCRS.impl.getDimension() : CRS.DEFAULT_DIMENSION;
     }
 
     /**
@@ -216,7 +216,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public final int getTargetDimensions() {
-        return (targetCRS != null) ? targetCRS.getDimension() : CRS.DEFAULT_DIMENSION;
+        return (targetCRS != null) ? targetCRS.impl.getDimension() : CRS.DEFAULT_DIMENSION;
     }
 
     /**

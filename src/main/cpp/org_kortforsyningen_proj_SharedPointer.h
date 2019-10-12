@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    getDimension
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    rawPointer
  * Signature: ()J
  */
