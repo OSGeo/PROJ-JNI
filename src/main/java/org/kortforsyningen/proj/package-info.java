@@ -44,10 +44,11 @@
  * as specified in the EPSG database and in agreement with centuries of practice.</p>
  *
  * <blockquote><pre>
- * CRSAuthorityFactory       factory   = Proj.getAuthorityFactory("EPSG");
- * CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
- * CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("3395");   // WGS 84 / World Mercator
- * CoordinateOperation       operation = Proj.createCoordinateOperation(sourceCRS, targetCRS, null);
+ * CRSAuthorityFactory        factory   = Proj.getAuthorityFactory("EPSG");
+ * CoordinateOperationFactory regops    = Proj.getOperationFactory(null);
+ * CoordinateReferenceSystem  sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
+ * CoordinateReferenceSystem  targetCRS = factory.createCoordinateReferenceSystem("3395");   // WGS 84 / World Mercator
+ * CoordinateOperation        operation = regops .createOperation(sourceCRS, targetCRS);
  * double[] coordinates = {
  *     45.500,  -73.567,                    // Montreal
  *     49.250, -123.100,                    // Vancouver
@@ -82,7 +83,7 @@
  * However there is a limit in the number of concurrent threads which can use efficiently the same
  * {@link org.opengis.referencing.operation.MathTransform} instance.
  * This limit can be controlled by assigning an integer to the
- * "{@systemProperty org.kortforsyningen.proj.maxThreadsPerTransform}" system property at startup time.
+ * "{@systemProperty org.kortforsyningen.proj.maxThreadsPerInstance}" system property at startup time.
  * A low value does not necessarily block more threads from using a
  * {@link org.opengis.referencing.operation.MathTransform} concurrently,
  * but the extra threads may observe a performance degradation.
@@ -101,6 +102,7 @@
  * <ul>
  *   <li>{@link org.opengis.referencing.operation.MathTransform#derivative MathTransform.derivative(DirectPosition)} —
  *       Jacobian matrix calculation is not yet supported by PROJ.</li>
+ *   <li>{@link org.opengis.referencing.crs.CRSFactory#createFromXML(String)} — XML support requires GDAL.</li>
  * </ul>
  *
  * <p><b>References:</b></p>
