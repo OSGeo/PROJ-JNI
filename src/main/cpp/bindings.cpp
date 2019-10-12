@@ -38,11 +38,15 @@ using osgeo::proj::io::DatabaseContextPtr;
 using osgeo::proj::io::DatabaseContextNNPtr;
 using osgeo::proj::io::AuthorityFactory;
 using osgeo::proj::io::AuthorityFactoryPtr;
+using osgeo::proj::io::IWKTExportable;
 using osgeo::proj::io::WKTFormatter;
 using osgeo::proj::io::WKTFormatterNNPtr;
-using osgeo::proj::io::IWKTExportable;
+using osgeo::proj::io::IPROJStringExportable;
 using osgeo::proj::io::PROJStringFormatter;
 using osgeo::proj::io::PROJStringFormatterNNPtr;
+using osgeo::proj::io::IJSONExportable;
+using osgeo::proj::io::JSONFormatter;
+using osgeo::proj::io::JSONFormatterNNPtr;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
 using osgeo::proj::crs::CRS;
@@ -540,25 +544,39 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 
 
 /**
- * Returns a Well-Known Text (WKT) for this object.
- * This is allowed only if this object implements osgeo::proj::io::IWKTExportable.
+ * Returns a Well-Known Text (WKT), JSON or PROJ string for this object.
+ * This is allowed only if this object implements osgeo::proj::io::IWKTExportable,
+ * osgeo::proj::io::IJSONExportable or osgeo::proj::io::IPROJStringExportable.
  *
  * @param  env         The JNI environment.
  * @param  object      The Java object wrapping the PROJ object to format.
  * @param  convention  One of ReferencingFormat constants.
+ * @param  indentation Number of spaces for each indentation level, or -1 for the default value.
+ * @param  multiline   Whether the WKT will use multi-line layout.
+ * @param  strict      Whether to enforce strictly standard format.
  * @return The Well-Known Text (WKT) for this object, or null if the object is not IWKTExportable.
  */
-JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_toWKT
-    (JNIEnv *env, jobject object, jint convention, jboolean multiline, jboolean strict)
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
+    (JNIEnv *env, jobject object, jint convention, jint indentation, jboolean multiline, jboolean strict)
 {
-    WKTFormatter::Convention c;
+    enum format {WKT, PROJ, JSON};
+    union version {
+        WKTFormatter::Convention wkt;
+        PROJStringFormatter::Convention proj;
+    };
+    format  f;
+    version c;
     switch (convention) {
-        case Format_WKT2_2019:            c = WKTFormatter::Convention::WKT2_2018;            break;      // TODO: rename "2018" as "2019" in next PROJ release.
-        case Format_WKT2_2015:            c = WKTFormatter::Convention::WKT2_2015;            break;
-        case Format_WKT2_2019_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2018_SIMPLIFIED; break;
-        case Format_WKT2_2015_SIMPLIFIED: c = WKTFormatter::Convention::WKT2_2015_SIMPLIFIED; break;
-        case Format_WKT1_GDAL:            c = WKTFormatter::Convention::WKT1_GDAL;            break;
-        case Format_WKT1_ESRI:            c = WKTFormatter::Convention::WKT1_ESRI;            break;
+        // TODO: rename "2018" as "2019" in next PROJ release.
+        case Format_WKT2_2019:            f = WKT;  c.wkt  = WKTFormatter::Convention::WKT2_2018;            break;
+        case Format_WKT2_2015:            f = WKT;  c.wkt  = WKTFormatter::Convention::WKT2_2015;            break;
+        case Format_WKT2_2019_SIMPLIFIED: f = WKT;  c.wkt  = WKTFormatter::Convention::WKT2_2018_SIMPLIFIED; break;
+        case Format_WKT2_2015_SIMPLIFIED: f = WKT;  c.wkt  = WKTFormatter::Convention::WKT2_2015_SIMPLIFIED; break;
+        case Format_WKT1_ESRI:            f = WKT;  c.wkt  = WKTFormatter::Convention::WKT1_ESRI;            break;
+        case Format_WKT1_GDAL:            f = WKT;  c.wkt  = WKTFormatter::Convention::WKT1_GDAL;            break;
+        case Format_PROJ_5:               f = PROJ; c.proj = PROJStringFormatter::Convention::PROJ_5;        break;
+        case Format_PROJ_4:               f = PROJ; c.proj = PROJStringFormatter::Convention::PROJ_4;        break;
+        case Format_JSON:                 f = JSON;                                                          break;
         default: {
             jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
             if (c) env->ThrowNew(c, std::to_string(convention).c_str());
@@ -567,12 +585,34 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_toWKT
     }
     try {
         BaseObjectPtr candidate = get_and_unwrap_ptr<BaseObject>(env, object);
-        std::shared_ptr<IWKTExportable> exportable = std::dynamic_pointer_cast<IWKTExportable>(candidate);
-        if (exportable) {
-            WKTFormatterNNPtr formatter = WKTFormatter::create(c);
-            formatter->setMultiLine(multiline);
-            formatter->setStrict(strict);
-            return non_empty_string(env, exportable->exportToWKT(formatter.get()));
+        switch (f) {
+            case WKT: {
+                std::shared_ptr<IWKTExportable> exportable = std::dynamic_pointer_cast<IWKTExportable>(candidate);
+                if (!exportable) break;
+                WKTFormatterNNPtr formatter = WKTFormatter::create(c.wkt);
+                formatter->setMultiLine(multiline);
+                formatter->setStrict(strict);
+                if (indentation >= 0) {
+                    formatter->setIndentationWidth(indentation);
+                }
+                return non_empty_string(env, exportable->exportToWKT(formatter.get()));
+            }
+            case JSON: {
+                std::shared_ptr<IJSONExportable> exportable = std::dynamic_pointer_cast<IJSONExportable>(candidate);
+                if (!exportable) break;
+                JSONFormatterNNPtr formatter = JSONFormatter::create();
+                formatter->setMultiLine(multiline);
+                if (indentation >= 0) {
+                    formatter->setIndentationWidth(indentation);
+                }
+                return non_empty_string(env, exportable->exportToJSON(formatter.get()));
+            }
+            case PROJ: {
+                std::shared_ptr<IPROJStringExportable> exportable = std::dynamic_pointer_cast<IPROJStringExportable>(candidate);
+                if (!exportable) break;
+                PROJStringFormatterNNPtr formatter = PROJStringFormatter::create(c.proj);
+                return non_empty_string(env, exportable->exportToPROJString(formatter.get()));
+            }
         }
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_FORMATTING_EXCEPTION, e);

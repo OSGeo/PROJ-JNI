@@ -17,11 +17,11 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
- * Method:    toWKT
- * Signature: (IZZ)Ljava/lang/String;
+ * Method:    format
+ * Signature: (IIZZ)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_toWKT
-  (JNIEnv *, jobject, jint, jboolean, jboolean);
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
+  (JNIEnv *, jobject, jint, jint, jboolean, jboolean);
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer

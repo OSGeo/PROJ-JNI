@@ -32,5 +32,8 @@
 #define Format_WKT2_2015            1
 #define Format_WKT2_2019_SIMPLIFIED 2
 #define Format_WKT2_2015_SIMPLIFIED 3
-#define Format_WKT1_GDAL            4
-#define Format_WKT1_ESRI            5
+#define Format_WKT1_ESRI            4
+#define Format_WKT1_GDAL            5
+#define Format_PROJ_5               6
+#define Format_PROJ_4               7
+#define Format_JSON                 8

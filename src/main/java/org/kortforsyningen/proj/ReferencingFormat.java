@@ -23,13 +23,16 @@ package org.kortforsyningen.proj;
 
 import java.util.Objects;
 import org.opengis.referencing.IdentifiedObject;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.CoordinateOperation;
 
 
 /**
- * Parses and format geodetic objects in <cite>Well Known Text</cite> format.
+ * Parses and format referencing objects in <cite>Well Known Text</cite>, JSON or PROJ format.
  * WKT formatting can be done more easily by invoking the {@link IdentifiedObject#toWKT()} method.
- * This {@code ReferencingFormat} can be used when more control is desired on the formatting process,
- * for example by {@linkplain #setConvention selecting which WKT version is desired}.
+ * This {@code ReferencingFormat} can be used when more control is desired on the formatting process
+ * (for example by {@linkplain #setConvention selecting which WKT version is desired}),
+ * or if another format is desired.
  *
  * <p><b>Limitations:</b></p>
  * <p>{@code ReferencingFormat} is <em>not</em> thread-safe. If used in a multi-thread environment,
@@ -41,7 +44,7 @@ import org.opengis.referencing.IdentifiedObject;
  */
 public class ReferencingFormat {
     /**
-     * The convention to use for formatting geodetic objects.
+     * The convention to use for formatting referencing objects.
      */
     private Convention convention;
 
@@ -50,6 +53,11 @@ public class ReferencingFormat {
      * If {@code false}, then the output will be in a single line.
      */
     private boolean multiline;
+
+    /**
+     * Number of spaces in indentations when multilines output is enabled.
+     */
+    private int indentation;
 
     /**
      * Whether the operation should fail if it can not be performed using
@@ -63,8 +71,9 @@ public class ReferencingFormat {
      * formats the WKT in a multi-lines layout.
      */
     public ReferencingFormat() {
-        convention = Convention.WKT;
-        multiline  = true;
+        convention  = Convention.WKT;
+        multiline   = true;
+        indentation = 4;
     }
 
     /**
@@ -80,7 +89,8 @@ public class ReferencingFormat {
 
     /**
      * Sets the convention to use for this formatter.
-     * This method allows to select a different version or flavor of WKT format.
+     * This method allows to select a different format (e.g. JSON or PROJ)
+     * or a different flavor of legacy WKT 1 format.
      * For example the conventions can be set to {@link Convention#WKT1_ESRI WKT1_ESRI}
      * if the legacy WKT format is desired instead than the one standardized by ISO 19162.
      *
@@ -112,6 +122,28 @@ public class ReferencingFormat {
     }
 
     /**
+     * Returns the number of spaces in indentations when multilines output is enabled.
+     *
+     * @return number of spaces for each indentation level.
+     */
+    public int getIndentationWidth() {
+        return indentation;
+    }
+
+    /**
+     * Sets the number of spaces in indentations when multilines output is enabled.
+     * If this setter is not invoked, then the default value is 4.
+     *
+     * @param n  number of spaces for each indentation level.
+     */
+    public void setIndentationWidth(final int n) {
+        if (n < 0 || n > Short.MAX_VALUE) {         // Arbitrary upper limit.
+            throw new IllegalArgumentException("Invalid indentation width.");
+        }
+        indentation = n;
+    }
+
+    /**
      * Returns whether the operation should fail if it can not be performed using
      * strictly standard compliant WKT format.
      *
@@ -135,15 +167,16 @@ public class ReferencingFormat {
      * Formats the given object. It must be a PROJ implementation.
      *
      * @param  object  the PROJ object to format.
-     * @return the given object in WKT format.
+     * @return the given object in WKT, JSON or PROJ format.
      * @throws FormattingException if the given object can not be formatted.
      */
     public String format(final Object object) throws FormattingException {
         Objects.requireNonNull(object);
         if (object instanceof IdentifiableObject) {
-            final String wkt = ((IdentifiableObject) object).impl.toWKT(convention.ordinal(), multiline, strict);
-            if (wkt != null) {
-                return wkt;
+            final String text = ((IdentifiableObject) object).impl.format(
+                    convention.ordinal(), indentation, multiline, strict);
+            if (text != null) {
+                return text;
             }
         }
         throw new FormattingException("Can not format the given object.");
@@ -153,11 +186,18 @@ public class ReferencingFormat {
 
 
     /**
-     * Controls some aspects in formatting of geodetic objects as <cite>Well Known Text</cite>.
+     * Controls some aspects in formatting referencing objects as <cite>Well Known Text</cite> (WKT),
+     * JSON or PROJ strings.
      * The WKT format has two major versions (WKT 1 and WKT 2), with WKT 2 defined by ISO 19162.
-     * The legacy WKT 1 format had various interpretations with some incompatibilities between
-     * them (e.g. regarding units of measurement).
-     * The WKT 2 format is consistent between all flavors in this enumeration.
+     * Those two WKT versions have different compatibility characteristics:
+     *
+     * <ul>
+     *   <li>All WKT 2 flavors in this enumeration are consistent between them.</li>
+     *   <li>The legacy WKT 1 format had various interpretations with some incompatibilities
+     *       between them (e.g. regarding units of measurement). A CRS formatted with one WKT 1
+     *       flavor is not guaranteed to be read correctly with a different WKT 1 flavor.</li>
+     * </ul>
+     *
      * The {@link #WKT} and {@link #WKT_SIMPLIFIED} fields are aliases to the most recent WKT
      * versions supported by current implementation.
      *
@@ -178,6 +218,8 @@ public class ReferencingFormat {
          *
          * @see <a href="http://docs.opengeospatial.org/is/18-010r7/18-010r7.html">Well-known
          *      text representation of coordinate reference systems (2019)</a>
+         *
+         * @see #WKT
          */
         WKT2_2019,
 
@@ -204,6 +246,8 @@ public class ReferencingFormat {
          *   <li>{@code AXIS.UNIT} omitted and replaced by a common {@code GEODCRS.UNIT}
          *       if they are all the same on all axis.</li>
          * </ul>
+         *
+         * @see #WKT_SIMPLIFIED
          */
         WKT2_2019_SIMPLIFIED,
 
@@ -215,6 +259,14 @@ public class ReferencingFormat {
         WKT2_2015_SIMPLIFIED,
 
         /**
+         * Well Known Text version 1 as traditionally written by ESRI software.
+         * This is derived from OGC 01-009.
+         *
+         * @see <a href="http://www.opengeospatial.org/standards/ct">Coordinate Transformation Service (2001)</a>
+         */
+        WKT1_ESRI,
+
+        /**
          * Well Known Text version 1 as traditionally written by GDAL.
          * A notable departure from {@code WKT1_GDAL} with respect to OGC 01-009 is that
          * in {@code WKT1_GDAL}, the unit of the {@code PRIMEM} value is always degrees.
@@ -222,12 +274,49 @@ public class ReferencingFormat {
         WKT1_GDAL,
 
         /**
-         * Well Known Text version 1 as traditionally written by ESRI software.
-         * This is derived from OGC 01-009.
+         * Implementation-specific string format for CRS and coordinate operations.
+         * The PROJ format is very compact but can not express all aspects of referencing objects.
+         * The format output depends on the type of object to format:
          *
-         * @see <a href="http://www.opengeospatial.org/standards/ct">Coordinate Transformation Service (2001)</a>
+         * <ul>
+         *   <li>For a {@link CoordinateReferenceSystem}, formats the same as {@link #PROJ_4}.
+         *       It should be noted that the export of a CRS as a PROJ string may cause loss
+         *       of many important aspects of a CRS definition.
+         *       Consequently it is discouraged to use it for interoperability in newer projects.
+         *       The choice of a WKT representation will be a better option.</li>
+         *   <li>For {@link CoordinateOperation}, returns a PROJ pipeline.</li>
+         * </ul>
          */
-        WKT1_ESRI;
+        PROJ_5,
+
+        /**
+         * Implementation-specific string format for PROJ 4 compatibility.
+         * This format was extensively used in PROJ 4, but since PROJ 6 the {@link #WKT} format
+         * is preferred for better interoperability and for more complete object descriptions.
+         * The PROJ 4 convention formats a string compatible with the {@code OGRSpatialReference::exportToProj4()}
+         * of GDAL ≥ 2.3. It is only compatible with a few CRS objects. The PROJ string will also contain a
+         * {@code +type=crs} parameter to disambiguate the nature of the string from a coordinate operation.
+         *
+         * <ul>
+         *   <li>For a {@link org.opengis.referencing.crs.GeographicCRS}, returns a {@code proj=longlat} string,
+         *       with ellipsoid / datum / prime meridian information, ignoring axis order and unit information.</li>
+         *   <li>For a geocentric {@code GeodeticCRS}, returns the transformation from
+         *       geographic coordinates into geocentric coordinates.</li>
+         *   <li>For a {@link org.opengis.referencing.crs.ProjectedCRS}, returns the projection method,
+         *       ignoring axis order.</li>
+         *   <li>For a {@code BoundCRS}, returns the PROJ string of its source/base CRS,
+         *       amended with {@code towgs84} / {@code nadgrids} parameter when the deriving conversion
+         *       can be expressed in that way.</li>
+         * </ul>
+         */
+        PROJ_4,
+
+        /**
+         * JSON format (non-standard).
+         * This format is PROJ-specific for now, but the structure of the JSON objects
+         * follow closely the model described by ISO 19111.
+         */
+        JSON;
 
         /**
          * The most recent version of WKT supported by current implementation.

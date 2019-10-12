@@ -58,16 +58,19 @@ class SharedPointer extends NativeResource implements Runnable {
 
     /**
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
-     * This is allowed only if the wrapped PROJ object implements {@code osgeo::proj::io::IWKTExportable}.
+     * This is allowed only if the wrapped PROJ object implements {@code osgeo::proj::io::IWKTExportable},
+     * {@code osgeo::proj::io::IJSONExportable} or {@code osgeo::proj::io::IPROJStringExportable}, depending
+     * on the convention used.
      *
      * @param  convention  ordinal value of the {@link ReferencingFormat.Convention} to use.
+     * @param  indentation number of spaces for each indentation level, or -1 for the default value.
      * @param  multiline   whether the WKT will use multi-line layout.
      * @param  strict      whether to enforce strictly standard format.
      * @return the Well-Known Text (WKT) for this object, or {@code null} if the PROJ object
      *         does not implement the {@code osgeo::proj::io::IWKTExportable} interface.
      * @throws FormattingException if an error occurred during formatting.
      */
-    final native String toWKT(int convention, boolean multiline, boolean strict);
+    final native String format(int convention, int indentation, boolean multiline, boolean strict);
 
     /**
      * Invoked by the cleaner thread when the {@link IdentifiableObject} has been garbage collected.

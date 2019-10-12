@@ -96,12 +96,12 @@ public final strictfp class ReferencingFormatTest {
     }
 
     /**
-     * Tests {@link ReferencingFormat#format(Object)}.
+     * Tests {@link ReferencingFormat#format(Object)} to a WKT format.
      *
      * @throws FactoryException if an error occurred while creating the test CRS.
      */
     @Test
-    public void testFormat() throws FactoryException {
+    public void testFormatWKT() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
         final ReferencingFormat formatter = new ReferencingFormat();
@@ -111,5 +111,35 @@ public final strictfp class ReferencingFormatTest {
                 "GEOGCS[\"GCS_WGS_1984\",\n" +
                 "    DATUM[\"D_WGS_1984\",\n" +
                 "        SPHEROID[\"WGS_1984\","));
+    }
+
+    /**
+     * Tests {@link ReferencingFormat#format(Object)} to a WKT format.
+     *
+     * @throws FactoryException if an error occurred while creating the test CRS.
+     */
+    @Test
+    public void testFormatJSON() throws FactoryException {
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
+        final ReferencingFormat formatter = new ReferencingFormat();
+        formatter.setConvention(ReferencingFormat.Convention.JSON);
+        final String wkt = formatter.format(crs);
+        assertTrue(wkt, wkt.contains("\"name\": \"WGS 84\""));
+    }
+
+    /**
+     * Tests {@link ReferencingFormat#format(Object)} to a PROJ format.
+     *
+     * @throws FactoryException if an error occurred while creating the test CRS.
+     */
+    @Test
+    public void testFormatPROJ() throws FactoryException {
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("3395");
+        final ReferencingFormat formatter = new ReferencingFormat();
+        formatter.setConvention(ReferencingFormat.Convention.PROJ_5);
+        final String wkt = formatter.format(crs);
+        assertEquals("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs", wkt);
     }
 }
