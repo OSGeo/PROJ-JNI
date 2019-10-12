@@ -52,7 +52,6 @@ using osgeo::proj::util::BaseObjectPtr;
 using osgeo::proj::crs::CRS;
 using osgeo::proj::crs::CRSNNPtr;
 using osgeo::proj::operation::CoordinateOperation;
-using osgeo::proj::operation::CoordinateOperationPtr;
 using osgeo::proj::operation::CoordinateOperationNNPtr;
 using osgeo::proj::operation::CoordinateOperationFactory;
 using osgeo::proj::operation::CoordinateOperationFactoryNNPtr;
@@ -232,7 +231,7 @@ void log(JNIEnv *env, const std::string &text) {
  * @param  object  The object to wrap in a memory block that can be referenced from a Java object.
  * @return Address to store in the Java object, or 0 if out of memory.
  */
-template <class T> jlong wrap_shared_ptr(std::shared_ptr<T> &object) {
+template <class T> inline jlong wrap_shared_ptr(std::shared_ptr<T> &object) {
     std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(calloc(1, sizeof(std::shared_ptr<T>)));
     if (wrapper) {
         *wrapper = object;          // This assignation also increases object.use_count() by one.
@@ -263,7 +262,7 @@ template <class T> inline std::shared_ptr<T> unwrap_shared_ptr(jlong ptr) {
  *
  * @param  ptr  Address returned by wrap_shared_ptr(…).
  */
-template <class T> void release_shared_ptr(jlong ptr) {
+template <class T> inline void release_shared_ptr(jlong ptr) {
     if (ptr) {
         std::shared_ptr<T> *wrapper = reinterpret_cast<std::shared_ptr<T>*>(ptr);
         *wrapper = nullptr;     // This assignation decreases object.use_count().
@@ -285,7 +284,7 @@ template <class T> void release_shared_ptr(jlong ptr) {
  * @return The address of the PROJ structure, or null if the operation fails
  *         (for example because the `ptr` field has not been found).
  */
-jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
+inline jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
     jlong ptr = env->GetLongField(object, java_field_for_pointer);
     env->SetLongField(object, java_field_for_pointer, (jlong) 0);
     return ptr;
@@ -318,6 +317,24 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
         }
     }
     throw std::invalid_argument("Null pointer to PROJ object.");
+}
+
+
+/**
+ * Returns the non-null shared pointer for the specified osgeo::proj::util::BaseObject subtype.
+ * This method is equivalent to above `get_and_unwrap_ptr` method for the case where the object
+ * is a BaseObject subtype (a CRS, CoordinateOperation, etc.), but with additional safety checks.
+ * We assume that the cost of those additional checks is low compared to the cost of other tasks
+ * (JNI, PROJ operation, etc.).
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the osgeo::proj::util::BaseObject subtype.
+ * @return Shared pointer to the PROJ object associated to the given Java object.
+ * @throw  std::exception if this method can not get a non-null pointer.
+ */
+template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_object(JNIEnv *env, jobject object) {
+    BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
+    return NN_CHECK_THROW(std::dynamic_pointer_cast<T>(ptr));
 }
 
 
@@ -396,7 +413,7 @@ rd: switch (type) {
     if (c) {
         jmethodID method = env->GetStaticMethodID(c, "wrapGeodeticObject", "(IJ)Lorg/kortforsyningen/proj/IdentifiableObject;");
         if (method) {
-            jlong ptr = wrap_shared_ptr(object);
+            jlong ptr = wrap_shared_ptr<BaseObject>(object);
             jobject result = env->CallStaticObjectMethod(c, method, type, ptr);
             if (!env->ExceptionCheck() && result) {                                 // ExceptionCheck() must be always invoked.
                 return result;
@@ -487,7 +504,7 @@ DatabaseContextPtr get_database_context(JNIEnv *env, jobject context) {
     } else {
         log(env, "Creating PROJ database context.");
         db = DatabaseContext::create(std::string(), std::vector<std::string>(), get_context(env, context)).as_nullable();
-        dbPtr = wrap_shared_ptr(db);
+        dbPtr = wrap_shared_ptr<DatabaseContext>(db);
         env->SetLongField(context, fid, dbPtr);
     }
     return db;
@@ -686,7 +703,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_newInstan
             const std::string authority_str = authority_utf;
             DatabaseContextNNPtr db = NN_CHECK_THROW(get_database_context(env, context));
             AuthorityFactoryPtr factory = AuthorityFactory::create(db, authority_str).as_nullable();
-            result = wrap_shared_ptr(factory);
+            result = wrap_shared_ptr<AuthorityFactory>(factory);
             /*
              * Log a message at debug level about the factory we just created.
              * The -1 in use count is for ignoring the reference in this block.
@@ -841,9 +858,9 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
      jdouble desiredAccuracy, jboolean discardSuperseded)
 {
     try {
-        CRSNNPtr source = NN_CHECK_THROW(get_and_unwrap_ptr<CRS>(env, sourceCRS));
-        CRSNNPtr target = NN_CHECK_THROW(get_and_unwrap_ptr<CRS>(env, targetCRS));
-        AuthorityFactoryPtr pf = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
+        CRSNNPtr                        source  = get_shared_object<CRS>(env, sourceCRS);
+        CRSNNPtr                        target  = get_shared_object<CRS>(env, targetCRS);
+        AuthorityFactoryPtr             pf      = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
         CoordinateOperationContextNNPtr context = CoordinateOperationContext::create(pf, nullptr, desiredAccuracy);
         context->setDiscardSuperseded(discardSuperseded);
         /*
@@ -880,12 +897,12 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_createPJ(JNIEnv *env, jobject context, jobject operation) {
     try {
-        DatabaseContextPtr dbContext = get_database_context(env, context);
-        CoordinateOperationPtr cop = get_and_unwrap_ptr<CoordinateOperation>(env, operation);
+        CoordinateOperationNNPtr cop       = get_shared_object<CoordinateOperation>(env, operation);
+        DatabaseContextPtr       dbContext = get_database_context(env, context);
         PROJStringFormatterNNPtr formatter = PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_5, dbContext);
-        std::string projString = cop->exportToPROJString(formatter.get());
-        PJ_CONTEXT *ctx = get_context(env, context);
-        PJ *pj = proj_create(ctx, projString.c_str());
+        std::string              projDef   = cop->exportToPROJString(formatter.get());
+        PJ_CONTEXT               *ctx      = get_context(env, context);
+        PJ                       *pj       = proj_create(ctx, projDef.c_str());
         return reinterpret_cast<jlong>(pj);
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_TRANSFORM_EXCEPTION, e);
