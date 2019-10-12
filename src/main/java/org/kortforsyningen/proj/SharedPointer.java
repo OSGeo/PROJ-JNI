@@ -62,6 +62,7 @@ class SharedPointer extends NativeResource implements Runnable {
      * {@code osgeo::proj::io::IJSONExportable} or {@code osgeo::proj::io::IPROJStringExportable}, depending
      * on the convention used.
      *
+     * @param  context     the thread context, or {@code null} if none.
      * @param  convention  ordinal value of the {@link ReferencingFormat.Convention} to use.
      * @param  indentation number of spaces for each indentation level, or -1 for the default value.
      * @param  multiline   whether the WKT will use multi-line layout.
@@ -70,7 +71,7 @@ class SharedPointer extends NativeResource implements Runnable {
      *         does not implement the {@code osgeo::proj::io::IWKTExportable} interface.
      * @throws FormattingException if an error occurred during formatting.
      */
-    final native String format(int convention, int indentation, boolean multiline, boolean strict);
+    final native String format(Context context, int convention, int indentation, boolean multiline, boolean strict);
 
     /**
      * Invoked by the cleaner thread when the {@link IdentifiableObject} has been garbage collected.

@@ -173,8 +173,11 @@ public class ReferencingFormat {
     public String format(final Object object) throws FormattingException {
         Objects.requireNonNull(object);
         if (object instanceof IdentifiableObject) {
-            final String text = ((IdentifiableObject) object).impl.format(
-                    convention.ordinal(), indentation, multiline, strict);
+            final String text;
+            try (Context c = Context.acquire()) {
+                text = ((IdentifiableObject) object).impl.format(c,
+                        convention.ordinal(), indentation, multiline, strict);
+            }
             if (text != null) {
                 return text;
             }

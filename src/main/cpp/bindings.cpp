@@ -468,26 +468,29 @@ inline PJ_CONTEXT* get_context(JNIEnv *env, jobject context) {
  * and will be released when destroyPJ(…) will be invoked.
  *
  * @param  env      The JNI environment.
- * @param  context  The Context object for the current thread.
- * @return Pointer to shared database.
+ * @param  context  The PJ_CONTEXT wrapper for the current thread, or null if none.
+ * @return Pointer to shared database, or null if the given context was null.
  * @throw  std::exception if the database creation failed.
  */
 DatabaseContextPtr get_database_context(JNIEnv *env, jobject context) {
-    jfieldID fid = get_database_field(env, context);
-    if (fid) {
-        DatabaseContextPtr db;
-        jlong dbPtr = env->GetLongField(context, fid);
-        if (dbPtr) {
-            db = unwrap_shared_ptr<DatabaseContext>(dbPtr);
-        } else {
-            log(env, "Creating PROJ database context.");
-            db = DatabaseContext::create(std::string(), std::vector<std::string>(), get_context(env, context)).as_nullable();
-            dbPtr = wrap_shared_ptr(db);
-            env->SetLongField(context, fid, dbPtr);
-        }
-        return db;
+    if (!context) {
+        return nullptr;
     }
-    throw std::exception();     // Should never happen.
+    jfieldID fid = get_database_field(env, context);
+    if (!fid) {
+        throw std::exception();     // Should never happen.
+    }
+    jlong dbPtr = env->GetLongField(context, fid);
+    DatabaseContextPtr db;
+    if (dbPtr) {
+        db = unwrap_shared_ptr<DatabaseContext>(dbPtr);
+    } else {
+        log(env, "Creating PROJ database context.");
+        db = DatabaseContext::create(std::string(), std::vector<std::string>(), get_context(env, context)).as_nullable();
+        dbPtr = wrap_shared_ptr(db);
+        env->SetLongField(context, fid, dbPtr);
+    }
+    return db;
 }
 
 
@@ -550,6 +553,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
  *
  * @param  env         The JNI environment.
  * @param  object      The Java object wrapping the PROJ object to format.
+ * @param  context     The PJ_CONTEXT wrapper, or null if none.
  * @param  convention  One of ReferencingFormat constants.
  * @param  indentation Number of spaces for each indentation level, or -1 for the default value.
  * @param  multiline   Whether the WKT will use multi-line layout.
@@ -557,7 +561,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
  * @return The Well-Known Text (WKT) for this object, or null if the object is not IWKTExportable.
  */
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
-    (JNIEnv *env, jobject object, jint convention, jint indentation, jboolean multiline, jboolean strict)
+    (JNIEnv *env, jobject object, jobject context, jint convention, jint indentation, jboolean multiline, jboolean strict)
 {
     enum format {WKT, PROJ, JSON};
     union version {
@@ -589,7 +593,8 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
             case WKT: {
                 std::shared_ptr<IWKTExportable> exportable = std::dynamic_pointer_cast<IWKTExportable>(candidate);
                 if (!exportable) break;
-                WKTFormatterNNPtr formatter = WKTFormatter::create(c.wkt);
+                DatabaseContextPtr dbContext = get_database_context(env, context);
+                WKTFormatterNNPtr formatter = WKTFormatter::create(c.wkt, dbContext);
                 formatter->setMultiLine(multiline);
                 formatter->setStrict(strict);
                 if (indentation >= 0) {
@@ -600,7 +605,8 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
             case JSON: {
                 std::shared_ptr<IJSONExportable> exportable = std::dynamic_pointer_cast<IJSONExportable>(candidate);
                 if (!exportable) break;
-                JSONFormatterNNPtr formatter = JSONFormatter::create();
+                DatabaseContextPtr dbContext = get_database_context(env, context);
+                JSONFormatterNNPtr formatter = JSONFormatter::create(dbContext);
                 formatter->setMultiLine(multiline);
                 if (indentation >= 0) {
                     formatter->setIndentationWidth(indentation);
@@ -610,7 +616,8 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
             case PROJ: {
                 std::shared_ptr<IPROJStringExportable> exportable = std::dynamic_pointer_cast<IPROJStringExportable>(candidate);
                 if (!exportable) break;
-                PROJStringFormatterNNPtr formatter = PROJStringFormatter::create(c.proj);
+                DatabaseContextPtr dbContext = get_database_context(env, context);
+                PROJStringFormatterNNPtr formatter = PROJStringFormatter::create(c.proj, dbContext);
                 return non_empty_string(env, exportable->exportToPROJString(formatter.get()));
             }
         }
@@ -873,11 +880,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_createPJ(JNIEnv *env, jobject context, jobject operation) {
     try {
-        PJ_CONTEXT *ctx = get_context(env, context);
         DatabaseContextPtr dbContext = get_database_context(env, context);
         CoordinateOperationPtr cop = get_and_unwrap_ptr<CoordinateOperation>(env, operation);
         PROJStringFormatterNNPtr formatter = PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_5, dbContext);
         std::string projString = cop->exportToPROJString(formatter.get());
+        PJ_CONTEXT *ctx = get_context(env, context);
         PJ *pj = proj_create(ctx, projString.c_str());
         return reinterpret_cast<jlong>(pj);
     } catch (const std::exception &e) {
