@@ -102,4 +102,44 @@ public final strictfp class OperationTest extends TransformTestCase {
 
         verifyConsistency(testData());
     }
+
+    /**
+     * Tests an operation that reduce the number of dimensions. The tested operation does (λ,φ,h) → (φ,λ).
+     * The coordinate swapping performed by that operation is a simple way to verify that the transform is
+     * executed.
+     *
+     * @throws FactoryException if an error occurred while creating a CRS or the operation.
+     * @throws TransformException if an error occurred while transforming a coordinate.
+     */
+    @Test
+    public void testDimensionReduce() throws FactoryException, TransformException {
+        initialize("7042", "4171");
+        tolerance = 0.0001;
+        verifyTransform(new double[] {61, 41, 0},
+                        new double[] {41, 61});
+
+        verifyConsistency(new float[] {
+                45.500f,  -73.567f, 10f,
+                49.250f, -123.100f, 12f,
+                35.653f,  139.839f, 15f,
+                48.865f,    2.349f, 10f});
+    }
+
+    /**
+     * Tests an operation that increase the number of dimensions. The tested operation does (φ,λ) → (λ,φ,h).
+     * The coordinate swapping performed by that operation is a simple way to verify that the transform is
+     * executed.
+     *
+     * @throws FactoryException if an error occurred while creating a CRS or the operation.
+     * @throws TransformException if an error occurred while transforming a coordinate.
+     */
+    @Test
+    public void testDimensionIncrease() throws FactoryException, TransformException {
+        initialize("4171", "7042");
+        tolerance = 0.0001;
+        verifyTransform(new double[] {42, 62},
+                        new double[] {62, 42, 0});
+
+        verifyConsistency(testData());
+    }
 }
