@@ -53,11 +53,6 @@ public final strictfp class OperationTest extends TransformTestCase {
     public OperationTest() {
         factory = new OperationFactory(null);
         crsFactory = new AuthorityFactory.API("EPSG");
-
-        // Disable tests of unsupported features.
-        isDoubleToFloatSupported    = false;
-        isFloatToDoubleSupported    = false;
-        isOverlappingArraySupported = false;
     }
 
     /**
