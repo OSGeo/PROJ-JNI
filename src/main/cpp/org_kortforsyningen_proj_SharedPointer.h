@@ -17,10 +17,10 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
- * Method:    rawPointer
+ * Method:    inverse
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse
   (JNIEnv *, jobject);
 
 /*
@@ -30,6 +30,14 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer
  */
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
   (JNIEnv *, jobject, jobject, jint, jint, jboolean, jboolean);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    rawPointer
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer
+  (JNIEnv *, jobject);
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer

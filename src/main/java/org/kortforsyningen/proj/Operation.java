@@ -84,8 +84,18 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
 
     /**
      * The source and target coordinate reference systems, or {@code null} if unspecified.
+     * Those CRSs are defined after construction, then considered as final.
+     *
+     * @see #setCRSs(CRS, CRS)
      */
     private CRS sourceCRS, targetCRS;
+
+    /**
+     * The inverse transform, created only when first needed.
+     *
+     * @see #inverse()
+     */
+    private transient Operation inverse;
 
     /**
      * The objects which will perform the actual coordinate operations.
@@ -565,7 +575,12 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @throws NoninvertibleTransformException if the inverse transform can not be computed.
      */
     @Override
-    public MathTransform inverse() throws NoninvertibleTransformException {
-        throw new NoninvertibleTransformException("Not supported yet.");
+    public synchronized MathTransform inverse() throws NoninvertibleTransformException {
+        if (inverse == null) {
+            inverse = new Operation(impl.inverse());
+            inverse.setCRSs(targetCRS, sourceCRS);
+            inverse.inverse = this;
+        }
+        return inverse;
     }
 }

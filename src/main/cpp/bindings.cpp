@@ -152,6 +152,7 @@ inline jfieldID get_database_field(JNIEnv *env, jobject context) {
 #define JPJ_FACTORY_EXCEPTION          "org/opengis/util/FactoryException"
 #define JPJ_NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
 #define JPJ_TRANSFORM_EXCEPTION        "org/opengis/referencing/operation/TransformException"
+#define JPJ_NON_INVERTIBLE_EXCEPTION   "org/opengis/referencing/operation/NoninvertibleTransformException"
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
 #define JPJ_ILLEGAL_STATE_EXCEPTION    "java/lang/IllegalStateException"
@@ -629,6 +630,27 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension(
         cs = crs->coordinateSystem().as_nullable();
     }
     return cs->axisList().size();
+}
+
+
+/**
+ * Creates the inverse of the wrapped operation.
+ *
+ * @param  env         The JNI environment.
+ * @param  operation   The Java object wrapping the PROJ operation to inverse.
+ * @return Pointer to the wrapper of the inverse operation.
+ * @throws NoninvertibleTransformException if the inverse transform can not be computed.
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse(JNIEnv *env, jobject operation) {
+    try {
+        CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, operation);
+        cop = cop->inverse();
+        BaseObjectPtr ptr = cop.as_nullable();
+        return wrap_shared_ptr<BaseObject>(ptr);
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_NON_INVERTIBLE_EXCEPTION, e);
+    }
+    return 0;
 }
 
 

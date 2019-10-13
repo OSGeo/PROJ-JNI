@@ -21,6 +21,8 @@
  */
 package org.kortforsyningen.proj;
 
+import org.opengis.referencing.operation.NoninvertibleTransformException;
+
 
 /**
  * Wrappers around C++ shared pointer ({@code std::shared_ptr}).
@@ -61,19 +63,27 @@ class SharedPointer extends NativeResource implements Runnable {
     final native int getDimension();
 
     /**
-     * Returns the memory address of the PROJ object wrapped by this {@code NativeResource}.
-     * This method is used for {@link IdentifiableObject#hashCode()} and
-     * {@link IdentifiableObject#equals(Object)} implementations only.
+     * Creates the inverse of the wrapped operation.
+     * This method can be used with the following types:
      *
-     * @return memory address of the wrapper PROJ object.
+     * <ul>
+     *   <li>{@code osgeo::proj::operation::CoordinateOperation}</li>
+     * </ul>
+     *
+     * @return pointer to the wrapper of the inverse operation.
+     * @throws NoninvertibleTransformException if the inverse transform can not be computed.
      */
-    final native long rawPointer();
+    final native long inverse() throws NoninvertibleTransformException;
 
     /**
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
-     * This is allowed only if the wrapped PROJ object implements {@code osgeo::proj::io::IWKTExportable},
-     * {@code osgeo::proj::io::IJSONExportable} or {@code osgeo::proj::io::IPROJStringExportable}, depending
-     * on the convention used.
+     * This method can be used with the following types:
+     *
+     * <ul>
+     *   <li>{@code osgeo::proj::io::IWKTExportable}</li>
+     *   <li>{@code osgeo::proj::io::IJSONExportable}</li>
+     *   <li>{@code osgeo::proj::io::IPROJStringExportable}</li>
+     * </ul>
      *
      * @param  context     the thread context, or {@code null} if none.
      * @param  convention  ordinal value of the {@link ReferencingFormat.Convention} to use.
@@ -85,6 +95,15 @@ class SharedPointer extends NativeResource implements Runnable {
      * @throws FormattingException if an error occurred during formatting.
      */
     final native String format(Context context, int convention, int indentation, boolean multiline, boolean strict);
+
+    /**
+     * Returns the memory address of the PROJ object wrapped by this {@code NativeResource}.
+     * This method is used for {@link IdentifiableObject#hashCode()} and
+     * {@link IdentifiableObject#equals(Object)} implementations only.
+     *
+     * @return memory address of the wrapper PROJ object.
+     */
+    final native long rawPointer();
 
     /**
      * Invoked by the cleaner thread when the {@link IdentifiableObject} has been garbage collected.

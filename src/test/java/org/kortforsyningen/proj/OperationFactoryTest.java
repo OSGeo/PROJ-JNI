@@ -60,7 +60,6 @@ public final strictfp class OperationFactoryTest extends TransformTestCase {
         isDoubleToFloatSupported    = false;
         isFloatToDoubleSupported    = false;
         isOverlappingArraySupported = false;
-        isInverseTransformSupported = false;
     }
 
     /**
