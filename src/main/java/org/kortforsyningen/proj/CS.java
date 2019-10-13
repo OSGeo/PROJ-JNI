@@ -21,8 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
-import org.opengis.referencing.cs.CoordinateSystem;
-import org.opengis.referencing.cs.CoordinateSystemAxis;
+import org.opengis.referencing.cs.*;
 
 
 /**
@@ -63,5 +62,70 @@ class CS extends IdentifiableObject implements CoordinateSystem {
     @Override
     public CoordinateSystemAxis getAxis(int dimension) throws IndexOutOfBoundsException {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * A coordinate system specialization. No new properties compared to parent CS.
+     */
+    static final class Cartesian extends CS implements CartesianCS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Cartesian(final long ptr) {
+            super(ptr);
+        }
+    }
+
+    /**
+     * A coordinate system specialization. No new properties compared to parent CS.
+     */
+    static final class Spherical extends CS implements SphericalCS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Spherical(final long ptr) {
+            super(ptr);
+        }
+    }
+
+    /**
+     * A coordinate system specialization. No new properties compared to parent CS.
+     */
+    static final class Ellipsoidal extends CS implements EllipsoidalCS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Ellipsoidal(final long ptr) {
+            super(ptr);
+        }
+    }
+
+    /**
+     * A coordinate system specialization. No new properties compared to parent CS.
+     */
+    static final class Vertical extends CS implements VerticalCS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Vertical(final long ptr) {
+            super(ptr);
+        }
+    }
+
+    /**
+     * A coordinate system specialization. No new properties compared to parent CS.
+     */
+    static final class Time extends CS implements TimeCS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Time(final long ptr) {
+            super(ptr);
+        }
     }
 }

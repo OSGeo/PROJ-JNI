@@ -32,6 +32,7 @@ import org.opengis.util.InternationalString;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.metadata.citation.PresentationForm;
 import org.opengis.referencing.IdentifiedObject;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.*;
 import org.opengis.referencing.cs.*;
 import org.opengis.referencing.datum.*;
@@ -64,14 +65,19 @@ final class AuthorityFactory extends NativeResource {
             VERTICAL_REFERENCE_FRAME    =  5,
             UNIT_OF_MEASURE             =  6,
             COORDINATE_SYSTEM           =  7,
-            COORDINATE_REFERENCE_SYSTEM =  8,
-            GEODETIC_CRS                =  9,
-            GEOGRAPHIC_CRS              = 10,
-            VERTICAL_CRS                = 11,
-            PROJECTED_CRS               = 12,
-            COMPOUND_CRS                = 13,
-            CONVERSION                  = 14,
-            COORDINATE_OPERATION        = 15;
+            CARTESIAN_CS                =  8,
+            SPHERICAL_CS                =  9,
+            ELLIPSOIDAL_CS              = 10,
+            VERTICAL_CS                 = 11,
+            TEMPORAL_CS                 = 12,
+            COORDINATE_REFERENCE_SYSTEM = 13,
+            GEODETIC_CRS                = 14,
+            GEOGRAPHIC_CRS              = 15,
+            VERTICAL_CRS                = 16,
+            PROJECTED_CRS               = 17,
+            COMPOUND_CRS                = 18,
+            CONVERSION                  = 19,
+            COORDINATE_OPERATION        = 20;
 
     /**
      * Creates a new factory for the given authority.
@@ -162,6 +168,7 @@ final class AuthorityFactory extends NativeResource {
      * is used by only one thread at a time. There is no guarantee that two consecutive invocations of
      * {@code createFoo(…)} methods in the same thread will use the same {@link AuthorityFactory} instance.</p>
      */
+    @SuppressWarnings("OverlyStrongTypeCast")
     static final class API implements CRSAuthorityFactory, CSAuthorityFactory, DatumAuthorityFactory,
             CoordinateOperationAuthorityFactory
     {
@@ -252,9 +259,16 @@ final class AuthorityFactory extends NativeResource {
             return (text != null) ? new SimpleCitation(text) : null;
         }
 
+        /**
+         * Returns an arbitrary object from a code.
+         *
+         * @param  code  value allocated by authority.
+         * @return the object for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public IdentifiedObject createObject(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return (IdentifiedObject) createGeodeticObject(ANY, code);
         }
 
         @Override
@@ -288,39 +302,110 @@ final class AuthorityFactory extends NativeResource {
             return (CS) createGeodeticObject(COORDINATE_SYSTEM, code);
         }
 
+        /**
+         * Returns a coordinate system which is expected to be Cartesian.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
         @Override
         public CartesianCS createCartesianCS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            try {
+                return (CS.Cartesian) createGeodeticObject(COORDINATE_SYSTEM, code);
+            } catch (ClassCastException e) {
+                throw unexpectedType(e, code);
+            }
         }
 
-        @Override
-        public EllipsoidalCS createEllipsoidalCS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
-        }
-
+        /**
+         * Returns a coordinate system which is expected to be spherical.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
         @Override
         public SphericalCS createSphericalCS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            try {
+                return (CS.Spherical) createGeodeticObject(COORDINATE_SYSTEM, code);
+            } catch (ClassCastException e) {
+                throw unexpectedType(e, code);
+            }
         }
 
+        /**
+         * Returns a coordinate system which is expected to be ellipsoidal.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
         @Override
-        public CylindricalCS createCylindricalCS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+        public EllipsoidalCS createEllipsoidalCS(final String code) throws FactoryException {
+            try {
+                return (CS.Ellipsoidal) createGeodeticObject(COORDINATE_SYSTEM, code);
+            } catch (ClassCastException e) {
+                throw unexpectedType(e, code);
+            }
         }
 
-        @Override
-        public PolarCS createPolarCS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
-        }
-
+        /**
+         * Returns a coordinate system which is expected to be vertical.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
         @Override
         public VerticalCS createVerticalCS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            try {
+                return (CS.Vertical) createGeodeticObject(COORDINATE_SYSTEM, code);
+            } catch (ClassCastException e) {
+                throw unexpectedType(e, code);
+            }
         }
 
+        /**
+         * Returns a coordinate system which is expected to be temporal.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
         @Override
         public TimeCS createTimeCS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            try {
+                return (CS.Time) createGeodeticObject(COORDINATE_SYSTEM, code);
+            } catch (ClassCastException e) {
+                throw unexpectedType(e, code);
+            }
+        }
+
+        /**
+         * Returns a coordinate system which is expected to be polar.
+         * PROJ does not yet support this type of coordinate system.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
+        @Override
+        public PolarCS createPolarCS(final String code) throws FactoryException {
+            throw new FactoryException(UNSUPPORTED);
+        }
+
+        /**
+         * Returns a coordinate system which is expected to be cylindrical.
+         * PROJ does not yet support this type of coordinate system.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
+        @Override
+        public CylindricalCS createCylindricalCS(final String code) throws FactoryException {
+            throw new FactoryException(UNSUPPORTED);
         }
 
         @Override
@@ -371,7 +456,6 @@ final class AuthorityFactory extends NativeResource {
          * @throws FactoryException if the object creation failed.
          */
         @Override
-        @SuppressWarnings("OverlyStrongTypeCast")
         public CoordinateReferenceSystem createCoordinateReferenceSystem(final String code) throws FactoryException {
             return (CRS) createGeodeticObject(COORDINATE_REFERENCE_SYSTEM, code);
         }
@@ -443,6 +527,18 @@ final class AuthorityFactory extends NativeResource {
         public Set<CoordinateOperation> createFromCoordinateReferenceSystemCodes(final String source, final String target) throws FactoryException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
+
+        /**
+         * Returns the exception to throw for an object of unexpected type.
+         *
+         * @param  e  the exception throws for because of unexpected type.
+         * @return the exception to throw.
+         */
+        private FactoryException unexpectedType(final ClassCastException e, final String code) {
+            return (NoSuchAuthorityCodeException) new NoSuchAuthorityCodeException(
+                    authority + ':' + code + " identifties an object of a different kind.",
+                    authority, code).initCause(e);
+        }
     }
 
     /**
@@ -464,10 +560,15 @@ final class AuthorityFactory extends NativeResource {
             case VERTICAL_CRS:
             case PROJECTED_CRS:
             case COMPOUND_CRS:
-            case COORDINATE_REFERENCE_SYSTEM: obj = new CRS      (ptr); break;
-            case COORDINATE_SYSTEM:           obj = new CS       (ptr); break;
-            case CONVERSION:
-            case COORDINATE_OPERATION:        obj = new Operation(ptr); break;
+            case COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
+            case COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
+            case CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
+            case SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;
+            case ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
+            case VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
+            case TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
+            case CONVERSION:                  obj = new Operation.Conversion(ptr); break;
+            case COORDINATE_OPERATION:        obj = new Operation           (ptr); break;
             default: throw new FactoryException("Unknown object type.");
         }
         obj.cleanWhenUnreachable();

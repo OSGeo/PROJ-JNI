@@ -406,6 +406,15 @@ rd: switch (type) {
             else if (dynamic_cast<osgeo::proj::crs::VerticalCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS;
             break;
         }
+        case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM: {
+            BaseObject *ptr = object.get();
+                 if (dynamic_cast<osgeo::proj::cs::CartesianCS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_CARTESIAN_CS;
+            else if (dynamic_cast<osgeo::proj::cs::SphericalCS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_SPHERICAL_CS;
+            else if (dynamic_cast<osgeo::proj::cs::EllipsoidalCS *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_ELLIPSOIDAL_CS;
+            else if (dynamic_cast<osgeo::proj::cs::VerticalCS    *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CS;
+            else if (dynamic_cast<osgeo::proj::cs::TemporalCS    *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_TEMPORAL_CS;
+            break;
+        }
         case org_kortforsyningen_proj_AuthorityFactory_DATUM: {
             BaseObject *ptr = object.get();
                  if (dynamic_cast<osgeo::proj::datum::GeodeticReferenceFrame *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME;

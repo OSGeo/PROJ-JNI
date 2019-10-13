@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Collection;
 import java.util.Collections;
 import java.security.AccessController;
@@ -29,12 +30,14 @@ import java.security.PrivilegedAction;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.metadata.quality.PositionalAccuracy;
+import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.Transformation;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
+import org.opengis.referencing.operation.OperationMethod;
 import org.opengis.referencing.operation.TransformException;
 
 
@@ -250,6 +253,30 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     }
 
     /**
+     * A specialization of coordinate operation when there is no datum change.
+     * In such case, there is no accuracy lost expected (ignoring rounding errors).
+     */
+    static final class Conversion extends Operation implements org.opengis.referencing.operation.Conversion {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Conversion(final long ptr) {
+            super(ptr);
+        }
+
+        @Override
+        public OperationMethod getMethod() {
+            return null;    // TODO
+        }
+
+        @Override
+        public ParameterValueGroup getParameterValues() {
+            throw new UnsupportedOperationException("Not supported yet.");  // TODO
+        }
+    }
+
+    /**
      * Gets the object which will perform the actual coordinate operation.
      * Current wrapper implements the {@code MathTransform} interface in the same class,
      * but a future version may dissociate the objects if useful.
@@ -268,7 +295,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public boolean isIdentity() {
-        return false;                   // TODO
+        return Objects.equals(sourceCRS, targetCRS);        // TODO: use more lenient comparison.
     }
 
     /**
