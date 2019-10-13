@@ -74,10 +74,12 @@ final class AuthorityFactory extends NativeResource {
             GEODETIC_CRS                = 14,
             GEOGRAPHIC_CRS              = 15,
             VERTICAL_CRS                = 16,
-            PROJECTED_CRS               = 17,
-            COMPOUND_CRS                = 18,
-            CONVERSION                  = 19,
-            COORDINATE_OPERATION        = 20;
+            TEMPORAL_CRS                = 17,
+            ENGINEERING_CRS             = 18,
+            PROJECTED_CRS               = 19,
+            COMPOUND_CRS                = 20,
+            CONVERSION                  = 21,
+            COORDINATE_OPERATION        = 22;
 
     /**
      * Creates a new factory for the given authority.
@@ -460,9 +462,16 @@ final class AuthorityFactory extends NativeResource {
             return (CRS) createGeodeticObject(COORDINATE_REFERENCE_SYSTEM, code);
         }
 
+        /**
+         * Returns a coordinate reference system which is expected to be geographic.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public GeographicCRS createGeographicCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return (CRS.Geographic) createGeodeticObject(GEOGRAPHIC_CRS, code);
         }
 
         @Override
@@ -475,19 +484,48 @@ final class AuthorityFactory extends NativeResource {
             throw new FactoryException("Not supported yet.");
         }
 
+        /**
+         * Returns a coordinate reference system which is expected to be vertical.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public VerticalCRS createVerticalCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return (CRS.Vertical) createGeodeticObject(VERTICAL_CRS, code);
         }
 
+        /**
+         * Returns a coordinate reference system which is expected to be temporal.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed or the CRS is another type.
+         */
         @Override
         public TemporalCRS createTemporalCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            try {
+                return (CRS.Temporal) createGeodeticObject(COORDINATE_REFERENCE_SYSTEM, code);
+            } catch (ClassCastException e) {
+                throw unexpectedType(e, code);
+            }
         }
 
+        /**
+         * Returns a coordinate reference system which is expected to be engineering.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed or the CRS is another type.
+         */
         @Override
         public EngineeringCRS createEngineeringCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            try {
+                return (CRS.Engineering) createGeodeticObject(COORDINATE_REFERENCE_SYSTEM, code);
+            } catch (ClassCastException e) {
+                throw unexpectedType(e, code);
+            }
         }
 
         @Override
@@ -555,12 +593,14 @@ final class AuthorityFactory extends NativeResource {
     private static IdentifiableObject wrapGeodeticObject(final int type, final long ptr) throws FactoryException {
         final org.kortforsyningen.proj.IdentifiableObject obj;
         switch (type) {
-            case GEODETIC_CRS:
-            case GEOGRAPHIC_CRS:
-            case VERTICAL_CRS:
             case PROJECTED_CRS:
             case COMPOUND_CRS:
             case COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
+            case GEODETIC_CRS:                obj = new CRS.Geodetic        (ptr); break;
+            case GEOGRAPHIC_CRS:              obj = new CRS.Geographic      (ptr); break;
+            case VERTICAL_CRS:                obj = new CRS.Vertical        (ptr); break;
+            case TEMPORAL_CRS:                obj = new CRS.Temporal        (ptr); break;
+            case ENGINEERING_CRS:             obj = new CRS.Engineering     (ptr); break;
             case COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
             case CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
             case SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;

@@ -399,11 +399,13 @@ rd: switch (type) {
         }
         case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: {
             BaseObject *ptr = object.get();
-                 if (dynamic_cast<osgeo::proj::crs::CompoundCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS;
-            else if (dynamic_cast<osgeo::proj::crs::ProjectedCRS  *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS;
-            else if (dynamic_cast<osgeo::proj::crs::GeographicCRS *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS;
-            else if (dynamic_cast<osgeo::proj::crs::GeodeticCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS;
-            else if (dynamic_cast<osgeo::proj::crs::VerticalCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS;
+                 if (dynamic_cast<osgeo::proj::crs::CompoundCRS    *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::ProjectedCRS   *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::GeographicCRS  *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::GeodeticCRS    *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::VerticalCRS    *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::TemporalCRS    *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_TEMPORAL_CRS;
+            else if (dynamic_cast<osgeo::proj::crs::EngineeringCRS *>(ptr)) type = org_kortforsyningen_proj_AuthorityFactory_ENGINEERING_CRS;
             break;
         }
         case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM: {

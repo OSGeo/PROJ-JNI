@@ -21,8 +21,15 @@
  */
 package org.kortforsyningen.proj;
 
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.*;
 import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.cs.EllipsoidalCS;
+import org.opengis.referencing.cs.TimeCS;
+import org.opengis.referencing.cs.VerticalCS;
+import org.opengis.referencing.datum.EngineeringDatum;
+import org.opengis.referencing.datum.GeodeticDatum;
+import org.opengis.referencing.datum.TemporalDatum;
+import org.opengis.referencing.datum.VerticalDatum;
 
 
 /**
@@ -33,6 +40,7 @@ import org.opengis.referencing.cs.CoordinateSystem;
  * @version 1.0
  * @since   1.0
  */
+@SuppressWarnings("OverlyStrongTypeCast")
 class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     /**
      * Default number of dimensions when we can not infer it.
@@ -73,5 +81,114 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     @Override
     public CoordinateSystem getCoordinateSystem() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     */
+    static class Geodetic extends CRS implements GeodeticCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Geodetic(final long ptr) {
+            super(ptr);
+        }
+
+        @Override
+        public GeodeticDatum getDatum() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     */
+    static final class Geographic extends Geodetic implements GeographicCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Geographic(final long ptr) {
+            super(ptr);
+        }
+
+        /**
+         * Returns the ellipsoidal specialization of the coordinate system.
+         */
+        @Override
+        public EllipsoidalCS getCoordinateSystem() {
+            return (CS.Ellipsoidal) super.getCoordinateSystem();
+        }
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     */
+    static final class Vertical extends CRS implements VerticalCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Vertical(final long ptr) {
+            super(ptr);
+        }
+
+        /**
+         * Returns the vertical specialization of the coordinate system.
+         */
+        @Override
+        public VerticalCS getCoordinateSystem() {
+            return (CS.Vertical) super.getCoordinateSystem();
+        }
+
+        @Override
+        public VerticalDatum getDatum() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     */
+    static final class Temporal extends CRS implements TemporalCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Temporal(final long ptr) {
+            super(ptr);
+        }
+
+        /**
+         * Returns the temporal specialization of the coordinate system.
+         */
+        @Override
+        public TimeCS getCoordinateSystem() {
+            return (CS.Time) super.getCoordinateSystem();
+        }
+
+        @Override
+        public TemporalDatum getDatum() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     */
+    static final class Engineering extends CRS implements EngineeringCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Engineering(final long ptr) {
+            super(ptr);
+        }
+
+        @Override
+        public EngineeringDatum getDatum() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
     }
 }
