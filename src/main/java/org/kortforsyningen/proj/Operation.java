@@ -372,7 +372,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @throws IllegalArgumentException if the offset or number of points is out of bounds.
      */
     private static void ensureValidRange(final int arrayLength, final int offset, final int numPts, final int dimension) {
-        if (offset < 0 || Math.addExact(offset, Math.multiplyExact(numPts, dimension)) >= arrayLength) {
+        if (offset < 0 || Math.addExact(offset, Math.multiplyExact(numPts, dimension)) > arrayLength) {
             if (offset < 0 || offset >= arrayLength) {
                 throw new IllegalArgumentException("Offset " + offset + " is out of bounds.");
             } else {

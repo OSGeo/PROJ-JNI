@@ -25,20 +25,19 @@ import org.junit.Test;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
-import org.opengis.referencing.operation.TransformException;
-import org.opengis.test.referencing.TransformTestCase;
 
 import static org.junit.Assert.*;
 
 
 /**
- * Tests {@link OperationFactory}.
+ * Tests {@link OperationFactory}. This class tests only the creation of coordinate operation.
+ * Transformations of coordinate values are tested by another class, {@link OperationTest}.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
  */
-public final strictfp class OperationFactoryTest extends TransformTestCase {
+public final strictfp class OperationFactoryTest {
     /**
      * The factory to test.
      */
@@ -55,31 +54,20 @@ public final strictfp class OperationFactoryTest extends TransformTestCase {
     public OperationFactoryTest() {
         factory = new OperationFactory(null);
         crsFactory = new AuthorityFactory.API("EPSG");
-
-        // Disable tests of unsupported features.
-        isDoubleToFloatSupported    = false;
-        isFloatToDoubleSupported    = false;
-        isOverlappingArraySupported = false;
     }
 
     /**
-     * Tests the requests for Mercator projection and the conversion of a coordinate.
+     * Tests creation of Mercator projection from a pair of CRS.
      *
      * @throws FactoryException if an error occurred while creating a CRS or the operation.
-     * @throws TransformException if an error occurred while transforming a coordinate.
      */
     @Test
-    public void testMercator() throws FactoryException, TransformException {
+    public void testMercator() throws FactoryException {
         final CoordinateReferenceSystem source = crsFactory.createCoordinateReferenceSystem("4326");
         final CoordinateReferenceSystem target = crsFactory.createCoordinateReferenceSystem("3395");
         final CoordinateOperation operation = factory.createOperation(source, target);
         assertTrue(operation.toWKT().startsWith("CONVERSION[\"World Mercator\","));
         assertSame("sourceCRS", source, operation.getSourceCRS());
         assertSame("targetCRS", target, operation.getTargetCRS());
-
-        transform = operation.getMathTransform();
-        tolerance = 0.01;                                           // Request one centimetre accuracy.
-        verifyTransform(new double[] {40, 60},                      // (latitude, longitude) point to transform.
-                        new double[] {6679169.45, 4838471.40});     // Expected (easting, northing) values.
     }
 }
