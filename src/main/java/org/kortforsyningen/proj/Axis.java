@@ -51,7 +51,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public String getAbbreviation() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return impl.getStringProperty(SharedPointer.ABBREVIATION);
     }
 
     /**
@@ -64,7 +64,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public AxisDirection getDirection() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return AxisDirection.valueOf(impl.getStringProperty(SharedPointer.DIRECTION));
     }
 
     /**
@@ -85,7 +85,8 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public double getMinimumValue() {
-        return Double.NEGATIVE_INFINITY;
+        final double v = impl.getNumericProperty(SharedPointer.MINIMUM);
+        return Double.isNaN(v) ? Double.NEGATIVE_INFINITY : v;
     }
 
     /**
@@ -96,7 +97,8 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public double getMaximumValue() {
-        return Double.POSITIVE_INFINITY;
+        final double v = impl.getNumericProperty(SharedPointer.MAXIMUM);
+        return Double.isNaN(v) ? Double.POSITIVE_INFINITY : v;
     }
 
     /**

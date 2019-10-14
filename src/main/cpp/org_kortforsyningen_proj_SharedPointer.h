@@ -7,6 +7,34 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef org_kortforsyningen_proj_SharedPointer_ABBREVIATION
+#define org_kortforsyningen_proj_SharedPointer_ABBREVIATION 0L
+#undef org_kortforsyningen_proj_SharedPointer_DIRECTION
+#define org_kortforsyningen_proj_SharedPointer_DIRECTION 1L
+#undef org_kortforsyningen_proj_SharedPointer_MINIMUM
+#define org_kortforsyningen_proj_SharedPointer_MINIMUM 2L
+#undef org_kortforsyningen_proj_SharedPointer_MAXIMUM
+#define org_kortforsyningen_proj_SharedPointer_MAXIMUM 3L
+#undef org_kortforsyningen_proj_SharedPointer_SCOPE
+#define org_kortforsyningen_proj_SharedPointer_SCOPE 4L
+#undef org_kortforsyningen_proj_SharedPointer_REMARKS
+#define org_kortforsyningen_proj_SharedPointer_REMARKS 5L
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    getStringProperty
+ * Signature: (S)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringProperty
+  (JNIEnv *, jobject, jshort);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    getNumericProperty
+ * Signature: (S)D
+ */
+JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumericProperty
+  (JNIEnv *, jobject, jshort);
+
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    getDimension

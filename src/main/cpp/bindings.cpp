@@ -21,6 +21,7 @@
  */
 #include <assert.h>
 #include <string>
+#include <cmath>
 #include <proj.h>
 #include "proj/crs.hpp"
 #include "org_kortforsyningen_proj_NativeResource.h"
@@ -50,6 +51,8 @@ using osgeo::proj::io::JSONFormatterNNPtr;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
 using osgeo::proj::util::IComparable;
+using osgeo::proj::common::IdentifiedObject;
+using osgeo::proj::common::ObjectUsage;
 using osgeo::proj::cs::CoordinateSystem;
 using osgeo::proj::cs::CoordinateSystemPtr;
 using osgeo::proj::crs::CRS;
@@ -157,6 +160,7 @@ inline jfieldID get_database_field(JNIEnv *env, jobject context) {
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
 #define JPJ_ILLEGAL_STATE_EXCEPTION    "java/lang/IllegalStateException"
+#define JPJ_RUNTIME_EXCEPTION          "java/lang/RuntimeException"
 
 /*
  * NOTE ON CHARACTER ENCODING: this implementation assumes that the PROJ library expects strings
@@ -343,7 +347,7 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
  * @return Shared pointer to the PROJ object associated to the given Java object.
  * @throw  std::exception if this method can not get a non-null pointer.
  */
-template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_object(JNIEnv *env, jobject object) {
+template <class T> osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_object(JNIEnv *env, jobject object) {
     BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
     return NN_CHECK_THROW(std::dynamic_pointer_cast<T>(ptr));
 }
@@ -586,6 +590,91 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 
 
 /**
+ * Returns a property value as a string.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get a property value.
+ * @param  property  One of ABBREVIATION, etc. values.
+ * @return Value of the specified property, or null if undefined.
+ */
+JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringProperty
+  (JNIEnv *env, jobject object, jshort property)
+{
+    std::string value;
+    try {
+        switch (property) {
+            case org_kortforsyningen_proj_SharedPointer_ABBREVIATION: {
+                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->abbreviation();
+                break;
+            }
+            case org_kortforsyningen_proj_SharedPointer_DIRECTION: {
+                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->direction().toString();
+                break;
+            }
+            case org_kortforsyningen_proj_SharedPointer_REMARKS: {
+                value = get_shared_object<IdentifiedObject>(env, object)->remarks();
+                break;
+            }
+            case org_kortforsyningen_proj_SharedPointer_SCOPE: {
+                osgeo::proj::common::ObjectUsageNNPtr usage = get_shared_object<ObjectUsage>(env, object);
+                for (const osgeo::proj::common::ObjectDomainNNPtr domain : usage->domains()) {
+                    osgeo::proj::util::optional<std::string> scope = domain->scope();
+                    if (scope.has_value()) {
+                        jstring r = non_empty_string(env, *scope);
+                        if (r) return r;                            // Returns the first non-empty value.
+                    }
+                }
+                return nullptr;
+            }
+            default: {
+                return nullptr;
+            }
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+        return nullptr;
+    }
+    return non_empty_string(env, value);
+}
+
+
+/**
+ * Returns a property value as a floating point number.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get a property value.
+ * @param  property  One of MINIMUM, MAXIMUM, etc. values.
+ * @return Value of the specified property, or NaN if undefined.
+ */
+JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumericProperty
+  (JNIEnv *env, jobject object, jshort property)
+{
+    try {
+        osgeo::proj::util::optional<double> value;
+        switch (property) {
+            case org_kortforsyningen_proj_SharedPointer_MINIMUM: {
+                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->minimumValue();
+                break;
+            }
+            case org_kortforsyningen_proj_SharedPointer_MAXIMUM: {
+                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->maximumValue();
+                break;
+            }
+            default: {
+                return NAN;
+            }
+        }
+        if (value.has_value()) {
+            return *value;
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+    }
+    return NAN;
+}
+
+
+/**
  * Returns the given object as a single CRS if possible, or null otherwise.
  * If the CRS is a bound CRS, its base CRS is returned.
  *
@@ -615,33 +704,38 @@ SingleCRSPtr as_single_crs(BaseObjectPtr &ptr) {
  * @return Number of dimensions in wrapped object, or 0 if unknown.
  */
 JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension(JNIEnv *env, jobject object) {
-    BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
-    CoordinateSystemPtr cs = std::dynamic_pointer_cast<CoordinateSystem>(ptr);
-    if (!cs) {
-        SingleCRSPtr crs = as_single_crs(ptr);
-        if (!crs) {
-            CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(ptr);
-            if (!compound) {
-                jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
-                if (c) env->ThrowNew(c, "Not a recognized CRS type.");
-                return 0;
-            }
-            int dimension = 0;
-            for (CRSNNPtr component : compound->componentReferenceSystems()) {
-                ptr = component.as_nullable();
-                crs = as_single_crs(ptr);
-                if (!crs) {
+    try {
+        BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
+        CoordinateSystemPtr cs = std::dynamic_pointer_cast<CoordinateSystem>(ptr);
+        if (!cs) {
+            SingleCRSPtr crs = as_single_crs(ptr);
+            if (!crs) {
+                CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(ptr);
+                if (!compound) {
                     jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
-                    if (c) env->ThrowNew(c, "Nested CompoundCRS.");
+                    if (c) env->ThrowNew(c, "Not a recognized CRS type.");
                     return 0;
                 }
-                dimension += crs->coordinateSystem()->axisList().size();
+                int dimension = 0;
+                for (CRSNNPtr component : compound->componentReferenceSystems()) {
+                    ptr = component.as_nullable();
+                    crs = as_single_crs(ptr);
+                    if (!crs) {
+                        jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
+                        if (c) env->ThrowNew(c, "Nested CompoundCRS.");
+                        return 0;
+                    }
+                    dimension += crs->coordinateSystem()->axisList().size();
+                }
+                return dimension;
             }
-            return dimension;
+            cs = crs->coordinateSystem().as_nullable();
         }
-        cs = crs->coordinateSystem().as_nullable();
+        return cs->axisList().size();
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+        return 0;
     }
-    return cs->axisList().size();
 }
 
 

@@ -163,7 +163,7 @@ abstract class IdentifiableObject {
      * @return the CRS, datum or operation domain of usage, or {@code null} if none.
      */
     public InternationalString getScope() {
-        return null;
+        return getProperty(SharedPointer.SCOPE);
     }
 
     /**
@@ -172,8 +172,21 @@ abstract class IdentifiableObject {
      * @return the remarks, or {@code null} if none.
      */
     public InternationalString getRemarks() {
-        return null;
+        return getProperty(SharedPointer.REMARKS);
     }
+
+    /**
+     * Returns a property value as an international string.
+     *
+     * @param  property  one of {@link SharedPointer#ABBREVIATION}, <i>etc.</i> values.
+     * @return value of the specified property, or {@code null} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    private InternationalString getProperty(final short property) {
+        final String value = impl.getStringProperty(property);
+        return (value != null) ? new SimpleCitation(value) : null;
+    }
+
     /**
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
      * This method can be invoked only if the wrapped PROJ object is

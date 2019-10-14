@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.lang.annotation.Native;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 
 
@@ -39,6 +40,17 @@ import org.opengis.referencing.operation.NoninvertibleTransformException;
  */
 class SharedPointer extends NativeResource implements Runnable {
     /**
+     * Identify properties which can be returned by a {@code getFooProperty(short)} method.
+     */
+    @Native
+    static final short ABBREVIATION = 0,
+                       DIRECTION    = 1,
+                       MINIMUM      = 2,
+                       MAXIMUM      = 3,
+                       SCOPE        = 4,
+                       REMARKS      = 5;
+
+    /**
      * Wraps the shared pointer at the given address.
      * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
      *
@@ -48,6 +60,24 @@ class SharedPointer extends NativeResource implements Runnable {
     SharedPointer(final long ptr) {
         super(ptr);
     }
+
+    /**
+     * Returns a property value as a string.
+     *
+     * @param  property  one of {@link #ABBREVIATION}, <i>etc.</i> values.
+     * @return value of the specified property, or {@code null} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    final native String getStringProperty(short property);
+
+    /**
+     * Returns a property value as a floating point number.
+     *
+     * @param  property  one of {@link #MINIMUM}, {@link #MAXIMUM}, <i>etc.</i> values.
+     * @return value of the specified property, or {@link Double#NaN} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    final native double getNumericProperty(short property);
 
     /**
      * Returns the number of dimensions of the wrapped object.
