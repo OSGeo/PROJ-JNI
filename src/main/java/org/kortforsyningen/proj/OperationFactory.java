@@ -24,6 +24,9 @@ package org.kortforsyningen.proj;
 import java.util.Map;
 import java.util.List;
 import org.opengis.metadata.citation.Citation;
+import org.opengis.metadata.extent.Extent;
+import org.opengis.metadata.extent.GeographicExtent;
+import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.Conversion;
@@ -113,11 +116,38 @@ final class OperationFactory implements CoordinateOperationFactory {
         final int     gridAvailabilityUse         = ordinal(context.getGridAvailabilityUse());
         final int     allowUseIntermediateCRS     = ordinal(context.getAllowUseIntermediateCRS());
         final boolean discardSuperseded           = context.getDiscardSuperseded();
+        final Extent  extent                      = context.getAreaOfInterest();
+        /*
+         * ISO 19115 allows the extent to be specified in many way (it can be a polygon for instance),
+         * but current version supports only geographic bounding boxes. The latitudes and longitudes
+         * are on an unspecified ellipsoid; the exact datum does not matter since this information is
+         * only approximate.
+         */
+        double westBoundLongitude = Double.POSITIVE_INFINITY;
+        double southBoundLatitude = Double.POSITIVE_INFINITY;
+        double eastBoundLongitude = Double.NEGATIVE_INFINITY;
+        double northBoundLatitude = Double.NEGATIVE_INFINITY;
+        if (extent != null) {
+            for (final GeographicExtent ge : extent.getGeographicElements()) {
+                if (ge instanceof GeographicBoundingBox) {
+                    final GeographicBoundingBox bbox = (GeographicBoundingBox) ge;
+                    double v;
+                    v = bbox.getWestBoundLongitude(); if (v < westBoundLongitude) westBoundLongitude = v;
+                    v = bbox.getEastBoundLongitude(); if (v > eastBoundLongitude) eastBoundLongitude = v;
+                    v = bbox.getSouthBoundLatitude(); if (v < southBoundLatitude) southBoundLatitude = v;
+                    v = bbox.getNorthBoundLatitude(); if (v > northBoundLatitude) northBoundLatitude = v;
+                }
+            }
+        }
         final Operation result;
         try (Context c = Context.acquire()) {
-            result = c.factory(authority).createOperation(sourceCRS.impl, targetCRS.impl,
-                        desiredAccuracy, sourceAndTargetCRSExtentUse, spatialCriterion,
-                        gridAvailabilityUse, allowUseIntermediateCRS, discardSuperseded);
+            result = c.factory(authority).createOperation(
+                        sourceCRS.impl,     targetCRS.impl,
+                        westBoundLongitude, eastBoundLongitude,
+                        southBoundLatitude, northBoundLatitude,
+                        desiredAccuracy,
+                        sourceAndTargetCRSExtentUse, spatialCriterion, gridAvailabilityUse, allowUseIntermediateCRS,
+                        discardSuperseded);
             result.setCRSs(sourceCRS, targetCRS);
         }
         return java.util.Collections.singletonList(result);

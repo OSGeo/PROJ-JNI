@@ -39,11 +39,6 @@ import static org.junit.Assert.*;
  */
 public final strictfp class OperationFactoryTest {
     /**
-     * The factory to test.
-     */
-    private final OperationFactory factory;
-
-    /**
      * The factory for creating CRS using EPSG codes.
      */
     private final AuthorityFactory.API crsFactory;
@@ -52,7 +47,6 @@ public final strictfp class OperationFactoryTest {
      * Creates a new test case.
      */
     public OperationFactoryTest() {
-        factory = new OperationFactory(null);
         crsFactory = new AuthorityFactory.API("EPSG");
     }
 
@@ -63,11 +57,40 @@ public final strictfp class OperationFactoryTest {
      */
     @Test
     public void testMercator() throws FactoryException {
-        final CoordinateReferenceSystem source = crsFactory.createCoordinateReferenceSystem("4326");
-        final CoordinateReferenceSystem target = crsFactory.createCoordinateReferenceSystem("3395");
-        final CoordinateOperation operation = factory.createOperation(source, target);
+        final OperationFactory          factory   = new OperationFactory(null);
+        final CoordinateReferenceSystem source    = crsFactory.createCoordinateReferenceSystem("4326");
+        final CoordinateReferenceSystem target    = crsFactory.createCoordinateReferenceSystem("3395");
+        final CoordinateOperation       operation = factory.createOperation(source, target);
         assertTrue(operation.toWKT().startsWith("CONVERSION[\"World Mercator\","));
         assertSame("sourceCRS", source, operation.getSourceCRS());
         assertSame("targetCRS", target, operation.getTargetCRS());
+    }
+
+    /**
+     * Tests the effect of specifying an area of interest when searching for a coordinate operation.
+     *
+     * @throws FactoryException if an error occurred while creating a CRS or the operation.
+     */
+    @Test
+    public void testAreaOfInterest() throws FactoryException {
+        final CoordinateReferenceSystem  source = crsFactory.createCoordinateReferenceSystem("4267");
+        final CoordinateReferenceSystem  target = crsFactory.createCoordinateReferenceSystem("4326");
+        final CoordinateOperationContext context = new CoordinateOperationContext();
+        /*
+         * Fetch an operation over USA. Operation domain of validity
+         * should be "USA - CONUS including EEZ".
+         */
+        context.setAreaOfInterest(-120, -75, 25, 42);
+        OperationFactory factory = new OperationFactory(context);
+        CoordinateOperation operation = factory.createOperation(source, target);
+        // TODO: test AREA. We expect "USA - CONUS including EEZ"
+        /*
+         * Fetch an operation over Canada. Operation domain of validity
+         * should be "Canada - NAD27".
+         */
+        context.setAreaOfInterest(-120, -75, 45, 55);
+        factory = new OperationFactory(context);
+        operation = factory.createOperation(source, target);
+        // TODO: test AREA. We expect "Canada - NAD27".
     }
 }

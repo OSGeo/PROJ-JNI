@@ -150,6 +150,33 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
     }
 
     /**
+     * Sets the desired area of interest from the given latitude and longitude bounds.
+     * This convenience method creates an {@link Extent} from the given argument values,
+     * then delegates to {@link #setAreaOfInterest(Extent)}.
+     *
+     * <p><strong>Caution:</strong> Arguments are expected in the same order than they appear in
+     * the ISO 19115 specification. This is different than the order commonly found in Java world,
+     * which is rather (<var>x</var><sub>min</sub>, <var>y</var><sub>min</sub>,
+     * <var>x</var><sub>max</sub>, <var>y</var><sub>max</sub>).</p>
+     *
+     * @param  westBoundLongitude  the minimal <var>x</var> value.
+     * @param  eastBoundLongitude  the maximal <var>x</var> value.
+     * @param  southBoundLatitude  the minimal <var>y</var> value.
+     * @param  northBoundLatitude  the maximal <var>y</var> value.
+     * @throws IllegalArgumentException if (<var>west bound</var> &gt; <var>east bound</var>)
+     *         or (<var>south bound</var> &gt; <var>north bound</var>).
+     *         Note that {@linkplain Double#NaN NaN} values are allowed.
+     */
+    public void setAreaOfInterest(final double westBoundLongitude,
+                                  final double eastBoundLongitude,
+                                  final double southBoundLatitude,
+                                  final double northBoundLatitude)
+    {
+        setAreaOfInterest(new SimpleExtent(westBoundLongitude, eastBoundLongitude,
+                                           southBoundLatitude, northBoundLatitude));
+    }
+
+    /**
      * Sets the desired area of interest.
      * The default value is {@code null}.
      *

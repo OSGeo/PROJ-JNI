@@ -960,6 +960,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
  * @param  factory                      The Java object wrapping the authority factory to use.
  * @param  sourceCRS                    Input coordinate reference system.
  * @param  targetCRS                    Output coordinate reference system.
+ * @param  westBoundLongitude           the minimal x value.
+ * @param  eastBoundLongitude           the maximal x value.
+ * @param  southBoundLatitude           the minimal y value.
+ * @param  northBoundLatitude           the maximal y value.
  * @param  desiredAccuracy              Desired accuracy (in metres), or 0 for the best accuracy available.
  * @param  sourceAndTargetCRSExtentUse  How CRS extents are used when considering if a transformation can be used.
  * @param  spatialCriterion             Criterion when comparing the areas of validity.
@@ -970,8 +974,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createOperation
     (JNIEnv *env, jobject factory, jobject sourceCRS, jobject targetCRS,
-     jdouble desiredAccuracy, jint sourceAndTargetCRSExtentUse, jint spatialCriterion,
-     jint gridAvailabilityUse, jint allowUseIntermediateCRS, jboolean discardSuperseded)
+     jdouble westBoundLongitude, jdouble eastBoundLongitude,
+     jdouble southBoundLatitude, jdouble northBoundLatitude,
+     jdouble desiredAccuracy,
+     jint sourceAndTargetCRSExtentUse, jint spatialCriterion, jint gridAvailabilityUse, jint allowUseIntermediateCRS,
+     jboolean discardSuperseded)
 {
     try {
         CRSNNPtr                        source  = get_shared_object<CRS>(env, sourceCRS);
@@ -990,6 +997,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
         }
         if (allowUseIntermediateCRS >= 0) {
             context->setAllowUseIntermediateCRS(static_cast<CoordinateOperationContext::IntermediateCRSUse>(allowUseIntermediateCRS));
+        }
+        if (northBoundLatitude > southBoundLatitude || eastBoundLongitude > westBoundLongitude) {
+            context->setAreaOfInterest(osgeo::proj::metadata::Extent::createFromBBOX(
+                    westBoundLongitude, southBoundLatitude,
+                    eastBoundLongitude, northBoundLatitude));
         }
         /*
          * At this time, it does not seem worth to cache the CoordinateOperationFactory instance.
