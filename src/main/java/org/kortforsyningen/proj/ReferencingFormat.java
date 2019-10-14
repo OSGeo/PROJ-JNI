@@ -34,13 +34,13 @@ import org.opengis.referencing.operation.CoordinateOperation;
  * {@code ReferencingFormat} provides also some control on the formatting process, for example the
  * number of spaces in indentations.
  *
- * <p><b>Differences with {@code toWKT()}:</b></p>
+ * <h2>Differences with {@code toWKT()}</h2>
  * WKT formatting can be done more easily by invoking the {@link IdentifiedObject#toWKT()} method.
  * However the {@code toWKT()} method, like the {@code toString()} method, uses only the information
  * available in the object to format. This {@link ReferencingFormat} class differs in that it may
  * complete those information by an access to the database.
  *
- * <p><b>Limitations:</b></p>
+ * <h2>Limitations</h2>
  * <p>{@code ReferencingFormat} is <em>not</em> thread-safe. If used in a multi-thread environment,
  * then each thread should have its own instance, or synchronization shall be done by the user.</p>
  *

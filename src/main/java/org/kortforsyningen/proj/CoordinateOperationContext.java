@@ -37,7 +37,7 @@ import org.opengis.metadata.extent.Extent;
  *   <li>The {@linkplain #setDesiredAccuracy(double) desired accuracy}.</li>
  * </ul>
  *
- * <p><b>Limitations:</b></p>
+ * <h2>Limitations</h2>
  * {@code CoordinateOperationContext} is <em>not</em> thread-safe.
  * It is only a temporary object for creating coordinate operations
  * and rarely need to be shared between different threads.

@@ -299,7 +299,7 @@ public final class Proj {
      * For large number of points, consider using coordinate tuples in {@code float[]} or {@code double[]}
      * arrays instead.
      *
-     * <p><b>Serialization:</b></p>
+     * <h4>Serialization</h4>
      * The {@code DirectPosition} returned by this method is {@linkplain java.io.Serializable serializable},
      * but the CRS is lost in the serialization process because we do not serialize native PROJ objects.
      *

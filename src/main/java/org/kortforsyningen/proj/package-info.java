@@ -66,7 +66,7 @@
  * System.out.printf("Paris:     %11.1f %11.1f%n", coordinates[6], coordinates[7]);</pre>
  * </blockquote>
  *
- * <p><b>Performance considerations:</b></p>
+ * <h2>Performance considerations</h2>
  * <p>Calls to {@code createCoordinateOperation(…)} methods may be costly.
  * Developers should get a {@link org.opengis.referencing.operation.CoordinateOperation} instance only once
  * for a given pair of {@link org.opengis.referencing.crs.CoordinateReferenceSystem}s and keep that reference
@@ -78,7 +78,7 @@
  * for an array of 4 points than to invoke that method 4 times (once for each point).
  * Above example shows the recommended way to use a transform.</p>
  *
- * <p><b>Multi-threading:</b></p>
+ * <h2>Multi-threading</h2>
  * <p>Unless otherwise noted in Javadoc, all classes are safe for use in multi-thread environment.
  * However there is a limit in the number of concurrent threads which can use efficiently the same
  * {@link org.opengis.referencing.operation.MathTransform} instance.
@@ -93,7 +93,7 @@
  * <p>Note that there is no limit on Java side in the amount of threads that can use <em>different</em>
  * {@link org.opengis.referencing.operation.MathTransform} instances concurrently.</p>
  *
- * <p><b>String representation:</b></p>
+ * <h2>String representation</h2>
  * <p>Referencing objects such as CRS, datum, <i>etc.</i>
  * implement the {@link org.opengis.referencing.IdentifiedObject#toWKT()} method,
  * which can be used for getting a string representation in <cite>Well Known Text</cite> (WKT) version 2 format.
@@ -106,11 +106,11 @@
  * The {@code "%s"} flag formats the object name, while the alternative form {@code "%#s"}
  * formats the authority (typically EPSG) code.</p>
  *
- * <p><b>Security:</b></p>
+ * <h2>Security</h2>
  * <p>PROJ-JNI can be executed in a security constrained environment if the {@code "loadLibrary.libproj-binding"}
  * runtime permission is granted. An example is given in the {@code security.policy} file.</p>
  *
- * <p><b>Unsupported features:</b></p>
+ * <h2>Unsupported features</h2>
  * <p>The following method calls will cause an exception to be thrown:</p>
  * <ul>
  *   <li>{@link org.opengis.referencing.operation.MathTransform#derivative MathTransform.derivative(DirectPosition)} —
@@ -118,7 +118,7 @@
  *   <li>{@link org.opengis.referencing.crs.CRSFactory#createFromXML(String)} — XML support requires GDAL.</li>
  * </ul>
  *
- * <p><b>References:</b></p>
+ * <h2>References</h2>
  * <ul>
  *   <li><a href="http://docs.opengeospatial.org/as/18-005r4/18-005r4.html">OGC Abstract Specification Topic 2: Referencing by coordinates</a>
  *   <li><a href="https://www.geoapi.org/3.0/index.html">OGC GeoAPI 3.0.1</a> (derived from OGC Topic 2)</li>
