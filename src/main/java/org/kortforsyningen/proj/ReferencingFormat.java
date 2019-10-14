@@ -29,10 +29,16 @@ import org.opengis.referencing.operation.CoordinateOperation;
 
 /**
  * Parses and format referencing objects in <cite>Well Known Text</cite>, JSON or PROJ format.
+ * {@code ReferencingFormat} allows to chose the format (WKT, JSON or PROJ), the format version
+ * (e.g. WKT 2 versus WKT 1), or the "flavor" when there is different interpretations of the same format.
+ * {@code ReferencingFormat} provides also some control on the formatting process, for example the
+ * number of spaces in indentations.
+ *
+ * <p><b>Differences with {@code toWKT()}:</b></p>
  * WKT formatting can be done more easily by invoking the {@link IdentifiedObject#toWKT()} method.
- * This {@code ReferencingFormat} can be used when more control is desired on the formatting process
- * (for example by {@linkplain #setConvention selecting which WKT version is desired}),
- * or if another format is desired.
+ * However the {@code toWKT()} method, like the {@code toString()} method, uses only the information
+ * available in the object to format. This {@link ReferencingFormat} class differs in that it may
+ * complete those information by an access to the database.
  *
  * <p><b>Limitations:</b></p>
  * <p>{@code ReferencingFormat} is <em>not</em> thread-safe. If used in a multi-thread environment,

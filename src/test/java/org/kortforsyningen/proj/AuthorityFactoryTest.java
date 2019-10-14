@@ -24,7 +24,7 @@ package org.kortforsyningen.proj;
 import org.junit.Test;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
 
@@ -57,7 +57,7 @@ public final strictfp class AuthorityFactoryTest {
     }
 
     /**
-     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(int, String)} with an invalid code.
+     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(short, String)} with an invalid code.
      * We expect a {@link NoSuchAuthorityCodeException} to be thrown with information about the invalid code.
      *
      * @throws FactoryException if the operation failed for another reason than the expected exception.
@@ -75,20 +75,20 @@ public final strictfp class AuthorityFactoryTest {
     }
 
     /**
-     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(int, String)}.
+     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(short, String)}.
      *
      * @throws FactoryException if the factory can not be created or if the CS creation failed.
      */
     @Test
     public void testCreateCoordinateSystem() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
-        final CoordinateSystem cs = factory.createCoordinateSystem("6422");
+        final EllipsoidalCS cs = factory.createEllipsoidalCS("6422");
         assertEquals("dimension", 2, cs.getDimension());
         // TODO
     }
 
     /**
-     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(int, String)}.
+     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(short, String)}.
      * This test uses <cite>"RGF93 / Lambert-93 + NGF-IGN69 height"</cite>.
      *
      * @throws FactoryException if the factory can not be created or if the CRS creation failed.

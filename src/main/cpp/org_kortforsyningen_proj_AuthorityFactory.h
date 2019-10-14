@@ -72,10 +72,10 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDesc
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    createGeodeticObject
- * Signature: (ILjava/lang/String;)Lorg/kortforsyningen/proj/IdentifiableObject;
+ * Signature: (SLjava/lang/String;)Lorg/kortforsyningen/proj/IdentifiableObject;
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
-  (JNIEnv *, jobject, jint, jstring);
+  (JNIEnv *, jobject, jshort, jstring);
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory

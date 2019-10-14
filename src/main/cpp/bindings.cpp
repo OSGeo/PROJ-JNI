@@ -378,7 +378,7 @@ void rethrow_as_java_exception(JNIEnv *env, const char *type, const std::excepti
  * @param  type    Base type of the object to wrap. This method will use a more specialized type if possible.
  * @return Wrapper for a PROJ object, or null if out of memory.
  */
-jobject specific_subclass(JNIEnv *env, BaseObjectPtr &object, jint type) {
+jobject specific_subclass(JNIEnv *env, BaseObjectPtr &object, jshort type) {
 rd: switch (type) {
         case org_kortforsyningen_proj_AuthorityFactory_ANY: {
             BaseObject *ptr = object.get();
@@ -432,7 +432,7 @@ rd: switch (type) {
      */
     jclass c = env->FindClass("org/kortforsyningen/proj/AuthorityFactory");
     if (c) {
-        jmethodID method = env->GetStaticMethodID(c, "wrapGeodeticObject", "(IJ)Lorg/kortforsyningen/proj/IdentifiableObject;");
+        jmethodID method = env->GetStaticMethodID(c, "wrapGeodeticObject", "(SJ)Lorg/kortforsyningen/proj/IdentifiableObject;");
         if (method) {
             jlong ptr = wrap_shared_ptr<BaseObject>(object);
             jobject result = env->CallStaticObjectMethod(c, method, type, ptr);
@@ -897,7 +897,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDesc
  * @return Wrapper for a PROJ object, or null if out of memory.
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createGeodeticObject
-    (JNIEnv *env, jobject factory, jint type, jstring code)
+    (JNIEnv *env, jobject factory, jshort type, jstring code)
 {
     const char *code_utf = env->GetStringUTFChars(code, nullptr);
     if (code_utf) {
@@ -912,13 +912,20 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
                 case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_REFERENCE_FRAME:    rp = pf->createGeodeticDatum             (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_REFERENCE_FRAME:    rp = pf->createVerticalDatum             (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_UNIT_OF_MEASURE:             rp = pf->createUnitOfMeasure             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_CARTESIAN_CS:                // No specific method - use generic one.
+                case org_kortforsyningen_proj_AuthorityFactory_SPHERICAL_CS:                // No specific method - use generic one.
+                case org_kortforsyningen_proj_AuthorityFactory_ELLIPSOIDAL_CS:              // No specific method - use generic one.
+                case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CS:                 // No specific method - use generic one.
+                case org_kortforsyningen_proj_AuthorityFactory_TEMPORAL_CS:                 // No specific method - use generic one.
                 case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM:           rp = pf->createCoordinateSystem          (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: rp = pf->createCoordinateReferenceSystem (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_GEODETIC_CRS:                rp = pf->createGeodeticCRS               (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_GEOGRAPHIC_CRS:              rp = pf->createGeographicCRS             (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_VERTICAL_CRS:                rp = pf->createVerticalCRS               (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_PROJECTED_CRS:               rp = pf->createProjectedCRS              (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_COMPOUND_CRS:                rp = pf->createCompoundCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_AuthorityFactory_TEMPORAL_CRS:                // No specific method - use generic one.
+                case org_kortforsyningen_proj_AuthorityFactory_ENGINEERING_CRS:             // No specific method - use generic one.
+                case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM: rp = pf->createCoordinateReferenceSystem (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_CONVERSION:                  rp = pf->createConversion                (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION:        rp = pf->createCoordinateOperation(code_utf, false).as_nullable(); break;
                 default: {
