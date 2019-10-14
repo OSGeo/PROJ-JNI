@@ -47,6 +47,12 @@ public final strictfp class EnumerationValueTest {
     private final List<String> lines;
 
     /**
+     * Name of the class containing the enumeration values to be added by
+     * {@link #addStaticAssert(String, Enum[])}.
+     */
+    private String parent;
+
+    /**
      * Creates a new verifier.
      */
     public EnumerationValueTest() {
@@ -62,10 +68,16 @@ public final strictfp class EnumerationValueTest {
         lines.add("");
         lines.add("#include \"proj/coordinateoperation.hpp\"");
         lines.add("");
+        lines.add("using osgeo::proj::util::IComparable;");
         lines.add("using osgeo::proj::operation::CoordinateOperationContext;");
         lines.add("");
         lines.add("");
         lines.add("// Verify that Java ordinal values are the same than C++ enumeration values.");
+
+        parent = "IComparable";
+        addStaticAssert("Criterion", ComparisonCriterion.values());
+
+        parent = "CoordinateOperationContext";
         addStaticAssert("SourceTargetCRSExtentUse", SourceTargetCRSExtentUse.values());
         addStaticAssert("SpatialCriterion",         SpatialCriterion.values());
         addStaticAssert("GridAvailabilityUse",      GridAvailabilityUse.values());
@@ -80,7 +92,7 @@ public final strictfp class EnumerationValueTest {
      */
     private void addStaticAssert(final String name, final Enum<?>[] values) {
         final StringBuilder line = new StringBuilder(200)
-                .append("static_assert(static_cast<int>(CoordinateOperationContext::").append(name).append("::");
+                .append("static_assert(static_cast<int>(").append(parent).append("::").append(name).append("::");
         final int base = line.length();
         for (final Enum<?> e : values) {
             if (!CoordinateOperationContext.DEFAULT.equals(e.name())) {

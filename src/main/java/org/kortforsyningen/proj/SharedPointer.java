@@ -97,6 +97,17 @@ class SharedPointer extends NativeResource implements Runnable {
     final native String format(Context context, int convention, int indentation, boolean multiline, boolean strict);
 
     /**
+     * Compares this object with the given object for equality.
+     * Note: we do not use this method for {@link #equals(Object)} implementation
+     * because we can not guarantee consistency with hash code values.
+     *
+     * @param  other      the other object to compare with this object.
+     * @param  criterion  a {@link ComparisonCriterion} ordinal value.
+     * @return whether the two objects are equal.
+     */
+    final native boolean isEquivalentTo(SharedPointer other, int criterion);
+
+    /**
      * Returns the memory address of the PROJ object wrapped by this {@code NativeResource}.
      * This method is used for {@link IdentifiableObject#hashCode()} and
      * {@link IdentifiableObject#equals(Object)} implementations only.

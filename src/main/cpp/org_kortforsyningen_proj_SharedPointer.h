@@ -33,6 +33,14 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    isEquivalentTo
+ * Signature: (Lorg/kortforsyningen/proj/SharedPointer;I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_isEquivalentTo
+  (JNIEnv *, jobject, jobject, jint);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    rawPointer
  * Signature: ()J
  */

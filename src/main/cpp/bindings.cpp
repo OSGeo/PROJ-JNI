@@ -49,6 +49,7 @@ using osgeo::proj::io::JSONFormatter;
 using osgeo::proj::io::JSONFormatterNNPtr;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
+using osgeo::proj::util::IComparable;
 using osgeo::proj::cs::CoordinateSystem;
 using osgeo::proj::cs::CoordinateSystemPtr;
 using osgeo::proj::crs::CRS;
@@ -748,6 +749,40 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
 
 
 /**
+ * Compares this object with the given object for equality.
+ *
+ * @param  env        The JNI environment.
+ * @param  object     The Java object wrapping the PROJ object.
+ * @param  other      The other object to compare with this object.
+ * @param  criterion  A IComparable.Criterion ordinal value.
+ * @return Whether the two objects are equal.
+ */
+JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_isEquivalentTo
+  (JNIEnv *env, jobject object, jobject other, jint criterion)
+{
+    try {
+        BaseObjectPtr ptr1, ptr2;
+        if ((ptr1 = get_and_unwrap_ptr<BaseObject>(env, object)) &&
+            (ptr2 = get_and_unwrap_ptr<BaseObject>(env, other)))
+        {
+            if (ptr1 == ptr2) {
+                return true;
+            }
+            std::shared_ptr<IComparable> obj1, obj2;
+            if ((obj1 = std::dynamic_pointer_cast<IComparable>(ptr1)) &&
+                (obj2 = std::dynamic_pointer_cast<IComparable>(ptr2)))
+            {
+                return obj1->isEquivalentTo(obj2.get(), static_cast<IComparable::Criterion>(criterion));
+            }
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
+    }
+    return false;
+}
+
+
+/**
  * Returns the memory address of the PROJ object wrapped by the NativeResource.
  * This is used for computing hash codes and object comparisons only.
  *
@@ -960,10 +995,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
  * @param  factory                      The Java object wrapping the authority factory to use.
  * @param  sourceCRS                    Input coordinate reference system.
  * @param  targetCRS                    Output coordinate reference system.
- * @param  westBoundLongitude           the minimal x value.
- * @param  eastBoundLongitude           the maximal x value.
- * @param  southBoundLatitude           the minimal y value.
- * @param  northBoundLatitude           the maximal y value.
+ * @param  westBoundLongitude           The minimal x value.
+ * @param  eastBoundLongitude           The maximal x value.
+ * @param  southBoundLatitude           The minimal y value.
+ * @param  northBoundLatitude           The maximal y value.
  * @param  desiredAccuracy              Desired accuracy (in metres), or 0 for the best accuracy available.
  * @param  sourceAndTargetCRSExtentUse  How CRS extents are used when considering if a transformation can be used.
  * @param  spatialCriterion             Criterion when comparing the areas of validity.

@@ -327,4 +327,26 @@ public final class Proj {
         }
         return new SimpleDirectPosition(wrapper, coordinates.clone());
     }
+
+    /**
+     * Returns {@code true} if the given objects are equivalent according the given criterion.
+     * If the two given objects are {@code null}, this method returns {@code true}.
+     * If one object is null and the other object is non-null, this method returns {@code false}.
+     *
+     * @param  obj1       first object to compare, or {@code null}.
+     * @param  obj2       second object to compare, or {@code null}.
+     * @param  criterion  the comparison criterion, which can be strict or relaxed.
+     * @return whether the given objects are equivalent according the given criterion.
+     */
+    public static boolean areEquivalent(final Object obj1, final Object obj2, final ComparisonCriterion criterion) {
+        Objects.requireNonNull(criterion);
+        if (obj1 == obj2) {
+            return true;
+        }
+        if (obj1 instanceof IdentifiableObject && obj2 instanceof IdentifiableObject) {
+            return ((IdentifiableObject) obj1).impl.isEquivalentTo(((IdentifiableObject) obj2).impl, criterion.ordinal());
+        } else {
+            return (obj1 != null) && obj1.equals(obj2);
+        }
+    }
 }

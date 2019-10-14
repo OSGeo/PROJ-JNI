@@ -22,7 +22,6 @@
 package org.kortforsyningen.proj;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Collection;
 import java.util.Collections;
 import java.security.AccessController;
@@ -31,6 +30,7 @@ import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.metadata.quality.PositionalAccuracy;
 import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.crs.GeneralDerivedCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.Transformation;
@@ -295,7 +295,15 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public boolean isIdentity() {
-        return Objects.equals(sourceCRS, targetCRS);        // TODO: use more lenient comparison.
+        final ComparisonCriterion c;
+        if (sourceCRS instanceof GeneralDerivedCRS &&
+            targetCRS instanceof GeneralDerivedCRS)
+        {
+            c = ComparisonCriterion.EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS;
+        } else {
+            c = ComparisonCriterion.EQUIVALENT;
+        }
+        return sourceCRS.impl.isEquivalentTo(targetCRS.impl, c.ordinal());
     }
 
     /**
