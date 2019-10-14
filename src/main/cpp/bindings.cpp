@@ -603,6 +603,16 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
     std::string value;
     try {
         switch (property) {
+            case org_kortforsyningen_proj_SharedPointer_NAME_STRING: {
+                value = get_shared_object<osgeo::proj::common::IdentifiedObject>(env, object)->nameStr();
+                break;
+            }
+            case org_kortforsyningen_proj_SharedPointer_AUTHORITY_CODE: {
+                int code = get_shared_object<osgeo::proj::common::IdentifiedObject>(env, object)->getEPSGCode();
+                if (code == 0) return nullptr;
+                value = "EPSG:" + std::to_string(code);
+                break;
+            }
             case org_kortforsyningen_proj_SharedPointer_ABBREVIATION: {
                 value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->abbreviation();
                 break;

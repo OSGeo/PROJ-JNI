@@ -24,6 +24,9 @@ package org.kortforsyningen.proj;
 import java.util.Set;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Formattable;
+import java.util.FormattableFlags;
+import java.util.Formatter;
 import java.lang.ref.Cleaner;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
@@ -43,7 +46,7 @@ import org.opengis.metadata.extent.Extent;
  * @version 1.0
  * @since   1.0
  */
-abstract class IdentifiableObject {
+abstract class IdentifiableObject implements Formattable {
     /**
      * Manager of objects having native resources to be released after the Java object has been garbage-collected.
      * This manager will decrement the reference count of the shared pointer.
@@ -222,6 +225,83 @@ abstract class IdentifiableObject {
             return e.toString();
         }
         return super.toString();
+    }
+
+    /**
+     * Formats the name or identifier of this object using the provider formatter.
+     * This method is invoked when an {@code IdentifiableObject} object is formatted
+     * using the {@code "%s"} conversion specifier of {@link Formatter}.
+     * Users don't need to invoke this method explicitly.
+     *
+     * <p>If the alternate flags is present (as in {@code "%#s"}), then this method
+     * will format the identifier (if present) instead than the object name.</p>
+     *
+     * @param  formatter  the formatter in which to format this object.
+     * @param  flags      whether to apply left alignment, use upper-case letters and/or use alternate form.
+     * @param  width      minimal number of characters to write, padding with {@code ' '} if necessary.
+     * @param  precision  maximal number of characters to write, or -1 if no limit.
+     */
+    @Override
+    public void formatTo(final Formatter formatter, final int flags, int width, int precision) {
+        String value = null;
+        if ((flags & FormattableFlags.ALTERNATE) != 0) {
+            value = impl.getStringProperty(SharedPointer.AUTHORITY_CODE);
+        }
+        if (value == null) {
+            value = impl.getStringProperty(SharedPointer.NAME_STRING);
+            if (value == null) {
+                value = "unnamed";
+            }
+        }
+        /*
+         * Converting to upper cases may change the string length in some locales.
+         * So we need to perform this conversion before to check the length.
+         */
+        boolean isUpperCase = (flags & FormattableFlags.UPPERCASE) != 0;
+        if (isUpperCase && (width > 0 || precision >= 0)) {
+            value = value.toUpperCase(formatter.locale());
+            isUpperCase = false;                            // Because conversion has already been done.
+        }
+        /*
+         * If the string is longer than the specified "precision", truncate
+         * and add "…" for letting user know that there is missing characters.
+         * This loop counts the number of Unicode code points rather than characters.
+         */
+        int length = value.length();
+        if (precision >= 0) {
+            for (int i=0,n=0; i<length; i += n) {
+                if (--precision < 0) {
+                    /*
+                     * Found the amount of characters to keep. The 'n' variable can be
+                     * zero only if precision == 0, in which case the string is empty.
+                     */
+                    if (n == 0) {
+                        value = "";
+                    } else {
+                        length = (i -= n) + 1;
+                        final StringBuilder buffer = new StringBuilder(length);
+                        value = buffer.append(value, 0, i).append('…').toString();
+                    }
+                    break;
+                }
+                n = Character.charCount(value.codePointAt(i));
+            }
+        }
+        /*
+         * If the string is shorter than the minimal width, add spaces on the left or right side.
+         * We double check with `width > length` since it is faster than codePointCount(…).
+         */
+        final String format;
+        final Object[] args;
+        if (width > length && (width -= value.codePointCount(0, length)) > 0) {
+            format = "%s%s";
+            args = new Object[] {value, value};
+            args[(flags & FormattableFlags.LEFT_JUSTIFY) != 0 ? 1 : 0] = " ".repeat(width);
+        } else {
+            format = isUpperCase ? "%S" : "%s";
+            args = new Object[] {value};
+        }
+        formatter.format(format, args);
     }
 
     /**

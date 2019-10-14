@@ -7,18 +7,22 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef org_kortforsyningen_proj_SharedPointer_NAME_STRING
+#define org_kortforsyningen_proj_SharedPointer_NAME_STRING 0L
+#undef org_kortforsyningen_proj_SharedPointer_AUTHORITY_CODE
+#define org_kortforsyningen_proj_SharedPointer_AUTHORITY_CODE 1L
 #undef org_kortforsyningen_proj_SharedPointer_ABBREVIATION
-#define org_kortforsyningen_proj_SharedPointer_ABBREVIATION 0L
+#define org_kortforsyningen_proj_SharedPointer_ABBREVIATION 2L
 #undef org_kortforsyningen_proj_SharedPointer_DIRECTION
-#define org_kortforsyningen_proj_SharedPointer_DIRECTION 1L
+#define org_kortforsyningen_proj_SharedPointer_DIRECTION 3L
 #undef org_kortforsyningen_proj_SharedPointer_MINIMUM
-#define org_kortforsyningen_proj_SharedPointer_MINIMUM 2L
+#define org_kortforsyningen_proj_SharedPointer_MINIMUM 4L
 #undef org_kortforsyningen_proj_SharedPointer_MAXIMUM
-#define org_kortforsyningen_proj_SharedPointer_MAXIMUM 3L
+#define org_kortforsyningen_proj_SharedPointer_MAXIMUM 5L
 #undef org_kortforsyningen_proj_SharedPointer_SCOPE
-#define org_kortforsyningen_proj_SharedPointer_SCOPE 4L
+#define org_kortforsyningen_proj_SharedPointer_SCOPE 6L
 #undef org_kortforsyningen_proj_SharedPointer_REMARKS
-#define org_kortforsyningen_proj_SharedPointer_REMARKS 5L
+#define org_kortforsyningen_proj_SharedPointer_REMARKS 7L
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    getStringProperty

@@ -93,12 +93,25 @@
  * <p>Note that there is no limit on Java side in the amount of threads that can use <em>different</em>
  * {@link org.opengis.referencing.operation.MathTransform} instances concurrently.</p>
  *
+ * <p><b>String representation:</b></p>
+ * <p>Referencing objects such as CRS, datum, <i>etc.</i>
+ * implement the {@link org.opengis.referencing.IdentifiedObject#toWKT()} method,
+ * which can be used for getting a string representation in <cite>Well Known Text</cite> (WKT) version 2 format.
+ * The {@link Object#toString()} method can also be used for getting a similar string representation,
+ * but in a {@linkplain ReferencingFormat.Convention#WKT_SIMPLIFIED slightly simplified} version.
+ * Note that those string representations do not perform database access, and consequently may be less
+ * complete than the formatting done by {@link ReferencingFormat}.</p>
+ *
+ * <p>Referencing objects implements also the {@link java.util.Formattable} interface.
+ * The {@code "%s"} flag formats the object name, while the alternative form {@code "%#s"}
+ * formats the authority (typically EPSG) code.</p>
+ *
  * <p><b>Security:</b></p>
  * <p>PROJ-JNI can be executed in a security constrained environment if the {@code "loadLibrary.libproj-binding"}
  * runtime permission is granted. An example is given in the {@code security.policy} file.</p>
  *
  * <p><b>Unsupported features:</b></p>
- * The following method calls will cause an exception to be thrown:
+ * <p>The following method calls will cause an exception to be thrown:</p>
  * <ul>
  *   <li>{@link org.opengis.referencing.operation.MathTransform#derivative MathTransform.derivative(DirectPosition)} —
  *       Jacobian matrix calculation is not yet supported by PROJ.</li>

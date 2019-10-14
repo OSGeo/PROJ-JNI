@@ -43,12 +43,14 @@ class SharedPointer extends NativeResource implements Runnable {
      * Identify properties which can be returned by a {@code getFooProperty(short)} method.
      */
     @Native
-    static final short ABBREVIATION = 0,
-                       DIRECTION    = 1,
-                       MINIMUM      = 2,
-                       MAXIMUM      = 3,
-                       SCOPE        = 4,
-                       REMARKS      = 5;
+    static final short NAME_STRING    = 0,
+                       AUTHORITY_CODE = 1,
+                       ABBREVIATION   = 2,
+                       DIRECTION      = 3,
+                       MINIMUM        = 4,
+                       MAXIMUM        = 5,
+                       SCOPE          = 6,
+                       REMARKS        = 7;
 
     /**
      * Wraps the shared pointer at the given address.

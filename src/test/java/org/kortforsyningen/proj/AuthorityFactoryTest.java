@@ -84,6 +84,7 @@ public final strictfp class AuthorityFactoryTest {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         final EllipsoidalCS cs = factory.createEllipsoidalCS("6422");
         assertEquals("dimension", 2, cs.getDimension());
+        assertEquals("EPSG:6422", String.format("%#s", cs));
         // TODO
     }
 
