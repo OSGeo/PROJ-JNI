@@ -44,5 +44,11 @@ public enum IntermediateCRSUse {
     /**
      * Never search for intermediate CRS.
      */
-    NEVER
+    NEVER,
+
+    /**
+     * The PROJ default value.
+     * Documented as {@link #IF_NO_DIRECT_TRANSFORMATION} as of PROJ 6.2.
+     */
+    DEFAULT
 }

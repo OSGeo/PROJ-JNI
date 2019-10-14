@@ -80,10 +80,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory
  * Method:    createOperation
- * Signature: (Lorg/kortforsyningen/proj/NativeResource;Lorg/kortforsyningen/proj/NativeResource;DZ)Lorg/kortforsyningen/proj/Operation;
+ * Signature: (Lorg/kortforsyningen/proj/NativeResource;Lorg/kortforsyningen/proj/NativeResource;DIIIIZ)Lorg/kortforsyningen/proj/Operation;
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createOperation
-  (JNIEnv *, jobject, jobject, jobject, jdouble, jboolean);
+  (JNIEnv *, jobject, jobject, jobject, jdouble, jint, jint, jint, jint, jboolean);
 
 /*
  * Class:     org_kortforsyningen_proj_AuthorityFactory

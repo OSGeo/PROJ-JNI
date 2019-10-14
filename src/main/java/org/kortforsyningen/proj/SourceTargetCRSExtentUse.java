@@ -49,5 +49,11 @@ public enum SourceTargetCRSExtentUse {
     /**
      * Test coordinate operation against the smallest of both CRS extents.
      */
-    SMALLEST
+    SMALLEST,
+
+    /**
+     * The PROJ default value.
+     * Documented as {@link #SMALLEST} as of PROJ 6.2.
+     */
+    DEFAULT
 }

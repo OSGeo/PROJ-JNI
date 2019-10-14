@@ -39,5 +39,11 @@ public enum SpatialCriterion {
     /**
      * The area of validity of transforms should at least intersect the area of interest.
      */
-    PARTIAL_INTERSECTION
+    PARTIAL_INTERSECTION,
+
+    /**
+     * The PROJ default value.
+     * Documented as {@link #STRICT_CONTAINMENT} as of PROJ 6.2.
+     */
+    DEFAULT
 }

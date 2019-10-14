@@ -954,17 +954,24 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
  * of the transformation with the area of use of the CRS), and by increasing accuracy.
  * Operations with unknown accuracy are sorted last, whatever their area.
  *
- * @param  env                The JNI environment.
- * @param  factory            The Java object wrapping the authority factory to use.
- * @param  sourceCRS          Input coordinate reference system.
- * @param  targetCRS          Output coordinate reference system.
- * @param  desiredAccuracy    Desired accuracy (in metres), or 0 for the best accuracy available.
- * @param  discardSuperseded  Whether transformations that are superseded (but not deprecated) should be discarded.
+ * All enumeration values in arguments are represented by integer, with -1 for the PROJ default value.
+ *
+ * @param  env                          The JNI environment.
+ * @param  factory                      The Java object wrapping the authority factory to use.
+ * @param  sourceCRS                    Input coordinate reference system.
+ * @param  targetCRS                    Output coordinate reference system.
+ * @param  desiredAccuracy              Desired accuracy (in metres), or 0 for the best accuracy available.
+ * @param  sourceAndTargetCRSExtentUse  How CRS extents are used when considering if a transformation can be used.
+ * @param  spatialCriterion             Criterion when comparing the areas of validity.
+ * @param  gridAvailabilityUse          How grid availability is used.
+ * @param  allowUseIntermediateCRS      Whether an intermediate pivot CRS can be used for researching coordinate operations.
+ * @param  discardSuperseded            Whether transformations that are superseded (but not deprecated) should be discarded.
  * @return The coordinate operations.
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createOperation
     (JNIEnv *env, jobject factory, jobject sourceCRS, jobject targetCRS,
-     jdouble desiredAccuracy, jboolean discardSuperseded)
+     jdouble desiredAccuracy, jint sourceAndTargetCRSExtentUse, jint spatialCriterion,
+     jint gridAvailabilityUse, jint allowUseIntermediateCRS, jboolean discardSuperseded)
 {
     try {
         CRSNNPtr                        source  = get_shared_object<CRS>(env, sourceCRS);
@@ -972,6 +979,18 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
         AuthorityFactoryPtr             pf      = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
         CoordinateOperationContextNNPtr context = CoordinateOperationContext::create(pf, nullptr, desiredAccuracy);
         context->setDiscardSuperseded(discardSuperseded);
+        if (sourceAndTargetCRSExtentUse >= 0) {
+            context->setSourceAndTargetCRSExtentUse(static_cast<CoordinateOperationContext::SourceTargetCRSExtentUse>(sourceAndTargetCRSExtentUse));
+        }
+        if (spatialCriterion >= 0) {
+            context->setSpatialCriterion(static_cast<CoordinateOperationContext::SpatialCriterion>(spatialCriterion));
+        }
+        if (gridAvailabilityUse >= 0) {
+            context->setGridAvailabilityUse(static_cast<CoordinateOperationContext::GridAvailabilityUse>(gridAvailabilityUse));
+        }
+        if (allowUseIntermediateCRS >= 0) {
+            context->setAllowUseIntermediateCRS(static_cast<CoordinateOperationContext::IntermediateCRSUse>(allowUseIntermediateCRS));
+        }
         /*
          * At this time, it does not seem worth to cache the CoordinateOperationFactory instance.
          */

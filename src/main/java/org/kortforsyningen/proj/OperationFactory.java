@@ -83,6 +83,16 @@ final class OperationFactory implements CoordinateOperationFactory {
     }
 
     /**
+     * Returns the ordinal value of the given enumeration, or -1 if the enumeration is for the default value.
+     *
+     * @param  e  the enumeration for which to get the ordinal value.
+     * @return the ordinal value, or -1 for the PROJ default value.
+     */
+    private static int ordinal(final Enum<?> e) {
+        return (e == null) || CoordinateOperationContext.DEFAULT.equals(e.name()) ? -1 : e.ordinal();
+    }
+
+    /**
      * Returns operations for conversion or transformation between two coordinate reference systems,
      * taking in account the given context. If no coordinate operation is found, then this method
      * returns an empty list.
@@ -96,13 +106,18 @@ final class OperationFactory implements CoordinateOperationFactory {
     static List<CoordinateOperation> findOperations(final CRS sourceCRS, final CRS targetCRS,
             final CoordinateOperationContext context) throws FactoryException
     {
-        final String  authority         = context.getAuthority();
-        final double  desiredAccuracy   = context.getDesiredAccuracy();
-        final boolean discardSuperseded = context.getDiscardSuperseded();
+        final String  authority                   = context.getAuthority();
+        final double  desiredAccuracy             = context.getDesiredAccuracy();
+        final int     sourceAndTargetCRSExtentUse = ordinal(context.getSourceAndTargetCRSExtentUse());
+        final int     spatialCriterion            = ordinal(context.getSpatialCriterion());
+        final int     gridAvailabilityUse         = ordinal(context.getGridAvailabilityUse());
+        final int     allowUseIntermediateCRS     = ordinal(context.getAllowUseIntermediateCRS());
+        final boolean discardSuperseded           = context.getDiscardSuperseded();
         final Operation result;
         try (Context c = Context.acquire()) {
             result = c.factory(authority).createOperation(sourceCRS.impl, targetCRS.impl,
-                        desiredAccuracy, discardSuperseded);
+                        desiredAccuracy, sourceAndTargetCRSExtentUse, spatialCriterion,
+                        gridAvailabilityUse, allowUseIntermediateCRS, discardSuperseded);
             result.setCRSs(sourceCRS, targetCRS);
         }
         return java.util.Collections.singletonList(result);

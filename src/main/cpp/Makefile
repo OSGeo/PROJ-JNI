@@ -68,7 +68,7 @@ endif
 #
 FLAGS       = -fPIC -shared -shared-libgcc -O2
 LIBS        = -lproj
-SRC_FILES   = bindings.cpp
+SRC_FILES   = assertions.cpp bindings.cpp
 OUT_FILE    = libproj-binding.so
 INCLUDE_DIR = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/$(SUBDIR)
 

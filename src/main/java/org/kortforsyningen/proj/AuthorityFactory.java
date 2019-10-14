@@ -136,17 +136,24 @@ final class AuthorityFactory extends NativeResource {
      * of the transformation with the area of use of the CRS), and by increasing accuracy.
      * Operations with unknown accuracy are sorted last, whatever their area.
      *
-     * @param  sourceCRS          input coordinate reference system.
-     * @param  targetCRS          output coordinate reference system.
-     * @param  desiredAccuracy    desired accuracy (in metres), or 0 for the best accuracy available.
-     * @param  discardSuperseded  whether transformations that are superseded (but not deprecated) should be discarded.
+     * <p>All enumeration values in arguments are represented by integer, with -1 for the PROJ default value.</p>
+     *
+     * @param  sourceCRS                    input coordinate reference system.
+     * @param  targetCRS                    output coordinate reference system.
+     * @param  desiredAccuracy              desired accuracy (in metres), or 0 for the best accuracy available.
+     * @param  sourceAndTargetCRSExtentUse  how CRS extents are used when considering if a transformation can be used.
+     * @param  spatialCriterion             criterion when comparing the areas of validity.
+     * @param  gridAvailabilityUse          how grid availability is used.
+     * @param  allowUseIntermediateCRS      whether an intermediate pivot CRS can be used for researching coordinate operations.
+     * @param  discardSuperseded            whether transformations that are superseded (but not deprecated) should be discarded.
      * @return the coordinate operations.
      * @throws FactoryException if an error occurred while searching the coordinate operations.
      *
      * @todo add missing parameters, returns a list.
      */
     native Operation createOperation(NativeResource sourceCRS, NativeResource targetCRS,
-            double desiredAccuracy, boolean discardSuperseded)
+            double desiredAccuracy, int sourceAndTargetCRSExtentUse, int spatialCriterion,
+            int gridAvailabilityUse, int allowUseIntermediateCRS, boolean discardSuperseded)
             throws FactoryException;
 
     /**

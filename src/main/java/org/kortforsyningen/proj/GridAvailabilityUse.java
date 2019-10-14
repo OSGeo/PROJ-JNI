@@ -46,5 +46,11 @@ public enum GridAvailabilityUse {
      * Ignore grid availability at all.
      * Results will be presented as if all grids were available.
      */
-    IGNORE_GRID_AVAILABILITY
+    IGNORE_GRID_AVAILABILITY,
+
+    /**
+     * The PROJ default value.
+     * Documented as {@link #USE_FOR_SORTING} as of PROJ 6.2.
+     */
+    DEFAULT
 }

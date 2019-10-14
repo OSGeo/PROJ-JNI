@@ -55,6 +55,12 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
     private static final long serialVersionUID = 6084066145640864767L;
 
     /**
+     * Name of the enumeration value used for PROJ default value.
+     * All enumerations shall use the same name.
+     */
+    static final String DEFAULT = "DEFAULT";
+
+    /**
      * The authority to use for searching coordinate operations.
      * Shall never be {@code null}.
      */
@@ -105,10 +111,10 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
      */
     public CoordinateOperationContext() {
         authority                   = "";
-        sourceAndTargetCRSExtentUse = SourceTargetCRSExtentUse.SMALLEST;
-        spatialCriterion            = SpatialCriterion.STRICT_CONTAINMENT;
-        gridAvailabilityUse         = GridAvailabilityUse.USE_FOR_SORTING;
-        allowUseIntermediateCRS     = IntermediateCRSUse.IF_NO_DIRECT_TRANSFORMATION;
+        sourceAndTargetCRSExtentUse = SourceTargetCRSExtentUse.DEFAULT;
+        spatialCriterion            = SpatialCriterion.DEFAULT;
+        gridAvailabilityUse         = GridAvailabilityUse.DEFAULT;
+        allowUseIntermediateCRS     = IntermediateCRSUse.DEFAULT;
         discardSuperseded           = true;
     }
 
@@ -195,7 +201,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
     /**
      * Sets how source and target CRS extents should be used when considering if a transformation can be used.
      * This parameter takes effect only if no area of interest is explicitly defined.
-     * The default is {@link SourceTargetCRSExtentUse#SMALLEST}.
+     * The default is {@link SourceTargetCRSExtentUse#DEFAULT}.
      *
      * @param  use  the new policy about CRS extents use.
      */
@@ -206,8 +212,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
     /**
      * Returns how source and target CRS extents should be used when considering if a transformation can be used.
      * This is the value given in last call to the {@linkplain #setSourceAndTargetCRSExtentUse setter},
-     * or the default value ({@link SourceTargetCRSExtentUse#SMALLEST SMALLEST})
-     * if no value has been explicitly set.
+     * or the {@linkplain SourceTargetCRSExtentUse#DEFAULT default value} if no value has been explicitly set.
      *
      * @return the current policy about CRS extents use.
      */
@@ -218,7 +223,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
     /**
      * Sets the spatial criterion to use when comparing the area of validity of coordinate operations
      * with the area of interest / area of validity of source and target CRS.
-     * The default is {@link SpatialCriterion#STRICT_CONTAINMENT}.
+     * The default is {@link SpatialCriterion#DEFAULT}.
      *
      * @param  criterion  the new spatial criterion.
      */
@@ -230,8 +235,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
      * Returns the spatial criterion to use when comparing the area of validity of coordinate operations
      * with the area of interest / area of validity of source and target CRS.
      * This is the value given in last call to the {@linkplain #setSpatialCriterion setter},
-     * or the default value ({@link SpatialCriterion#STRICT_CONTAINMENT STRICT_CONTAINMENT})
-     * if no value has been explicitly set.
+     * or the {@linkplain SpatialCriterion#DEFAULT default value} if no value has been explicitly set.
      *
      * @return the current spatial criterion.
      */
@@ -241,7 +245,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
 
     /**
      * Sets how grid availability is used.
-     * The default is {@link GridAvailabilityUse#USE_FOR_SORTING}.
+     * The default is {@link GridAvailabilityUse#DEFAULT}.
      *
      * @param  use  the new policy about grid availability use.
      */
@@ -252,8 +256,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
     /**
      * Return how grid availability is used.
      * This is the value given in last call to the {@linkplain #setGridAvailabilityUse setter},
-     * or the default value ({@link GridAvailabilityUse#USE_FOR_SORTING USE_FOR_SORTING})
-     * if no value has been explicitly set.
+     * or the {@linkplain GridAvailabilityUse#DEFAULT default value} if no value has been explicitly set.
      *
      * @return the current policy about grid availability use.
      */
@@ -275,7 +278,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
      * By default, with the {@code IF_NO_DIRECT_TRANSFORMATION} strategy, all potential
      * <var>C</var> candidates will be used if there is no direct transformation.</p>
      *
-     * <p>The default is {@link IntermediateCRSUse#IF_NO_DIRECT_TRANSFORMATION}.</p>
+     * <p>The default is {@link IntermediateCRSUse#DEFAULT}.</p>
      *
      * @param  use  the new policy about intermediate pivot CRS use.
      */
@@ -287,8 +290,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
      * Return whether an intermediate pivot CRS can be used for researching coordinate operations
      * between a source and target CRS.
      * This is the value given in last call to the {@linkplain #setAllowUseIntermediateCRS setter},
-     * or the default value ({@link IntermediateCRSUse#IF_NO_DIRECT_TRANSFORMATION IF_NO_DIRECT_TRANSFORMATION})
-     * if no value has been explicitly set.
+     * or the {@linkplain IntermediateCRSUse#DEFAULT default value} if no value has been explicitly set.
      *
      * @return the current policy about intermediate pivot CRS use.
      */
