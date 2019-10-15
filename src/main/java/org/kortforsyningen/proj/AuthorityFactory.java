@@ -56,7 +56,7 @@ final class AuthorityFactory extends NativeResource {
      * Kind of geodetic objects created by native functions invoked from this class.
      */
     @Native
-    private static final short
+    static final short
             ANY                         =  0,
             PRIME_MERIDIAN              =  1,
             ELLIPSOID                   =  2,
@@ -557,40 +557,5 @@ final class AuthorityFactory extends NativeResource {
         public Set<CoordinateOperation> createFromCoordinateReferenceSystemCodes(final String source, final String target) throws FactoryException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-    }
-
-    /**
-     * Creates an object of the given type. This method is invoked by native code; it shall not be moved,
-     * renamed or have method signature modified unless the C++ bindings are updated accordingly.
-     * If an exception is thrown in this Java method, the native method will release the memory allocated
-     * for {@code ptr}.
-     *
-     * @param  type  one of the {@link #COORDINATE_REFERENCE_SYSTEM}, {@link #DATUM}, <i>etc.</i> constants.
-     * @param  ptr   pointer to the object allocated by PROJ.
-     * @return the Java object wrapping the PROJ object.
-     * @throws FactoryException if the given type is not recognized.
-     */
-    private static IdentifiableObject wrapGeodeticObject(final short type, final long ptr) throws FactoryException {
-        final org.kortforsyningen.proj.IdentifiableObject obj;
-        switch (type) {
-            case PROJECTED_CRS:
-            case COMPOUND_CRS:
-            case COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
-            case GEODETIC_CRS:                obj = new CRS.Geodetic        (ptr); break;
-            case GEOGRAPHIC_CRS:              obj = new CRS.Geographic      (ptr); break;
-            case VERTICAL_CRS:                obj = new CRS.Vertical        (ptr); break;
-            case TEMPORAL_CRS:                obj = new CRS.Temporal        (ptr); break;
-            case ENGINEERING_CRS:             obj = new CRS.Engineering     (ptr); break;
-            case COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
-            case CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
-            case SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;
-            case ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
-            case VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
-            case TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
-            case CONVERSION:                  obj = new Operation.Conversion(ptr); break;
-            case COORDINATE_OPERATION:        obj = new Operation           (ptr); break;
-            default: throw new FactoryException("Unknown object type.");
-        }
-        return obj.releaseWhenUnreachable();
     }
 }

@@ -24,6 +24,7 @@ package org.kortforsyningen.proj;
 import org.junit.Test;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
@@ -119,5 +120,19 @@ public final strictfp class AuthorityFactoryTest {
         final InternationalString text = factory.getDescriptionText("4326");
         assertNotNull(text);
         assertFalse(text.toString().isEmpty());
+    }
+
+    /**
+     * Verifies that asking twice for the same code returns the same wrapper.
+     *
+     * @throws FactoryException if the factory can not be created or if the CS creation failed.
+     */
+    @Test
+    public void testCache() throws FactoryException  {
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final EllipsoidalCS cs  = factory.createEllipsoidalCS("6422");
+        final GeographicCRS crs = factory.createGeographicCRS("4326");
+        assertSame(cs,  factory.createEllipsoidalCS("6422"));
+        assertSame(crs, factory.createGeographicCRS("4326"));
     }
 }
