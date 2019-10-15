@@ -55,6 +55,7 @@ using osgeo::proj::common::IdentifiedObject;
 using osgeo::proj::common::ObjectUsage;
 using osgeo::proj::cs::CoordinateSystem;
 using osgeo::proj::cs::CoordinateSystemPtr;
+using osgeo::proj::cs::CoordinateSystemAxis;
 using osgeo::proj::crs::CRS;
 using osgeo::proj::crs::CRSNNPtr;
 using osgeo::proj::crs::SingleCRS;
@@ -604,21 +605,21 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
     try {
         switch (property) {
             case org_kortforsyningen_proj_SharedPointer_NAME_STRING: {
-                value = get_shared_object<osgeo::proj::common::IdentifiedObject>(env, object)->nameStr();
+                value = get_shared_object<IdentifiedObject>(env, object)->nameStr();
                 break;
             }
             case org_kortforsyningen_proj_SharedPointer_AUTHORITY_CODE: {
-                int code = get_shared_object<osgeo::proj::common::IdentifiedObject>(env, object)->getEPSGCode();
+                int code = get_shared_object<IdentifiedObject>(env, object)->getEPSGCode();
                 if (code == 0) return nullptr;
                 value = "EPSG:" + std::to_string(code);
                 break;
             }
             case org_kortforsyningen_proj_SharedPointer_ABBREVIATION: {
-                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->abbreviation();
+                value = get_shared_object<CoordinateSystemAxis>(env, object)->abbreviation();
                 break;
             }
             case org_kortforsyningen_proj_SharedPointer_DIRECTION: {
-                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->direction().toString();
+                value = get_shared_object<CoordinateSystemAxis>(env, object)->direction().toString();
                 break;
             }
             case org_kortforsyningen_proj_SharedPointer_REMARKS: {
@@ -663,11 +664,11 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
         osgeo::proj::util::optional<double> value;
         switch (property) {
             case org_kortforsyningen_proj_SharedPointer_MINIMUM: {
-                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->minimumValue();
+                value = get_shared_object<CoordinateSystemAxis>(env, object)->minimumValue();
                 break;
             }
             case org_kortforsyningen_proj_SharedPointer_MAXIMUM: {
-                value = get_shared_object<osgeo::proj::cs::CoordinateSystemAxis>(env, object)->maximumValue();
+                value = get_shared_object<CoordinateSystemAxis>(env, object)->maximumValue();
                 break;
             }
             default: {
@@ -818,7 +819,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
                 std::shared_ptr<IWKTExportable> exportable = std::dynamic_pointer_cast<IWKTExportable>(candidate);
                 if (!exportable) break;
                 DatabaseContextPtr dbContext = get_database_context(env, context);
-                WKTFormatterNNPtr formatter = WKTFormatter::create(c.wkt, dbContext);
+                WKTFormatterNNPtr  formatter = WKTFormatter::create(c.wkt, dbContext);
                 formatter->setMultiLine(multiline);
                 formatter->setStrict(strict);
                 if (indentation >= 0) {
@@ -840,7 +841,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
             case PROJ: {
                 std::shared_ptr<IPROJStringExportable> exportable = std::dynamic_pointer_cast<IPROJStringExportable>(candidate);
                 if (!exportable) break;
-                DatabaseContextPtr dbContext = get_database_context(env, context);
+                DatabaseContextPtr       dbContext = get_database_context(env, context);
                 PROJStringFormatterNNPtr formatter = PROJStringFormatter::create(c.proj, dbContext);
                 return non_empty_string(env, exportable->exportToPROJString(formatter.get()));
             }
