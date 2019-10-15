@@ -81,10 +81,10 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
- * Method:    run
+ * Method:    release
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_SharedPointer_run
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_SharedPointer_release
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

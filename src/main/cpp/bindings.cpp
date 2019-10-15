@@ -912,7 +912,7 @@ JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer(J
  * @param  env     The JNI environment.
  * @param  object  The Java object wrapping the shared object to release.
  */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_SharedPointer_run(JNIEnv *env, jobject object) {
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_SharedPointer_release(JNIEnv *env, jobject object) {
     jlong ptr = get_and_clear_ptr(env, object);
     release_shared_ptr<BaseObject>(ptr);
 }

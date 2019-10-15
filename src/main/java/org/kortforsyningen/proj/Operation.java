@@ -148,7 +148,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
          * This method destroy all @code PJ} objects, then the PROJ {@code CoordinateOperation}.
          */
         @Override
-        public void run() {
+        final void release() {
             /*
              * Synchronization should not be needed since the array should not be used anymore.
              * But we still want the memory barrier effect, and the synchronization is a safety.
@@ -162,7 +162,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
                     }
                 }
             }
-            super.run();
+            super.release();
         }
     }
 

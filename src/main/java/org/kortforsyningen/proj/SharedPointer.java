@@ -38,7 +38,7 @@ import org.opengis.referencing.operation.NoninvertibleTransformException;
  * @version 1.0
  * @since   1.0
  */
-class SharedPointer extends NativeResource implements Runnable {
+class SharedPointer extends NativeResource {
     /**
      * Identify properties which can be returned by a {@code getFooProperty(short)} method.
      */
@@ -153,6 +153,5 @@ class SharedPointer extends NativeResource implements Runnable {
      * This method is invoked by the cleaner thread and shall never been invoked directly by us.
      * This implementation assumes that {@link #ptr} points to a C++ shared pointer.
      */
-    @Override
-    public native void run();
+    native void release();
 }

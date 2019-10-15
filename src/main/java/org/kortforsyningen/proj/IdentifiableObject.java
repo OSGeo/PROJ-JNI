@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.Formattable;
 import java.util.FormattableFlags;
 import java.util.Formatter;
-import java.lang.ref.Cleaner;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
 import org.opengis.referencing.ReferenceIdentifier;
@@ -47,26 +46,6 @@ import org.opengis.metadata.extent.Extent;
  * @since   1.0
  */
 abstract class IdentifiableObject implements Formattable {
-    /**
-     * Manager of objects having native resources to be released after the Java object has been garbage-collected.
-     * This manager will decrement the reference count of the shared pointer.
-     */
-    private static final Cleaner DISPOSER = Cleaner.create(IdentifiableObject::cleanerThread);
-
-    /**
-     * Creates a new thread for disposing PROJ objects after their Java wrappers have been garbage-collected.
-     * We create a thread ourselves mostly for specifying a more explicit name than the default name.
-     *
-     * @param  cleaner  provided by {@link Cleaner}.
-     * @return the thread to use for disposing PROJ objects.
-     */
-    private static Thread cleanerThread(final Runnable cleaner) {
-        final Thread t = new Thread(cleaner);
-        t.setPriority(Thread.MAX_PRIORITY - 2);
-        t.setName("PROJ objects disposer");
-        return t;
-    }
-
     /**
      * Provides access to the PROJ implementation.
      */
@@ -98,9 +77,20 @@ abstract class IdentifiableObject implements Formattable {
     /**
      * Registers a cleaner which will release PROJ resources when this {@code IdentifiableObject}
      * is garbage collected. This method shall be invoked exactly once after construction.
+     * This method usually returns {@code this}, unless another wrapper has been created concurrently
+     * for the same PROJ object. In the later case, {@code this} wrapper is destroyed and the existing
+     * wrapper is returned.
+     *
+     * @return the wrapper to use (usually {@code this} unless another wrapper has been created concurrently).
      */
-    final void cleanWhenUnreachable() {
-        DISPOSER.register(this, impl);
+    final IdentifiableObject cleanWhenUnreachable() {
+        final IdentifiableObject existing = SharedObjects.CACHE.putIfAbsent(impl.rawPointer(), this);
+        if (existing == null) {
+            return this;            // Normal case.
+        } else {
+            impl.release();         // Destroy this wrapper, use the existing one instead.
+            return existing;
+        }
     }
 
     /**
