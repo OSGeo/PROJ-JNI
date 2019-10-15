@@ -43,14 +43,15 @@ class SharedPointer extends NativeResource {
      * Identify properties which can be returned by a {@code getFooProperty(short)} method.
      */
     @Native
-    static final short NAME_STRING    = 0,
-                       AUTHORITY_CODE = 1,
-                       ABBREVIATION   = 2,
-                       DIRECTION      = 3,
-                       MINIMUM        = 4,
-                       MAXIMUM        = 5,
-                       SCOPE          = 6,
-                       REMARKS        = 7;
+    static final short NAME_STRING       = 0,
+                       AUTHORITY_CODE    = 1,
+                       ABBREVIATION      = 2,
+                       DIRECTION         = 3,
+                       MINIMUM           = 4,
+                       MAXIMUM           = 5,
+                       SCOPE             = 6,
+                       REMARKS           = 7,
+                       COORDINATE_SYSTEM = 8;
 
     /**
      * Wraps the shared pointer at the given address.
@@ -62,6 +63,15 @@ class SharedPointer extends NativeResource {
     SharedPointer(final long ptr) {
         super(ptr);
     }
+
+    /**
+     * Returns a property value as an object.
+     *
+     * @param  property  one of {@link #COORDINATE_SYSTEM}, <i>etc.</i> values.
+     * @return value of the specified property, or {@code null} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    final native Object getObjectProperty(short property);
 
     /**
      * Returns a property value as a string.

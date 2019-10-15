@@ -79,8 +79,9 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
      * @return the coordinate system.
      */
     @Override
+    @SuppressWarnings("OverlyStrongTypeCast")
     public CoordinateSystem getCoordinateSystem() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (CS) impl.getObjectProperty(SharedPointer.COORDINATE_SYSTEM);
     }
 
     /**

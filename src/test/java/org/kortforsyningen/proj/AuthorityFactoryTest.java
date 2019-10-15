@@ -134,5 +134,6 @@ public final strictfp class AuthorityFactoryTest {
         final GeographicCRS crs = factory.createGeographicCRS("4326");
         assertSame(cs,  factory.createEllipsoidalCS("6422"));
         assertSame(crs, factory.createGeographicCRS("4326"));
+        assertSame(cs, crs.getCoordinateSystem());
     }
 }

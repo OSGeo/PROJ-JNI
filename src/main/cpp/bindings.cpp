@@ -604,6 +604,40 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 
 
 /**
+ * Returns a property value as an object.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get a property value.
+ * @param  property  One of COORDINATE_SYSTEM, etc. values.
+ * @return Value of the specified property, or null if undefined.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectProperty
+  (JNIEnv *env, jobject object, jshort property)
+{
+    try {
+        BaseObjectPtr value;
+        jshort type;
+        switch (property) {
+            case org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM: {
+                value = get_shared_object<SingleCRS>(env, object)->coordinateSystem().as_nullable();
+                type  = org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM;
+                break;
+            }
+            default: {
+                return nullptr;
+            }
+        }
+        if (value) {
+            return specific_subclass(env, object, value, type);
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+    }
+    return nullptr;
+}
+
+
+/**
  * Returns a property value as a string.
  *
  * @param  env       The JNI environment.
@@ -614,8 +648,8 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringProperty
   (JNIEnv *env, jobject object, jshort property)
 {
-    std::string value;
     try {
+        std::string value;
         switch (property) {
             case org_kortforsyningen_proj_SharedPointer_NAME_STRING: {
                 value = get_shared_object<IdentifiedObject>(env, object)->nameStr();
@@ -654,11 +688,11 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 return nullptr;
             }
         }
+        return non_empty_string(env, value);
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
-        return nullptr;
     }
-    return non_empty_string(env, value);
+    return nullptr;
 }
 
 

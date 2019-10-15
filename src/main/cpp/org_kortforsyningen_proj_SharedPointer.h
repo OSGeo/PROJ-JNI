@@ -23,6 +23,16 @@ extern "C" {
 #define org_kortforsyningen_proj_SharedPointer_SCOPE 6L
 #undef org_kortforsyningen_proj_SharedPointer_REMARKS
 #define org_kortforsyningen_proj_SharedPointer_REMARKS 7L
+#undef org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM
+#define org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM 8L
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    getObjectProperty
+ * Signature: (S)Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectProperty
+  (JNIEnv *, jobject, jshort);
+
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    getStringProperty

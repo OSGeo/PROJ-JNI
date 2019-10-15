@@ -43,6 +43,12 @@ import java.lang.ref.SoftReference;
  *     }
  * }</pre>
  *
+ * <h2>Design note</h2>
+ * We use soft references instead than weak references because PROJ-JNI does not retain hard reference
+ * to components. For example {@link CRS} does not have a hard reference to its {@link CS} component.
+ * If we were using weak references, the component wrapper could be recreated almost every time the
+ * {@link CRS#getCoordinateSystem()} method is invoked.
+ *
  * @author  Martin Desruisseaux (IRD, Geomatys)
  * @version 1.0
  * @since   1.0
@@ -239,7 +245,6 @@ final class SharedObjects {
      * @param  toRemove  the entry to remove from this map.
      */
     final synchronized void removeEntry(final Entry toRemove) {
-        assert isValid();
         final int capacity = table.length;
         if (toRemove.removeFrom(table, hash(toRemove.key, capacity))) {
             if (--count < lowerCapacityThreshold(capacity)) {
@@ -280,6 +285,12 @@ final class SharedObjects {
      * Returns the value to which this map maps the specified key.
      * Returns {@code null} if the map contains no mapping for this key.
      * Null keys are considered never present.
+     *
+     * <h4>Synchronization note</h4>
+     * We could use read-write lock or stamped lock for avoiding an exclusive lock here.
+     * However the code executed here is very fast; in most cases just reading a single
+     * element in the array without looping. Read-write locks may be counter productive
+     * in such scenario because of the extra cost of managing a read and a write locks.
      *
      * @param  key  key whose associated value is to be returned.
      * @return the value to which this map maps the specified key.
