@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Locale;
 import javax.measure.Unit;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.AxisDirection;
@@ -64,7 +65,11 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public AxisDirection getDirection() {
-        return AxisDirection.valueOf(impl.getStringProperty(SharedPointer.DIRECTION));
+        String dir = impl.getStringProperty(SharedPointer.DIRECTION);
+        if (dir != null) {
+            dir = dir.toUpperCase(Locale.US).trim().replace(' ', '_');
+        }
+        return AxisDirection.valueOf(dir);
     }
 
     /**
@@ -74,7 +79,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public Unit<?> getUnit() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return null;                // TODO
     }
 
     /**

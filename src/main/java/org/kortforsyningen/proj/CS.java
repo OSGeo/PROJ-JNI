@@ -60,8 +60,9 @@ class CS extends IdentifiableObject implements CoordinateSystem {
      * @throws IndexOutOfBoundsException if {@code dimension} is out of bounds.
      */
     @Override
+    @SuppressWarnings("OverlyStrongTypeCast")
     public CoordinateSystemAxis getAxis(int dimension) throws IndexOutOfBoundsException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (Axis) impl.getObjectProperty(SharedPointer.AXIS, dimension);
     }
 
     /**

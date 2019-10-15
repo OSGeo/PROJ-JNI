@@ -172,6 +172,7 @@ inline jfieldID get_database_field(JNIEnv *env, jobject context) {
 #define JPJ_TRANSFORM_EXCEPTION        "org/opengis/referencing/operation/TransformException"
 #define JPJ_NON_INVERTIBLE_EXCEPTION   "org/opengis/referencing/operation/NoninvertibleTransformException"
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
+#define JPJ_OUT_OF_BOUNDS_EXCEPTION    "java/lang/IndexOutOfBoundsException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
 #define JPJ_ILLEGAL_STATE_EXCEPTION    "java/lang/IllegalStateException"
 #define JPJ_RUNTIME_EXCEPTION          "java/lang/RuntimeException"
@@ -609,10 +610,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
  * @param  env       The JNI environment.
  * @param  object    The Java object wrapping the PROJ object for which to get a property value.
  * @param  property  One of COORDINATE_SYSTEM, etc. values.
+ * @param  index     Index of the element to return. Ignored if the property is not a vector.
  * @return Value of the specified property, or null if undefined.
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectProperty
-  (JNIEnv *env, jobject object, jshort property)
+  (JNIEnv *env, jobject object, jshort property, jint index)
 {
     try {
         BaseObjectPtr value;
@@ -623,6 +625,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
                 type  = org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM;
                 break;
             }
+            case org_kortforsyningen_proj_SharedPointer_AXIS: {
+                value = get_shared_object<CoordinateSystem>(env, object)->axisList().at(index).as_nullable();
+                type  = org_kortforsyningen_proj_AuthorityFactory_AXIS;
+                break;
+            }
             default: {
                 return nullptr;
             }
@@ -630,6 +637,8 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
         if (value) {
             return specific_subclass(env, object, value, type);
         }
+    } catch (const std::out_of_range &e) {
+        rethrow_as_java_exception(env, JPJ_OUT_OF_BOUNDS_EXCEPTION, e);
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
     }

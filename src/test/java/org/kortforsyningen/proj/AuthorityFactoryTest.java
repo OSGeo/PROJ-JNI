@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
@@ -84,9 +85,18 @@ public final strictfp class AuthorityFactoryTest {
     public void testCreateCoordinateSystem() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         final EllipsoidalCS cs = factory.createEllipsoidalCS("6422");
-        assertEquals("dimension", 2, cs.getDimension());
         assertEquals("EPSG:6422", String.format("%#s", cs));
-        // TODO
+        assertEquals("dimension", 2, cs.getDimension());
+        assertEquals("Lat", cs.getAxis(0).getAbbreviation());
+        assertEquals("Lon", cs.getAxis(1).getAbbreviation());
+        try {
+            cs.getAxis(2);
+            fail("Expected IndexOutOfBoundsException.");
+        } catch (IndexOutOfBoundsException e) {
+            assertNotNull(e.getMessage());
+        }
+        assertSame(AxisDirection.NORTH, cs.getAxis(0).getDirection());
+        assertSame(AxisDirection.EAST,  cs.getAxis(1).getDirection());
     }
 
     /**

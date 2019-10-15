@@ -51,7 +51,8 @@ class SharedPointer extends NativeResource {
                        MAXIMUM           = 5,
                        SCOPE             = 6,
                        REMARKS           = 7,
-                       COORDINATE_SYSTEM = 8;
+                       COORDINATE_SYSTEM = 8,
+                       AXIS              = 9;
 
     /**
      * Wraps the shared pointer at the given address.
@@ -68,10 +69,11 @@ class SharedPointer extends NativeResource {
      * Returns a property value as an object.
      *
      * @param  property  one of {@link #COORDINATE_SYSTEM}, <i>etc.</i> values.
+     * @param  index     index of the element to return. Ignored if the property is not a vector.
      * @return value of the specified property, or {@code null} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
-    final native Object getObjectProperty(short property);
+    final native Object getObjectProperty(short property, int index);
 
     /**
      * Returns a property value as a string.

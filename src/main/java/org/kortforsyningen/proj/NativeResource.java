@@ -206,6 +206,13 @@ abstract class NativeResource {
     private IdentifiableObject wrapGeodeticObject(final short type, final long ptr) throws FactoryException {
         final org.kortforsyningen.proj.IdentifiableObject obj;
         switch (type) {
+            case AuthorityFactory.AXIS:                        obj = new Axis                (ptr); break;
+            case AuthorityFactory.COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
+            case AuthorityFactory.CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
+            case AuthorityFactory.SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;
+            case AuthorityFactory.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
+            case AuthorityFactory.VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
+            case AuthorityFactory.TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
             case AuthorityFactory.PROJECTED_CRS:
             case AuthorityFactory.COMPOUND_CRS:
             case AuthorityFactory.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
@@ -214,12 +221,6 @@ abstract class NativeResource {
             case AuthorityFactory.VERTICAL_CRS:                obj = new CRS.Vertical        (ptr); break;
             case AuthorityFactory.TEMPORAL_CRS:                obj = new CRS.Temporal        (ptr); break;
             case AuthorityFactory.ENGINEERING_CRS:             obj = new CRS.Engineering     (ptr); break;
-            case AuthorityFactory.COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
-            case AuthorityFactory.CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
-            case AuthorityFactory.SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;
-            case AuthorityFactory.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
-            case AuthorityFactory.VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
-            case AuthorityFactory.TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
             case AuthorityFactory.CONVERSION:                  obj = new Operation.Conversion(ptr); break;
             case AuthorityFactory.COORDINATE_OPERATION:        obj = new Operation           (ptr); break;
             default: throw new FactoryException("Unknown object type.");
