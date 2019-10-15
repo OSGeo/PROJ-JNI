@@ -27,7 +27,7 @@ import org.opengis.referencing.operation.NoninvertibleTransformException;
 
 /**
  * Wrappers around C++ shared pointer ({@code std::shared_ptr}).
- * {@code SharedPointer} can be {@linkplain IdentifiableObject#cleanWhenUnreachable() registered}
+ * {@code SharedPointer} can be {@linkplain IdentifiableObject#releaseWhenUnreachable() registered}
  * for automatic release of C++ shared pointer when an instance of another object is garbage collected.
  * The other object is usually an {@link IdentifiableObject}, but other objects could be used as well.
  * The navigation shall be in only one direction, from {@link IdentifiableObject} to {@code SharedPointer}.

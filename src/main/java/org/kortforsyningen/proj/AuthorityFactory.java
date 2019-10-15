@@ -591,6 +591,6 @@ final class AuthorityFactory extends NativeResource {
             case COORDINATE_OPERATION:        obj = new Operation           (ptr); break;
             default: throw new FactoryException("Unknown object type.");
         }
-        return obj.cleanWhenUnreachable();
+        return obj.releaseWhenUnreachable();
     }
 }

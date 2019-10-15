@@ -53,7 +53,7 @@ abstract class IdentifiableObject implements Formattable {
 
     /**
      * Creates a wrapper for the given pointer to a PROJ structure.
-     * It is caller's responsibility to invoke {@link #cleanWhenUnreachable()} after construction.
+     * It is caller's responsibility to invoke {@link #releaseWhenUnreachable()} after construction.
      *
      * @param  ptr  pointer to the PROJ structure to wrap.
      * @throws OutOfMemoryError if {@code ptr} is 0.
@@ -66,7 +66,7 @@ abstract class IdentifiableObject implements Formattable {
      * Creates an {@code IdentifiableObject} using a predetermined wrapper to a PROJ structure.
      * This is a variant of {@link #IdentifiableObject(long)} constructor for the cases when a
      * subclass of {@link SharedPointer} is desired. It still caller's responsibility to invoke
-     * {@link #cleanWhenUnreachable()} after construction.
+     * {@link #releaseWhenUnreachable()} after construction.
      *
      * @param  ptr  wrapper to a pointer to the PROJ structure.
      */
@@ -83,7 +83,7 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @return the wrapper to use (usually {@code this} unless another wrapper has been created concurrently).
      */
-    final IdentifiableObject cleanWhenUnreachable() {
+    final IdentifiableObject releaseWhenUnreachable() {
         final IdentifiableObject existing = SharedObjects.CACHE.putIfAbsent(impl.rawPointer(), this);
         if (existing == null) {
             return this;            // Normal case.
