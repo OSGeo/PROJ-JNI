@@ -33,19 +33,11 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
- * Method:    getSize
+ * Method:    getPropertySize
  * Signature: (S)I
  */
-JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getSize
+JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getPropertySize
   (JNIEnv *, jobject, jshort);
-
-/*
- * Class:     org_kortforsyningen_proj_SharedPointer
- * Method:    getDimension
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension
-  (JNIEnv *, jobject);
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer

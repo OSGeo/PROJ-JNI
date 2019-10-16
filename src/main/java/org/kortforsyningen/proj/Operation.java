@@ -184,7 +184,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     private int getDimension(final int i) {
         final CRS crs = getCRS(i);
-        return (crs != null) ? crs.impl.getDimension() : 0;
+        return (crs != null) ? crs.getDimension() : 0;
     }
 
     /**
@@ -249,7 +249,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     private boolean dimensionMatches(final int i, final int dim) {
         final CRS crs = getCRS(i);
-        return (crs == null) || (dim == crs.impl.getDimension());
+        return (crs == null) || (dim == crs.getDimension());
     }
 
     /**
@@ -297,18 +297,16 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     }
 
     /**
-     * Gets the object which will perform the actual coordinate operation.
+     * Gets the object which will perform the actual coordinate operation,
+     * or {@code null} if this operation is a defining conversion.
      * Current wrapper implements the {@code MathTransform} interface in the same class,
      * but a future version may dissociate the objects if useful.
      *
-     * @return the transform from source to target CRS.
+     * @return the transform from source to target CRS, or {@code null} if not applicable.
      */
     @Override
     public MathTransform getMathTransform() {
-        if (srcDim == 0 || dstDim == 0) {
-            throw new IllegalStateException("Source and target CRS are unknown.");
-        }
-        return this;
+        return (srcDim != 0 && dstDim != 0) ? this : null;
     }
 
     /**

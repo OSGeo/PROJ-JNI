@@ -790,28 +790,6 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
 
 
 /**
- * Returns the size of the identified property.
- *
- * @param  env       The JNI environment.
- * @param  object    The Java object wrapping the PROJ object for which to get the vector length.
- * @param  property  One of IDENTIFIER, etc. values.
- * @return Vector length in wrapped object, or 0 if unknown.
- */
-JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getSize(JNIEnv *env, jobject object, jshort property) {
-    try {
-        switch (property) {
-            case org_kortforsyningen_proj_Property_IDENTIFIER: {
-                return get_shared_object<IdentifiedObject>(env, object)->identifiers().size();
-            }
-        }
-    } catch (const std::exception &e) {
-        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
-    }
-    return 0;
-}
-
-
-/**
  * Returns the given object as a single CRS if possible, or null otherwise.
  * If the CRS is a bound CRS, its base CRS is returned.
  *
@@ -832,47 +810,55 @@ SingleCRSPtr as_single_crs(BaseObjectPtr &ptr) {
 
 
 /**
- * Returns the number of dimensions of the wrapped object.
- * This method can be used with the osgeo::proj::crs::CRS
- * and osgeo::proj::cs::CoordinateSystem types.
+ * Returns the size of the identified property.
  *
- * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the PROJ object for which to get the number of dimensions.
- * @return Number of dimensions in wrapped object, or 0 if unknown.
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get the vector length.
+ * @param  property  One of IDENTIFIER, etc. values.
+ * @return Vector length in wrapped object, or 0 if unknown.
  */
-JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension(JNIEnv *env, jobject object) {
+JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getPropertySize
+    (JNIEnv *env, jobject object, jshort property)
+ {
     try {
-        BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
-        CoordinateSystemPtr cs = std::dynamic_pointer_cast<CoordinateSystem>(ptr);
-        if (!cs) {
-            SingleCRSPtr crs = as_single_crs(ptr);
-            if (!crs) {
-                CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(ptr);
-                if (!compound) {
-                    jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
-                    if (c) env->ThrowNew(c, "Not a recognized CRS type.");
-                    return 0;
-                }
-                int dimension = 0;
-                for (CRSNNPtr component : compound->componentReferenceSystems()) {
-                    ptr = component.as_nullable();
-                    crs = as_single_crs(ptr);
-                    if (!crs) {
-                        jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
-                        if (c) env->ThrowNew(c, "Nested CompoundCRS.");
-                        return 0;
-                    }
-                    dimension += crs->coordinateSystem()->axisList().size();
-                }
-                return dimension;
+        switch (property) {
+            case org_kortforsyningen_proj_Property_IDENTIFIER: {
+                return get_shared_object<IdentifiedObject>(env, object)->identifiers().size();
             }
-            cs = crs->coordinateSystem().as_nullable();
+            case org_kortforsyningen_proj_Property_AXIS: {
+                BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
+                CoordinateSystemPtr cs = std::dynamic_pointer_cast<CoordinateSystem>(ptr);
+                if (!cs) {
+                    SingleCRSPtr crs = as_single_crs(ptr);
+                    if (!crs) {
+                        CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(ptr);
+                        if (!compound) {
+                            jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
+                            if (c) env->ThrowNew(c, "Not a recognized CRS type.");
+                            return 0;
+                        }
+                        int dimension = 0;
+                        for (CRSNNPtr component : compound->componentReferenceSystems()) {
+                            ptr = component.as_nullable();
+                            crs = as_single_crs(ptr);
+                            if (!crs) {
+                                jclass c = env->FindClass(JPJ_ILLEGAL_ARGUMENT_EXCEPTION);
+                                if (c) env->ThrowNew(c, "Nested CompoundCRS.");
+                                return 0;
+                            }
+                            dimension += crs->coordinateSystem()->axisList().size();
+                        }
+                        return dimension;
+                    }
+                    cs = crs->coordinateSystem().as_nullable();
+                }
+                return cs->axisList().size();
+            }
         }
-        return cs->axisList().size();
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
-        return 0;
     }
+    return 0;
 }
 
 

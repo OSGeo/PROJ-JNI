@@ -21,14 +21,18 @@
  */
 package org.kortforsyningen.proj;
 
-import org.junit.Test;
+import java.util.Collection;
+import java.util.Iterator;
+import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.cs.AxisDirection;
+import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -101,6 +105,26 @@ public final strictfp class AuthorityFactoryTest {
 
     /**
      * Tests indirectly {@link AuthorityFactory#createGeodeticObject(short, String)}.
+     *
+     * @throws FactoryException if the factory can not be created or if the CRS creation failed.
+     */
+    @Test
+    public void testCreateProjectedCRS() throws FactoryException {
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("3395");
+        assertEquals("EPSG:3395", String.format("%#s", crs));
+        assertIdentifierEquals("EPSG", "3395", crs.getIdentifiers());
+
+        final CoordinateSystem cs = crs.getCoordinateSystem();
+        assertEquals("dimension", 2, cs.getDimension());
+        assertEquals("E", cs.getAxis(0).getAbbreviation());
+        assertEquals("N", cs.getAxis(1).getAbbreviation());
+        assertSame(AxisDirection.EAST,  cs.getAxis(0).getDirection());
+        assertSame(AxisDirection.NORTH, cs.getAxis(1).getDirection());
+    }
+
+    /**
+     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(short, String)}.
      * This test uses <cite>"RGF93 / Lambert-93 + NGF-IGN69 height"</cite>.
      *
      * @throws FactoryException if the factory can not be created or if the CRS creation failed.
@@ -109,7 +133,7 @@ public final strictfp class AuthorityFactoryTest {
     public void testCreateCompoundCRS() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("5698");
-        assertEquals("dimension", 3, ((CRS) crs).impl.getDimension());
+        assertEquals("dimension", 3, ((CRS) crs).getDimension());
     }
 
     /**
@@ -145,5 +169,25 @@ public final strictfp class AuthorityFactoryTest {
         assertSame(cs,  factory.createEllipsoidalCS("6422"));
         assertSame(crs, factory.createGeographicCRS("4326"));
         assertSame(cs, crs.getCoordinateSystem());
+    }
+
+    /**
+     * Asserts that the given collection contains exactly one element,
+     * and that the element is equal to the given value.
+     *
+     * @param  codeSpace   the expected code space.
+     * @param  code        the expected code.
+     * @param  collection  the collection to verify.
+     */
+    private static void assertIdentifierEquals(final String codeSpace, final String code,
+            final Collection<ReferenceIdentifier> collection)
+    {
+        assertEquals("size", 1, collection.size());
+        final Iterator<ReferenceIdentifier> it = collection.iterator();
+        assertTrue("Expected an element.", it.hasNext());
+        final ReferenceIdentifier id = it.next();
+        assertEquals("codeSpace", codeSpace, id.getCodeSpace());
+        assertEquals("code",      code,      id.getCode());
+        assertFalse("Unexpected element.", it.hasNext());
     }
 }

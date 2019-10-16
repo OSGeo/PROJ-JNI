@@ -74,6 +74,15 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     }
 
     /**
+     * Returns the number of dimensions of this CRS.
+     *
+     * @return the number of dimensions of this CRS.
+     */
+    final int getDimension() {
+        return impl.getPropertySize(Property.AXIS);
+    }
+
+    /**
      * Returns the coordinate system of a single CRS, or a view over all coordinate systems of a compound CRS.
      *
      * @return the coordinate system.

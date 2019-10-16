@@ -49,7 +49,7 @@ class CS extends IdentifiableObject implements CoordinateSystem {
      */
     @Override
     public int getDimension() {
-        return impl.getDimension();
+        return impl.getPropertySize(Property.AXIS);
     }
 
     /**

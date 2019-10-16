@@ -79,24 +79,12 @@ class SharedPointer extends NativeResource {
 
     /**
      * Returns the size of the identified property.
+     * If {@code property} is {@link Property#AXIS}, the returned value is the number of dimensions.
      *
      * @param  property  one of {@link Property#IDENTIFIER}, <i>etc.</i> values.
      * @return number of elements in the vector of the C++ structure.
      */
-    final native int getSize(short property);
-
-    /**
-     * Returns the number of dimensions of the wrapped object.
-     * This method can be used with the following types:
-     *
-     * <ul>
-     *   <li>{@code osgeo::proj::cs::CoordinateSystem}</li>
-     *   <li>{@code osgeo::proj::crs::CRS}</li>
-     * </ul>
-     *
-     * @return number of dimensions in wrapped object, or 0 if unknown.
-     */
-    final native int getDimension();
+    final native int getPropertySize(short property);
 
     /**
      * Creates the inverse of the wrapped operation.

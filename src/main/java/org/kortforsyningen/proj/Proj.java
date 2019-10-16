@@ -317,7 +317,7 @@ public final class Proj {
         CRS wrapper = null;
         if (crs != null) {
             wrapper = CRS.cast("crs", crs);
-            final int dimension = wrapper.impl.getDimension();
+            final int dimension = wrapper.getDimension();
             if (coordinates == null) {
                 return new SimpleDirectPosition(wrapper, new double[dimension]);
             }

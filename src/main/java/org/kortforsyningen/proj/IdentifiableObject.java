@@ -226,7 +226,7 @@ abstract class IdentifiableObject implements Formattable {
          */
         @Override
         public int size() {
-            return 0;
+            return impl.getPropertySize(property);
         }
 
         /**
