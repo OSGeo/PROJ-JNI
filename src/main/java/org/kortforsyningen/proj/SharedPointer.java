@@ -43,8 +43,9 @@ class SharedPointer extends NativeResource {
      * Identify properties which can be returned by {@link #getObjectProperty(short, int)} method.
      */
     @Native
-    static final short COORDINATE_SYSTEM = 0,
-                       AXIS              = 1;
+    static final short AXIS              = 0,
+                       COORDINATE_SYSTEM = 1,
+                       SOURCE_TARGET_CRS = 2;       // Index 0 for source, 1 for target.
 
     /**
      * Identify properties which can be returned by {@link #getStringProperty(short)} method.
@@ -124,10 +125,10 @@ class SharedPointer extends NativeResource {
      *   <li>{@code osgeo::proj::operation::CoordinateOperation}</li>
      * </ul>
      *
-     * @return pointer to the wrapper of the inverse operation.
+     * @return inverse operation.
      * @throws NoninvertibleTransformException if the inverse transform can not be computed.
      */
-    final native long inverse() throws NoninvertibleTransformException;
+    final native Object inverse() throws NoninvertibleTransformException;
 
     /**
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.

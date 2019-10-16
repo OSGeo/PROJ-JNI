@@ -148,7 +148,6 @@ final class OperationFactory implements CoordinateOperationFactory {
                         desiredAccuracy,
                         sourceAndTargetCRSExtentUse, spatialCriterion, gridAvailabilityUse, allowUseIntermediateCRS,
                         discardSuperseded);
-            result.setCRSs(sourceCRS, targetCRS);
         }
         return java.util.Collections.singletonList(result);
     }

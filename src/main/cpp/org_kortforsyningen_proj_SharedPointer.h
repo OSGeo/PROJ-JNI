@@ -7,10 +7,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM
-#define org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM 0L
 #undef org_kortforsyningen_proj_SharedPointer_AXIS
-#define org_kortforsyningen_proj_SharedPointer_AXIS 1L
+#define org_kortforsyningen_proj_SharedPointer_AXIS 0L
+#undef org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM
+#define org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM 1L
+#undef org_kortforsyningen_proj_SharedPointer_SOURCE_TARGET_CRS
+#define org_kortforsyningen_proj_SharedPointer_SOURCE_TARGET_CRS 2L
 #undef org_kortforsyningen_proj_SharedPointer_NAME_STRING
 #define org_kortforsyningen_proj_SharedPointer_NAME_STRING 0L
 #undef org_kortforsyningen_proj_SharedPointer_AUTHORITY_CODE
@@ -62,9 +64,9 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    inverse
- * Signature: ()J
+ * Signature: ()Ljava/lang/Object;
  */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse
   (JNIEnv *, jobject);
 
 /*

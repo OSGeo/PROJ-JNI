@@ -86,12 +86,9 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     }
 
     /**
-     * The source and target coordinate reference systems, or {@code null} if unspecified.
-     * Those CRSs are defined after construction, then considered as final.
-     *
-     * @see #setCRSs(CRS, CRS)
+     * The dimensions of source and target coordinate reference systems, or 0 if unknown.
      */
-    private CRS sourceCRS, targetCRS;
+    private final int srcDim, dstDim;
 
     /**
      * The inverse transform, created only when first needed.
@@ -175,21 +172,29 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     Operation(final long ptr) {
         super(new Cleaner(ptr));
         transforms = ((Cleaner) impl).transforms;
+        srcDim = getDimension(0);
+        dstDim = getDimension(1);
     }
 
     /**
-     * Sets the source and target CRS. This is invoked after construction when
-     * the coordinate operation has been created from a pair of Java CRS objects.
+     * Returns the number of dimension of the specified CRS, or 0 if unknown.
      *
-     * @param  source  the source CRS.
-     * @param  target  the target CRS.
-     *
-     * @todo Compare the pointers against the ones returned from C++ API
-     *       and create new CRS objects if the pointers do not match.
+     * @param  i  0 for source CRS, or 1 for target CRS.
+     * @return number of dimension of specified CRS, or 0 in unknown.
      */
-    final void setCRSs(final CRS source, final CRS target) {
-        sourceCRS = source;
-        targetCRS = target;
+    private int getDimension(final int i) {
+        final CRS crs = getCRS(i);
+        return (crs != null) ? crs.impl.getDimension() : 0;
+    }
+
+    /**
+     * Returns the source or target CRS, or {@code null} if unknown.
+     *
+     * @param  i  0 for source CRS, or 1 for target CRS.
+     * @return the specified CRS, or {@code null} in unknown.
+     */
+    private CRS getCRS(final int i) {
+        return (CRS) impl.getObjectProperty(SharedPointer.SOURCE_TARGET_CRS, i);
     }
 
     /**
@@ -199,7 +204,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public final CoordinateReferenceSystem getSourceCRS() {
-        return sourceCRS;
+        return getCRS(0);
     }
 
     /**
@@ -209,7 +214,8 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public final int getSourceDimensions() {
-        return (sourceCRS != null) ? sourceCRS.impl.getDimension() : CRS.DEFAULT_DIMENSION;
+        assert dimensionMatches(0, srcDim) : srcDim;
+        return srcDim;
     }
 
     /**
@@ -219,7 +225,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public final CoordinateReferenceSystem getTargetCRS() {
-        return targetCRS;
+        return getCRS(1);
     }
 
     /**
@@ -229,7 +235,21 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public final int getTargetDimensions() {
-        return (targetCRS != null) ? targetCRS.impl.getDimension() : CRS.DEFAULT_DIMENSION;
+        assert dimensionMatches(1, dstDim) : dstDim;
+        return dstDim;
+    }
+
+    /**
+     * Verifies if the number of dimension of source or target CRS matches the expected value.
+     * This is used for assertions only.
+     *
+     * @param  i    0 for source CRS, or 1 for target CRS.
+     * @param  dim  the expected number of dimensions.
+     * @return whether the dimension matches.
+     */
+    private boolean dimensionMatches(final int i, final int dim) {
+        final CRS crs = getCRS(i);
+        return (crs == null) || (dim == crs.impl.getDimension());
     }
 
     /**
@@ -285,6 +305,9 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public MathTransform getMathTransform() {
+        if (srcDim == 0 || dstDim == 0) {
+            throw new IllegalStateException("Source and target CRS are unknown.");
+        }
         return this;
     }
 
@@ -295,6 +318,14 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public boolean isIdentity() {
+        final CRS sourceCRS = getCRS(0);
+        final CRS targetCRS = getCRS(1);
+        if (sourceCRS == targetCRS) {
+            return true;
+        }
+        if (sourceCRS == null || targetCRS == null) {
+            return false;
+        }
         final ComparisonCriterion c;
         if (sourceCRS instanceof GeneralDerivedCRS &&
             targetCRS instanceof GeneralDerivedCRS)
@@ -364,8 +395,6 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public DirectPosition transform(final DirectPosition ptSrc, DirectPosition ptDst) throws TransformException {
-        final int srcDim = getSourceDimensions();
-        final int dstDim = getTargetDimensions();
         if (ptSrc.getDimension() != srcDim) {
             throw new MismatchedDimensionException();
         }
@@ -398,7 +427,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
             if (ordinates.length != dstDim) {
                 ordinates = Arrays.copyOf(ordinates, dstDim);
             }
-            ptDst = new SimpleDirectPosition(targetCRS, ordinates);
+            ptDst = new SimpleDirectPosition(getCRS(1), ordinates);
         }
         return ptDst;
     }
@@ -538,9 +567,8 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
                           final int numPts) throws TransformException
     {
         if (numPts > 0) {
-            final int srcDim, dstDim;
-            ensureValidRange(srcPts.length, srcOff, numPts, srcDim = getSourceDimensions());
-            ensureValidRange(dstPts.length, dstOff, numPts, dstDim = getTargetDimensions());
+            ensureValidRange(srcPts.length, srcOff, numPts, srcDim);
+            ensureValidRange(dstPts.length, dstOff, numPts, dstDim);
             final int dimension = Math.max(srcDim, dstDim);
             final double[] buffer;
             final int bufOff;
@@ -614,9 +642,8 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
                           final int numPts) throws TransformException
     {
         if (numPts > 0) {
-            final int srcDim, dstDim;
-            ensureValidRange(srcPts.length, srcOff, numPts, srcDim = getSourceDimensions());
-            ensureValidRange(dstPts.length, dstOff, numPts, dstDim = getTargetDimensions());
+            ensureValidRange(srcPts.length, srcOff, numPts, srcDim);
+            ensureValidRange(dstPts.length, dstOff, numPts, dstDim);
             final int dimension = Math.max(srcDim, dstDim);
             final double[] buffer = new double[dimension * numPts];
             floatsToDoubles(srcPts, srcOff, srcDim, buffer, 0, dimension, numPts);
@@ -650,9 +677,8 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
                           final int numPts) throws TransformException
     {
         if (numPts > 0) {
-            final int srcDim, dstDim;
-            ensureValidRange(srcPts.length, srcOff, numPts, srcDim = getSourceDimensions());
-            ensureValidRange(dstPts.length, dstOff, numPts, dstDim = getTargetDimensions());
+            ensureValidRange(srcPts.length, srcOff, numPts, srcDim);
+            ensureValidRange(dstPts.length, dstOff, numPts, dstDim);
             final int dimension = Math.max(srcDim, dstDim);
             final double[] buffer = new double[dimension * numPts];
             copy(srcPts, srcOff, srcDim, buffer, 0, dimension, numPts);
@@ -685,9 +711,8 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
                           final int numPts) throws TransformException
     {
         if (numPts > 0) {
-            final int srcDim, dstDim;
-            ensureValidRange(srcPts.length, srcOff, numPts, srcDim = getSourceDimensions());
-            ensureValidRange(dstPts.length, dstOff, numPts, dstDim = getTargetDimensions());
+            ensureValidRange(srcPts.length, srcOff, numPts, srcDim);
+            ensureValidRange(dstPts.length, dstOff, numPts, dstDim);
             final int dimension = Math.max(srcDim, dstDim);
             final double[] buffer;
             final int bufOff;
@@ -737,8 +762,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     @Override
     public synchronized MathTransform inverse() throws NoninvertibleTransformException {
         if (inverse == null) {
-            inverse = new Operation(impl.inverse());
-            inverse.setCRSs(targetCRS, sourceCRS);
+            inverse = (Operation) impl.inverse();
             inverse.inverse = this;
         }
         return inverse;

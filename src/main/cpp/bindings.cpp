@@ -622,6 +622,12 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
         BaseObjectPtr value;
         jshort type;
         switch (property) {
+            case org_kortforsyningen_proj_SharedPointer_SOURCE_TARGET_CRS: {
+                CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, object);
+                value = (index ? cop->targetCRS() : cop->sourceCRS());
+                type  = org_kortforsyningen_proj_AuthorityFactory_COORDINATE_REFERENCE_SYSTEM;
+                break;
+            }
             case org_kortforsyningen_proj_SharedPointer_COORDINATE_SYSTEM: {
                 value = get_shared_object<SingleCRS>(env, object)->coordinateSystem().as_nullable();
                 type  = org_kortforsyningen_proj_AuthorityFactory_COORDINATE_SYSTEM;
@@ -813,19 +819,19 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getDimension(
  *
  * @param  env         The JNI environment.
  * @param  operation   The Java object wrapping the PROJ operation to inverse.
- * @return Pointer to the wrapper of the inverse operation, or 0 if out of memory.
+ * @return inverse operation, or null if out of memory.
  * @throws NoninvertibleTransformException if the inverse transform can not be computed.
  */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse(JNIEnv *env, jobject operation) {
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse(JNIEnv *env, jobject operation) {
     try {
         CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, operation);
         cop = cop->inverse();
         BaseObjectPtr ptr = cop.as_nullable();
-        return wrap_shared_ptr<BaseObject>(ptr);
+        return specific_subclass(env, operation, ptr, org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION);
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_NON_INVERTIBLE_EXCEPTION, e);
     }
-    return 0;
+    return nullptr;
 }
 
 
