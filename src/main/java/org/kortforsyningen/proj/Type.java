@@ -1,0 +1,72 @@
+/*
+ * Copyright © 2019 Agency for Data Supply and Efficiency
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package org.kortforsyningen.proj;
+
+import java.lang.annotation.Native;
+
+
+/**
+ * Identification of object types.
+ *
+ * @author  Martin Desruisseaux (Geomatys)
+ * @version 1.0
+ * @since   1.0
+ */
+final class Type {
+    /**
+     * Do not allow instantiation of this class.
+     */
+    private Type() {
+    }
+
+    /**
+     * Kind of geodetic objects created by native functions invoked from this class.
+     */
+    @Native
+    static final short
+            ANY                         =  0,
+            IDENTIFIER                  =  1,
+            PRIME_MERIDIAN              =  2,
+            ELLIPSOID                   =  3,
+            DATUM                       =  4,
+            GEODETIC_REFERENCE_FRAME    =  5,
+            VERTICAL_REFERENCE_FRAME    =  6,
+            TEMPORAL_DATUM              =  7,
+            UNIT_OF_MEASURE             =  8,
+            AXIS                        =  9,
+            COORDINATE_SYSTEM           = 10,
+            CARTESIAN_CS                = 11,
+            SPHERICAL_CS                = 12,
+            ELLIPSOIDAL_CS              = 13,
+            VERTICAL_CS                 = 14,
+            TEMPORAL_CS                 = 15,
+            COORDINATE_REFERENCE_SYSTEM = 16,
+            GEODETIC_CRS                = 17,
+            GEOGRAPHIC_CRS              = 18,
+            VERTICAL_CRS                = 19,
+            TEMPORAL_CRS                = 20,
+            ENGINEERING_CRS             = 21,
+            PROJECTED_CRS               = 22,
+            COMPOUND_CRS                = 23,
+            CONVERSION                  = 24,
+            COORDINATE_OPERATION        = 25;
+}

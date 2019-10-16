@@ -194,7 +194,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @return the specified CRS, or {@code null} in unknown.
      */
     private CRS getCRS(final int i) {
-        return (CRS) impl.getObjectProperty(SharedPointer.SOURCE_TARGET_CRS, i);
+        return (CRS) impl.getObjectProperty(Property.SOURCE_TARGET_CRS, i);
     }
 
     /**

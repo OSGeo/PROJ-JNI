@@ -52,7 +52,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public String getAbbreviation() {
-        return impl.getStringProperty(SharedPointer.ABBREVIATION);
+        return impl.getStringProperty(Property.ABBREVIATION);
     }
 
     /**
@@ -65,7 +65,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public AxisDirection getDirection() {
-        String dir = impl.getStringProperty(SharedPointer.DIRECTION);
+        String dir = impl.getStringProperty(Property.DIRECTION);
         if (dir != null) {
             dir = dir.toUpperCase(Locale.US).trim().replace(' ', '_');
         }
@@ -90,7 +90,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public double getMinimumValue() {
-        final double v = impl.getNumericProperty(SharedPointer.MINIMUM);
+        final double v = impl.getNumericProperty(Property.MINIMUM);
         return Double.isNaN(v) ? Double.NEGATIVE_INFINITY : v;
     }
 
@@ -102,7 +102,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public double getMaximumValue() {
-        final double v = impl.getNumericProperty(SharedPointer.MAXIMUM);
+        final double v = impl.getNumericProperty(Property.MAXIMUM);
         return Double.isNaN(v) ? Double.POSITIVE_INFINITY : v;
     }
 

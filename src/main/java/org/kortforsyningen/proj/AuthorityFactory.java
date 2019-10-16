@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.Objects;
 import java.util.Collection;
 import java.util.Collections;
-import java.lang.annotation.Native;
 import javax.measure.Unit;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
@@ -52,36 +51,6 @@ import org.opengis.referencing.operation.*;
  * @since   1.0
  */
 final class AuthorityFactory extends NativeResource {
-    /**
-     * Kind of geodetic objects created by native functions invoked from this class.
-     */
-    @Native
-    static final short
-            ANY                         =  0,
-            PRIME_MERIDIAN              =  1,
-            ELLIPSOID                   =  2,
-            DATUM                       =  3,
-            GEODETIC_REFERENCE_FRAME    =  4,
-            VERTICAL_REFERENCE_FRAME    =  5,
-            UNIT_OF_MEASURE             =  6,
-            AXIS                        =  7,
-            COORDINATE_SYSTEM           =  8,
-            CARTESIAN_CS                =  9,
-            SPHERICAL_CS                = 10,
-            ELLIPSOIDAL_CS              = 11,
-            VERTICAL_CS                 = 12,
-            TEMPORAL_CS                 = 13,
-            COORDINATE_REFERENCE_SYSTEM = 14,
-            GEODETIC_CRS                = 15,
-            GEOGRAPHIC_CRS              = 16,
-            VERTICAL_CRS                = 17,
-            TEMPORAL_CRS                = 18,
-            ENGINEERING_CRS             = 19,
-            PROJECTED_CRS               = 20,
-            COMPOUND_CRS                = 21,
-            CONVERSION                  = 22,
-            COORDINATE_OPERATION        = 23;
-
     /**
      * Creates a new factory for the given authority.
      * This constructor should not be invoked directly; use {@link Context#factory(String)} instead.
@@ -123,7 +92,7 @@ final class AuthorityFactory extends NativeResource {
      * Creates an {@code osgeo::proj::common::IdentifiedObject} from the specified code.
      * The PROJ method invoked by this function is determined by the {@code type} argument.
      *
-     * @param  type  one of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, <i>etc.</i> constants.
+     * @param  type  one of {@link Type#ELLIPSOID}, {@link Type#PRIME_MERIDIAN}, <i>etc.</i> constants.
      * @param  code  object code allocated by authority.
      * @return wrapper for the PROJ shared object, or {@code null} if out of memory.
      * @throws FactoryException if no object can be created for the given code.
@@ -208,7 +177,7 @@ final class AuthorityFactory extends NativeResource {
          *
          * @param  <T>     compile-time value of {@code classe} argument.
          * @param  classe  the expected Java class of the object to create.
-         * @param  type    one of {@link #ELLIPSOID}, {@link #PRIME_MERIDIAN}, <i>etc.</i> constants.
+         * @param  type    one of {@link Type#ELLIPSOID}, {@link Type#PRIME_MERIDIAN}, <i>etc.</i> constants.
          * @param  code    object code allocated by authority.
          * @return wrapper for the PROJ object.
          * @throws FactoryException if no object can be created for the given code.
@@ -292,7 +261,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public IdentifiedObject createObject(final String code) throws FactoryException {
-            return (IdentifiedObject) createGeodeticObject(IdentifiableObject.class, ANY, code);
+            return (IdentifiedObject) createGeodeticObject(IdentifiableObject.class, Type.ANY, code);
         }
 
         @Override
@@ -323,7 +292,7 @@ final class AuthorityFactory extends NativeResource {
         @Override
         @SuppressWarnings("OverlyStrongTypeCast")
         public CoordinateSystem createCoordinateSystem(final String code) throws FactoryException {
-            return createGeodeticObject(CS.class, COORDINATE_SYSTEM, code);
+            return createGeodeticObject(CS.class, Type.COORDINATE_SYSTEM, code);
         }
 
         /**
@@ -335,7 +304,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public CartesianCS createCartesianCS(final String code) throws FactoryException {
-            return createGeodeticObject(CS.Cartesian.class, CARTESIAN_CS, code);
+            return createGeodeticObject(CS.Cartesian.class, Type.CARTESIAN_CS, code);
         }
 
         /**
@@ -347,7 +316,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public SphericalCS createSphericalCS(final String code) throws FactoryException {
-            return createGeodeticObject(CS.Spherical.class, SPHERICAL_CS, code);
+            return createGeodeticObject(CS.Spherical.class, Type.SPHERICAL_CS, code);
         }
 
         /**
@@ -359,7 +328,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public EllipsoidalCS createEllipsoidalCS(final String code) throws FactoryException {
-            return createGeodeticObject(CS.Ellipsoidal.class, ELLIPSOIDAL_CS, code);
+            return createGeodeticObject(CS.Ellipsoidal.class, Type.ELLIPSOIDAL_CS, code);
         }
 
         /**
@@ -371,7 +340,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public VerticalCS createVerticalCS(final String code) throws FactoryException {
-            return createGeodeticObject(CS.Vertical.class, VERTICAL_CS, code);
+            return createGeodeticObject(CS.Vertical.class, Type.VERTICAL_CS, code);
         }
 
         /**
@@ -383,7 +352,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public TimeCS createTimeCS(final String code) throws FactoryException {
-            return createGeodeticObject(CS.Time.class, TEMPORAL_CS, code);
+            return createGeodeticObject(CS.Time.class, Type.TEMPORAL_CS, code);
         }
 
         /**
@@ -461,7 +430,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public CoordinateReferenceSystem createCoordinateReferenceSystem(final String code) throws FactoryException {
-            return createGeodeticObject(CRS.class, COORDINATE_REFERENCE_SYSTEM, code);
+            return createGeodeticObject(CRS.class, Type.COORDINATE_REFERENCE_SYSTEM, code);
         }
 
         /**
@@ -473,7 +442,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public GeographicCRS createGeographicCRS(final String code) throws FactoryException {
-            return createGeodeticObject(CRS.Geographic.class, GEOGRAPHIC_CRS, code);
+            return createGeodeticObject(CRS.Geographic.class, Type.GEOGRAPHIC_CRS, code);
         }
 
         @Override
@@ -495,7 +464,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public VerticalCRS createVerticalCRS(final String code) throws FactoryException {
-            return createGeodeticObject(CRS.Vertical.class, VERTICAL_CRS, code);
+            return createGeodeticObject(CRS.Vertical.class, Type.VERTICAL_CRS, code);
         }
 
         /**
@@ -507,7 +476,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public TemporalCRS createTemporalCRS(final String code) throws FactoryException {
-            return createGeodeticObject(CRS.Temporal.class, TEMPORAL_CRS, code);
+            return createGeodeticObject(CRS.Temporal.class, Type.TEMPORAL_CRS, code);
         }
 
         /**
@@ -519,7 +488,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public EngineeringCRS createEngineeringCRS(final String code) throws FactoryException {
-            return createGeodeticObject(CRS.Engineering.class, ENGINEERING_CRS, code);
+            return createGeodeticObject(CRS.Engineering.class, Type.ENGINEERING_CRS, code);
         }
 
         @Override
@@ -551,7 +520,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public CoordinateOperation createCoordinateOperation(final String code) throws FactoryException {
-            return createGeodeticObject(Operation.class, COORDINATE_OPERATION, code);
+            return createGeodeticObject(Operation.class, Type.COORDINATE_OPERATION, code);
         }
 
         @Override

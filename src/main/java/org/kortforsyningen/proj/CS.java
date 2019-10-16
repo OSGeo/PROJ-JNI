@@ -62,7 +62,7 @@ class CS extends IdentifiableObject implements CoordinateSystem {
     @Override
     @SuppressWarnings("OverlyStrongTypeCast")
     public CoordinateSystemAxis getAxis(int dimension) throws IndexOutOfBoundsException {
-        return (Axis) impl.getObjectProperty(SharedPointer.AXIS, dimension);
+        return (Axis) impl.getObjectProperty(Property.AXIS, dimension);
     }
 
     /**

@@ -198,7 +198,7 @@ abstract class NativeResource {
      * If an exception is thrown in this Java method, the native method will release the memory allocated
      * for {@code ptr}.
      *
-     * @param  type  one of the {@link AuthorityFactory#COORDINATE_REFERENCE_SYSTEM}, <i>etc.</i> constants.
+     * @param  type  one of the {@link Type#COORDINATE_REFERENCE_SYSTEM}, <i>etc.</i> constants.
      * @param  ptr   pointer to the shared pointer for the object allocated by PROJ.
      * @return the Java object wrapping the PROJ object.
      * @throws FactoryException if the given type is not recognized.
@@ -206,23 +206,24 @@ abstract class NativeResource {
     private IdentifiableObject wrapGeodeticObject(final short type, final long ptr) throws FactoryException {
         final org.kortforsyningen.proj.IdentifiableObject obj;
         switch (type) {
-            case AuthorityFactory.AXIS:                        obj = new Axis                (ptr); break;
-            case AuthorityFactory.COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
-            case AuthorityFactory.CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
-            case AuthorityFactory.SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;
-            case AuthorityFactory.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
-            case AuthorityFactory.VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
-            case AuthorityFactory.TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
-            case AuthorityFactory.PROJECTED_CRS:
-            case AuthorityFactory.COMPOUND_CRS:
-            case AuthorityFactory.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
-            case AuthorityFactory.GEODETIC_CRS:                obj = new CRS.Geodetic        (ptr); break;
-            case AuthorityFactory.GEOGRAPHIC_CRS:              obj = new CRS.Geographic      (ptr); break;
-            case AuthorityFactory.VERTICAL_CRS:                obj = new CRS.Vertical        (ptr); break;
-            case AuthorityFactory.TEMPORAL_CRS:                obj = new CRS.Temporal        (ptr); break;
-            case AuthorityFactory.ENGINEERING_CRS:             obj = new CRS.Engineering     (ptr); break;
-            case AuthorityFactory.CONVERSION:                  obj = new Operation.Conversion(ptr); break;
-            case AuthorityFactory.COORDINATE_OPERATION:        obj = new Operation           (ptr); break;
+            case Type.IDENTIFIER:                  obj = new ObjectIdentifier    (ptr); break;
+            case Type.AXIS:                        obj = new Axis                (ptr); break;
+            case Type.COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
+            case Type.CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
+            case Type.SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;
+            case Type.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
+            case Type.VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
+            case Type.TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
+            case Type.PROJECTED_CRS:
+            case Type.COMPOUND_CRS:
+            case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
+            case Type.GEODETIC_CRS:                obj = new CRS.Geodetic        (ptr); break;
+            case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic      (ptr); break;
+            case Type.VERTICAL_CRS:                obj = new CRS.Vertical        (ptr); break;
+            case Type.TEMPORAL_CRS:                obj = new CRS.Temporal        (ptr); break;
+            case Type.ENGINEERING_CRS:             obj = new CRS.Engineering     (ptr); break;
+            case Type.CONVERSION:                  obj = new Operation.Conversion(ptr); break;
+            case Type.COORDINATE_OPERATION:        obj = new Operation           (ptr); break;
             default: throw new FactoryException("Unknown object type.");
         }
         return obj.releaseWhenUnreachable();

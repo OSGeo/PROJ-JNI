@@ -82,7 +82,8 @@ final class OperationFactory implements CoordinateOperationFactory {
      * @return message to give to {@link OperationNotFoundException} constructor.
      */
     static String notFound(final CRS sourceCRS, final CRS targetCRS) {
-        return "Can not find a coordinate operation from “" + sourceCRS.getNameString() + "” to “" + targetCRS.getNameString() + "”.";
+        return "Can not find a coordinate operation from “" + sourceCRS.getNameString(false)
+                                                 + "” to “" + targetCRS.getNameString(false) + "”.";
     }
 
     /**

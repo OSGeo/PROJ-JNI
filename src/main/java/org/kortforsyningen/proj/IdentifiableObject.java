@@ -24,9 +24,12 @@ package org.kortforsyningen.proj;
 import java.util.Set;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.AbstractSet;
 import java.util.Formattable;
 import java.util.FormattableFlags;
 import java.util.Formatter;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
 import org.opengis.referencing.ReferenceIdentifier;
@@ -97,10 +100,17 @@ abstract class IdentifiableObject implements Formattable {
      * Returns a non-null label identifying this object.
      * This is used for formatting error messages.
      *
+     * @param  alternate  whether to return an authority code instead.
      * @return a non-null label for error messages or short formatting.
      */
-    final String getNameString() {
-        final String value = impl.getStringProperty(SharedPointer.NAME_STRING);
+    String getNameString(final boolean alternate) {
+        if (alternate) {
+            final String value = impl.getStringProperty(Property.IDENTIFIER_STRING);
+            if (value != null) {
+                return value;
+            }
+        }
+        final String value = impl.getStringProperty(Property.NAME_STRING);
         return (value != null) ? value : "unnamed";
     }
 
@@ -114,8 +124,9 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @return the primary name, or {@code null} if this object does not provide a name.
      */
+    @SuppressWarnings("OverlyStrongTypeCast")
     public ReferenceIdentifier getName() {
-        return null;
+        return (ObjectIdentifier) impl.getObjectProperty(Property.NAME, 0);
     }
 
     /**
@@ -124,7 +135,7 @@ abstract class IdentifiableObject implements Formattable {
      * @return alternative names and abbreviations, or an empty collection if there is none.
      */
     public Collection<GenericName> getAlias() {
-        return Collections.emptySet();
+        return Collections.emptySet();              // TODO
     }
 
     /**
@@ -133,7 +144,7 @@ abstract class IdentifiableObject implements Formattable {
      * @return this object identifiers, or an empty collection if there is none.
      */
     public Set<ReferenceIdentifier> getIdentifiers() {
-        return Collections.emptySet();
+        return new PropertySet<>(ObjectIdentifier.class, Property.IDENTIFIER);
     }
 
     /**
@@ -152,7 +163,7 @@ abstract class IdentifiableObject implements Formattable {
      * @return the CRS, datum or operation domain of usage, or {@code null} if none.
      */
     public InternationalString getScope() {
-        return getProperty(SharedPointer.SCOPE);
+        return getProperty(Property.SCOPE);
     }
 
     /**
@@ -161,19 +172,84 @@ abstract class IdentifiableObject implements Formattable {
      * @return the remarks, or {@code null} if none.
      */
     public InternationalString getRemarks() {
-        return getProperty(SharedPointer.REMARKS);
+        return getProperty(Property.REMARKS);
     }
 
     /**
      * Returns a property value as an international string.
      *
-     * @param  property  one of {@link SharedPointer#ABBREVIATION}, <i>etc.</i> values.
+     * @param  property  one of {@link Property#REMARKS}, <i>etc.</i> values.
      * @return value of the specified property, or {@code null} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
     private InternationalString getProperty(final short property) {
         final String value = impl.getStringProperty(property);
         return (value != null) ? new SimpleCitation(value) : null;
+    }
+
+    /**
+     * Collection of objects stored by PROJ in a vector.
+     * This class assumes that the vector does not contain duplicated elements; we do not verify.
+     *
+     * <p>This class must be declared here, not in {@link SharedPointer}, because we need to keep
+     * a strong reference to the enclosing {@link IdentifiableObject}. Otherwise unexpected behavior
+     * could occur due to premature garbage collection.</p>
+     *
+     * @param  <E>  type of values returned by this collection.
+     */
+    private class PropertySet<E> extends AbstractSet<E> {
+        /**
+         * Type of values returned by this collection.
+         */
+        final Class<? extends E> type;
+
+        /**
+         * The {@link Property} constant which identify which property to read.
+         */
+        private final short property;
+
+        /**
+         * Creates a new collection.
+         *
+         * @param  type      type of values returned by this collection.
+         * @param  property  the {@link Property} constant which identify which property to read.
+         */
+        PropertySet(final Class<? extends E> type, final short property) {
+            this.type     = type;
+            this.property = property;
+        }
+
+        /**
+         * Returns the length of the C++ vector.
+         *
+         * @return number of elements in the wrapped vector.
+         */
+        @Override
+        public int size() {
+            return 0;
+        }
+
+        /**
+         * Returns an iterator over the elements in the C++ vector.
+         *
+         * @return iterator over the elements in the wrapped vector.
+         */
+        @Override
+        public Iterator<E> iterator() {
+            return new Iterator<E>() {
+                private final int size = size();
+                private int index;
+
+                @Override public boolean hasNext() {
+                    return index < size;
+                }
+
+                @Override public E next() {
+                    if (index >= size) throw new NoSuchElementException();
+                    return type.cast(impl.getObjectProperty(property, index++));
+                }
+            };
+        }
     }
 
     /**
@@ -228,14 +304,8 @@ abstract class IdentifiableObject implements Formattable {
      * @param  precision  maximal number of characters to write, or -1 if no limit.
      */
     @Override
-    public void formatTo(final Formatter formatter, final int flags, int width, int precision) {
-        String value = null;
-        if ((flags & FormattableFlags.ALTERNATE) != 0) {
-            value = impl.getStringProperty(SharedPointer.AUTHORITY_CODE);
-        }
-        if (value == null) {
-            value = getNameString();
-        }
+    public final void formatTo(final Formatter formatter, final int flags, int width, int precision) {
+        String value = getNameString((flags & FormattableFlags.ALTERNATE) != 0);
         /*
          * Converting to upper cases may change the string length in some locales.
          * So we need to perform this conversion before to check the length.

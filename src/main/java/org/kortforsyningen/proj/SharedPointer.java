@@ -21,7 +21,6 @@
  */
 package org.kortforsyningen.proj;
 
-import java.lang.annotation.Native;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 
 
@@ -40,32 +39,6 @@ import org.opengis.referencing.operation.NoninvertibleTransformException;
  */
 class SharedPointer extends NativeResource {
     /**
-     * Identify properties which can be returned by {@link #getObjectProperty(short, int)} method.
-     */
-    @Native
-    static final short AXIS              = 0,
-                       COORDINATE_SYSTEM = 1,
-                       SOURCE_TARGET_CRS = 2;       // Index 0 for source, 1 for target.
-
-    /**
-     * Identify properties which can be returned by {@link #getStringProperty(short)} method.
-     */
-    @Native
-    static final short NAME_STRING    = 0,
-                       AUTHORITY_CODE = 1,
-                       ABBREVIATION   = 2,
-                       DIRECTION      = 3,
-                       SCOPE          = 4,
-                       REMARKS        = 5;
-
-    /**
-     * Identify properties which can be returned by {@link #getNumericProperty(short)} method.
-     */
-    @Native
-    static final short MINIMUM = 0,
-                       MAXIMUM = 1;
-
-    /**
      * Wraps the shared pointer at the given address.
      * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
      *
@@ -79,17 +52,17 @@ class SharedPointer extends NativeResource {
     /**
      * Returns a property value as an object.
      *
-     * @param  property  one of {@link #COORDINATE_SYSTEM}, <i>etc.</i> values.
+     * @param  property  one of {@link Property#COORDINATE_SYSTEM}, <i>etc.</i> values.
      * @param  index     index of the element to return. Ignored if the property is not a vector.
      * @return value of the specified property, or {@code null} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
-    final native Object getObjectProperty(short property, int index);
+    final native IdentifiableObject getObjectProperty(short property, int index);
 
     /**
      * Returns a property value as a string.
      *
-     * @param  property  one of {@link #ABBREVIATION}, <i>etc.</i> values.
+     * @param  property  one of {@link Property#NAME_STRING}, <i>etc.</i> values.
      * @return value of the specified property, or {@code null} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
@@ -98,11 +71,19 @@ class SharedPointer extends NativeResource {
     /**
      * Returns a property value as a floating point number.
      *
-     * @param  property  one of {@link #MINIMUM}, {@link #MAXIMUM}, <i>etc.</i> values.
+     * @param  property  one of {@link Property#MINIMUM}, <i>etc.</i> values.
      * @return value of the specified property, or {@link Double#NaN} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
     final native double getNumericProperty(short property);
+
+    /**
+     * Returns the size of the identified property.
+     *
+     * @param  property  one of {@link Property#IDENTIFIER}, <i>etc.</i> values.
+     * @return number of elements in the vector of the C++ structure.
+     */
+    final native int getSize(short property);
 
     /**
      * Returns the number of dimensions of the wrapped object.
@@ -128,7 +109,7 @@ class SharedPointer extends NativeResource {
      * @return inverse operation.
      * @throws NoninvertibleTransformException if the inverse transform can not be computed.
      */
-    final native Object inverse() throws NoninvertibleTransformException;
+    final native IdentifiableObject inverse() throws NoninvertibleTransformException;
 
     /**
      * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
