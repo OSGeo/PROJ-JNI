@@ -40,19 +40,29 @@ import org.opengis.referencing.operation.NoninvertibleTransformException;
  */
 class SharedPointer extends NativeResource {
     /**
-     * Identify properties which can be returned by a {@code getFooProperty(short)} method.
+     * Identify properties which can be returned by {@link #getObjectProperty(short, int)} method.
      */
     @Native
-    static final short NAME_STRING       = 0,
-                       AUTHORITY_CODE    = 1,
-                       ABBREVIATION      = 2,
-                       DIRECTION         = 3,
-                       MINIMUM           = 4,
-                       MAXIMUM           = 5,
-                       SCOPE             = 6,
-                       REMARKS           = 7,
-                       COORDINATE_SYSTEM = 8,
-                       AXIS              = 9;
+    static final short COORDINATE_SYSTEM = 0,
+                       AXIS              = 1;
+
+    /**
+     * Identify properties which can be returned by {@link #getStringProperty(short)} method.
+     */
+    @Native
+    static final short NAME_STRING    = 0,
+                       AUTHORITY_CODE = 1,
+                       ABBREVIATION   = 2,
+                       DIRECTION      = 3,
+                       SCOPE          = 4,
+                       REMARKS        = 5;
+
+    /**
+     * Identify properties which can be returned by {@link #getNumericProperty(short)} method.
+     */
+    @Native
+    static final short MINIMUM = 0,
+                       MAXIMUM = 1;
 
     /**
      * Wraps the shared pointer at the given address.
