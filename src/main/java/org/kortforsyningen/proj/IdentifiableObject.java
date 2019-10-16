@@ -95,17 +95,13 @@ abstract class IdentifiableObject implements Formattable {
 
     /**
      * Returns a non-null label identifying this object.
-     * This is used for formatting error messages only.
+     * This is used for formatting error messages.
      *
-     * @return a non-null label for error messages.
+     * @return a non-null label for error messages or short formatting.
      */
-    final String label() {
-        final ReferenceIdentifier name = getName();
-        if (name != null) {
-            final String code = name.getCode();
-            if (code != null) return code;
-        }
-        return "?";
+    final String getNameString() {
+        final String value = impl.getStringProperty(SharedPointer.NAME_STRING);
+        return (value != null) ? value : "unnamed";
     }
 
     /*
@@ -238,10 +234,7 @@ abstract class IdentifiableObject implements Formattable {
             value = impl.getStringProperty(SharedPointer.AUTHORITY_CODE);
         }
         if (value == null) {
-            value = impl.getStringProperty(SharedPointer.NAME_STRING);
-            if (value == null) {
-                value = "unnamed";
-            }
+            value = getNameString();
         }
         /*
          * Converting to upper cases may change the string length in some locales.
