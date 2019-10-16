@@ -23,6 +23,7 @@ package org.kortforsyningen.proj;
 
 import java.util.Arrays;
 import java.lang.ref.SoftReference;
+import java.util.concurrent.locks.StampedLock;
 
 
 /**
@@ -49,11 +50,16 @@ import java.lang.ref.SoftReference;
  * If we were using weak references, the component wrapper could be recreated almost every time the
  * {@link CRS#getCoordinateSystem()} method is invoked.
  *
+ * <p>This class extends {@link StampedLock} for implementation convenience only.
+ * We allow ourself to do that because this class is not public.
+ * Callers should not rely on this implementation detail.</p>
+ *
  * @author  Martin Desruisseaux (IRD, Geomatys)
  * @version 1.0
  * @since   1.0
  */
-final class SharedObjects {
+@SuppressWarnings("serial")
+final class SharedObjects extends StampedLock {
     /**
      * Number of nanoseconds to wait before to rehash the table for reducing its size.
      * When the garbage collector collects a lot of elements, we will wait at least this amount of time
@@ -244,7 +250,23 @@ final class SharedObjects {
      *
      * @param  toRemove  the entry to remove from this map.
      */
-    final synchronized void removeEntry(final Entry toRemove) {
+    final void remove(final Entry toRemove) {
+        final long stamp = writeLock();
+        try {
+            removeUnderLock(toRemove);
+        } finally {
+            unlockWrite(stamp);
+        }
+    }
+
+    /**
+     * Implementation of {@link #remove(Entry)} invoked when the caller already has a lock.
+     * This variant is required because {@link StampedLock} is not re-entrant.
+     *
+     * @param  toRemove  the entry to remove from this map.
+     */
+    private void removeUnderLock(final Entry toRemove) {
+        assert isWriteLocked();
         final int capacity = table.length;
         if (toRemove.removeFrom(table, hash(toRemove.key, capacity))) {
             if (--count < lowerCapacityThreshold(capacity)) {
@@ -265,9 +287,6 @@ final class SharedObjects {
      * @return whether {@link #count} matches the expected value.
      */
     private boolean isValid() {
-        if (!Thread.holdsLock(this)) {
-            throw new AssertionError();
-        }
         if (count > upperCapacityThreshold(table.length)) {
             throw new AssertionError(count);
         }
@@ -286,21 +305,40 @@ final class SharedObjects {
      * Returns {@code null} if the map contains no mapping for this key.
      * Null keys are considered never present.
      *
-     * <h4>Synchronization note</h4>
-     * We could use read-write lock or stamped lock for avoiding an exclusive lock here.
-     * However the code executed here is very fast; in most cases just reading a single
-     * element in the array without looping. Read-write locks may be counter productive
-     * in such scenario because of the extra cost of managing a read and a write locks.
-     *
      * @param  key  key whose associated value is to be returned.
      * @return the value to which this map maps the specified key.
      */
-    final synchronized IdentifiableObject get(final long key) {
-        final int index = hash(key, table.length);
-        for (Entry e = table[index]; e != null; e = e.next) {
-            if (key == e.key) {
-                return e.get();
+    final IdentifiableObject get(final long key) {
+        /*
+         * First, try to get the entry without acquiring a lock. We look only at the entry
+         * found directly in the table; we do not follow the chain of entries because they
+         * may be inconsistent.
+         */
+        long stamp = tryOptimisticRead();
+        if (stamp != 0) {
+            final Entry[] t = table;                    // Protect from concurrent change.
+            final Entry e = t[hash(key, t.length)];
+            if (validate(stamp)) {
+                if (e == null) {
+                    return null;
+                } else if (e.key == key) {
+                    return e.get();
+                }
             }
+        }
+        /*
+         * If the optimistic read did not worked, perform the "real" read here.
+         */
+        stamp = readLock();
+        try {
+            final int index = hash(key, table.length);
+            for (Entry e = table[index]; e != null; e = e.next) {
+                if (e.key == key) {
+                    return e.get();
+                }
+            }
+        } finally {
+            unlockRead(stamp);
         }
         return null;
     }
@@ -315,27 +353,32 @@ final class SharedObjects {
      * @param  value  value to be associated with the specified key.
      * @return the current value associated with specified key, or {@code null} if there was no mapping for key.
      */
-    final synchronized IdentifiableObject putIfAbsent(final long key, final IdentifiableObject value) {
-        int index = hash(key, table.length);
-        for (Entry e = table[index]; e != null; e = e.next) {
-            if (key == e.key) {
-                final IdentifiableObject oldValue = e.get();
-                if (oldValue != null) {
-                    return oldValue;
+    final IdentifiableObject putIfAbsent(final long key, final IdentifiableObject value) {
+        final long stamp = writeLock();
+        try {
+            int index = hash(key, table.length);
+            for (Entry e = table[index]; e != null; e = e.next) {
+                if (e.key == key) {
+                    final IdentifiableObject oldValue = e.get();
+                    if (oldValue != null) {
+                        return oldValue;
+                    }
+                    removeUnderLock(e);
+                    index = hash(key, table.length);
                 }
-                removeEntry(e);
-                index = hash(key, table.length);
             }
-        }
-        if (++count >= lowerCapacityThreshold(table.length)) {
-            if (count > upperCapacityThreshold(table.length)) {
-                table = rehash(table, count);
-                index = hash(key, table.length);
+            if (++count >= lowerCapacityThreshold(table.length)) {
+                if (count > upperCapacityThreshold(table.length)) {
+                    table = rehash(table, count);
+                    index = hash(key, table.length);
+                }
+                lastTimeNormalCapacity = System.nanoTime();
             }
-            lastTimeNormalCapacity = System.nanoTime();
+            table[index] = new Entry(key, value, table[index]);
+            assert isValid();
+        } finally {
+            unlockWrite(stamp);
         }
-        table[index] = new Entry(key, value, table[index]);
-        assert isValid();
         return null;
     }
 }

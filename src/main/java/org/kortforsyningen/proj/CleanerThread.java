@@ -97,7 +97,7 @@ final class CleanerThread extends Thread {
                      * a programming error that we want to know about.
                      */
                     ref.cleaner.release();
-                    SharedObjects.CACHE.removeEntry(ref);
+                    SharedObjects.CACHE.remove(ref);
                 }
             } catch (Throwable exception) {
                 System.getLogger(NativeResource.LOGGER_NAME).log(System.Logger.Level.WARNING, exception);
