@@ -222,12 +222,12 @@ void log(JNIEnv *env, const std::string &text) {
     jclass c = env->FindClass("org/kortforsyningen/proj/NativeResource");
     if (c) {
         jobject logger = env->CallStaticObjectMethod(c, java_method_getLogger);
-        if (!env->ExceptionCheck() && logger) {                         // ExceptionCheck() must be always invoked.
+        if (!env->ExceptionCheck()) {                               // ExceptionCheck() must be always invoked.
             c = env->FindClass("java/lang/System$Logger$Level");
             if (c) {
                 jobject level = env->GetStaticObjectField(c, java_field_debug_level);
                 jstring str = env->NewStringUTF(text.c_str());
-                if (str) {
+                if (str && logger) {
                     env->CallObjectMethod(logger, java_method_log, level, str);
                     if (!env->ExceptionCheck()) {
                         return;                             // Success.
@@ -395,7 +395,7 @@ void rethrow_as_java_exception(JNIEnv *env, const char *type, const std::excepti
  *
  * @param  env     The JNI environment.
  * @param  caller  The Java object which is creating another object.
- * @param  object  Shared pointer to wrap.
+ * @param  object  Shared pointer to wrap. Shall not be empty.
  * @param  type    Base type of the object to wrap. This method will use a more specialized type if possible.
  * @return Wrapper for a PROJ object, or null if an error occurred.
  */
@@ -455,7 +455,7 @@ again:  switch (type) {
         jlong ptr = wrap_shared_ptr<BaseObject>(object);
         if (ptr) {
             result = env->CallObjectMethod(caller, java_method_wrapGeodeticObject, type, ptr);
-            if (env->ExceptionCheck() || !result) {             // ExceptionCheck() must be always invoked.
+            if (env->ExceptionCheck() | !result) {              // ExceptionCheck() must be always invoked.
                 release_shared_ptr<BaseObject>(ptr);
                 result = nullptr;
             }
@@ -590,8 +590,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
         }
         env->ReleaseStringUTFChars(text, text_utf);     // Must be after the catch block in case an exception happens.
     }
-    if (result) {
+    if (result) try {
         return specific_subclass(env, context, result, org_kortforsyningen_proj_AuthorityFactory_ANY);
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
     }
     return nullptr;
 }
@@ -1135,8 +1137,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
             rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
         env->ReleaseStringUTFChars(code, code_utf);
-        if (rp) {
+        if (rp) try {
             return specific_subclass(env, factory, rp, type);
+        } catch (const std::exception &e) {
+            rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
     }
     return nullptr;
@@ -1206,7 +1210,9 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
         std::vector<CoordinateOperationNNPtr> operations = opf->createOperations(source, target, context);
         if (!operations.empty()) {
             BaseObjectPtr op = operations[0].as_nullable();
-            return specific_subclass(env, factory, op, org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION);
+            if (op) {
+                return specific_subclass(env, factory, op, org_kortforsyningen_proj_AuthorityFactory_COORDINATE_OPERATION);
+            }
         }
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
