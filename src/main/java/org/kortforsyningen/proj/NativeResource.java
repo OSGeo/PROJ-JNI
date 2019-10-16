@@ -219,13 +219,13 @@ abstract class NativeResource {
             case Type.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
             case Type.VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
             case Type.TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
-            case Type.PROJECTED_CRS:
             case Type.COMPOUND_CRS:
             case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
             case Type.GEODETIC_CRS:                obj = new CRS.Geodetic        (ptr); break;
             case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic      (ptr); break;
             case Type.VERTICAL_CRS:                obj = new CRS.Vertical        (ptr); break;
             case Type.TEMPORAL_CRS:                obj = new CRS.Temporal        (ptr); break;
+            case Type.PROJECTED_CRS:               obj = new CRS.Projected       (ptr); break;
             case Type.ENGINEERING_CRS:             obj = new CRS.Engineering     (ptr); break;
             case Type.CONVERSION:                  obj = new Operation.Conversion(ptr); break;
             case Type.COORDINATE_OPERATION:        obj = new Operation           (ptr); break;

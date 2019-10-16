@@ -68,6 +68,7 @@ using osgeo::proj::crs::CompoundCRS;
 using osgeo::proj::crs::CompoundCRSPtr;
 using osgeo::proj::crs::BoundCRS;
 using osgeo::proj::crs::BoundCRSPtr;
+using osgeo::proj::crs::DerivedCRS;
 using osgeo::proj::operation::CoordinateOperation;
 using osgeo::proj::operation::CoordinateOperationNNPtr;
 using osgeo::proj::operation::CoordinateOperationFactory;
@@ -643,6 +644,16 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
                 CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, object);
                 value = (index ? cop->targetCRS() : cop->sourceCRS());
                 type  = org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_BASE_CRS: {
+                value = get_shared_object<DerivedCRS>(env, object)->baseCRS().as_nullable();
+                type  = org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_CONVERT_FROM_BASE: {
+                value = get_shared_object<DerivedCRS>(env, object)->derivingConversion().as_nullable();
+                type  = org_kortforsyningen_proj_Type_CONVERSION;
                 break;
             }
             case org_kortforsyningen_proj_Property_DATUM: {

@@ -49,7 +49,9 @@ final class Property {
                        DATUM             = 4,
                        ELLIPSOID         = 5,
                        PRIME_MERIDIAN    = 6,
-                       SOURCE_TARGET_CRS = 7;       // Index 0 for source, 1 for target.
+                       CONVERT_FROM_BASE = 7,
+                       BASE_CRS          = 8,
+                       SOURCE_TARGET_CRS = 9;       // Index 0 for source, 1 for target.
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getStringProperty(short)} method.

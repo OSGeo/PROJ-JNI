@@ -21,7 +21,16 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Set;
+import java.util.Collection;
+import org.opengis.util.GenericName;
+import org.opengis.util.InternationalString;
+import org.opengis.metadata.extent.Extent;
+import org.opengis.metadata.quality.PositionalAccuracy;
+import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.*;
+import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.cs.TimeCS;
@@ -30,6 +39,9 @@ import org.opengis.referencing.datum.EngineeringDatum;
 import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.datum.TemporalDatum;
 import org.opengis.referencing.datum.VerticalDatum;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.OperationMethod;
+import org.opengis.referencing.operation.Projection;
 
 
 /**
@@ -228,6 +240,70 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
         @Override
         public EngineeringDatum getDatum() {
             return getDatum(Datum.Engineering.class);
+        }
+    }
+
+    /**
+     * A projected coordinate reference system specialization.
+     */
+    static final class Projected extends CRS implements ProjectedCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Projected(final long ptr) {
+            super(ptr);
+        }
+
+        /**
+         * Returns the base coordinate reference system, which must be geographic.
+         */
+        @Override
+        @SuppressWarnings("OverlyStrongTypeCast")
+        public GeographicCRS getBaseCRS() {
+            return (Geographic) impl.getObjectProperty(Property.BASE_CRS, 0);
+        }
+
+        /**
+         * Returns the map projection from the {@linkplain #getBaseCRS() base CRS} to this CRS.
+         */
+        @Override
+        public Projection getConversionFromBase() {
+            final Operation.Conversion op = (Operation.Conversion) impl.getObjectProperty(Property.CONVERT_FROM_BASE, 0);
+            if (op == null) return null;
+            return new Projection() {
+                @Override public ReferenceIdentifier            getName()                        {return op.getName();}
+                @Override public Collection<GenericName>        getAlias()                       {return op.getAlias();}
+                @Override public Set<ReferenceIdentifier>       getIdentifiers()                 {return op.getIdentifiers();}
+                @Override public InternationalString            getRemarks()                     {return op.getRemarks();}
+                @Override public CoordinateReferenceSystem      getSourceCRS()                   {return op.getSourceCRS();}
+                @Override public CoordinateReferenceSystem      getTargetCRS()                   {return op.getTargetCRS();}
+                @Override public String                         getOperationVersion()            {return op.getOperationVersion();}
+                @Override public OperationMethod                getMethod()                      {return op.getMethod();}
+                @Override public ParameterValueGroup            getParameterValues()             {return op.getParameterValues();}
+                @Override public Collection<PositionalAccuracy> getCoordinateOperationAccuracy() {return op.getCoordinateOperationAccuracy();}
+                @Override public Extent                         getDomainOfValidity()            {return op.getDomainOfValidity();}
+                @Override public InternationalString            getScope()                       {return op.getScope();}
+                @Override public MathTransform                  getMathTransform()               {return op.getMathTransform();}
+                @Override public String                         toWKT()                          {return op.toWKT();}
+                @Override public String                         toString()                       {return op.toString();}
+            };
+        }
+
+        /**
+         * Returns the Cartesian specialization of the coordinate system.
+         */
+        @Override
+        public CartesianCS getCoordinateSystem() {
+            return getCoordinateSystem(CS.Cartesian.class);
+        }
+
+        /**
+         * Returns the geodetic specialization of the datum.
+         */
+        @Override
+        public GeodeticDatum getDatum() {
+            return getDatum(Datum.Geodetic.class);
         }
     }
 }

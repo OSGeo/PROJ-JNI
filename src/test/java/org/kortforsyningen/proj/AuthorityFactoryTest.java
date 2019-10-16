@@ -27,12 +27,14 @@ import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.AxisDirection;
-import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.EllipsoidalCS;
+import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
 import org.junit.Test;
+import org.opengis.referencing.datum.GeodeticDatum;
 
 import static org.junit.Assert.*;
 
@@ -111,16 +113,23 @@ public final strictfp class AuthorityFactoryTest {
     @Test
     public void testCreateProjectedCRS() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
-        final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("3395");
+        final ProjectedCRS crs = factory.createProjectedCRS("3395");
         assertEquals("EPSG:3395", String.format("%#s", crs));
         assertIdentifierEquals("EPSG", "3395", crs.getIdentifiers());
 
-        final CoordinateSystem cs = crs.getCoordinateSystem();
+        final CartesianCS cs = crs.getCoordinateSystem();
         assertEquals("dimension", 2, cs.getDimension());
         assertEquals("E", cs.getAxis(0).getAbbreviation());
         assertEquals("N", cs.getAxis(1).getAbbreviation());
         assertSame(AxisDirection.EAST,  cs.getAxis(0).getDirection());
         assertSame(AxisDirection.NORTH, cs.getAxis(1).getDirection());
+
+        final GeodeticDatum datum = crs.getDatum();
+        assertNotNull(datum);
+
+        final GeographicCRS base = crs.getBaseCRS();
+        assertSame(datum, base.getDatum());
+        assertNotNull(crs.getConversionFromBase());
     }
 
     /**

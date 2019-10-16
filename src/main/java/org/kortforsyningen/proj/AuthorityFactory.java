@@ -492,9 +492,16 @@ final class AuthorityFactory extends NativeResource {
             throw new FactoryException("Not supported yet.");
         }
 
+        /**
+         * Returns a coordinate reference system which is expected to be projected.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public ProjectedCRS createProjectedCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(CRS.Projected.class, Type.PROJECTED_CRS, code);
         }
 
         /**
