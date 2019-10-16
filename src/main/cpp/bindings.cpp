@@ -448,6 +448,8 @@ again:  switch (type) {
             case org_kortforsyningen_proj_Type_DATUM: {
                      if (dynamic_cast<osgeo::proj::datum::GeodeticReferenceFrame *>(rp)) type = org_kortforsyningen_proj_Type_GEODETIC_REFERENCE_FRAME;
                 else if (dynamic_cast<osgeo::proj::datum::VerticalReferenceFrame *>(rp)) type = org_kortforsyningen_proj_Type_VERTICAL_REFERENCE_FRAME;
+                else if (dynamic_cast<osgeo::proj::datum::TemporalDatum          *>(rp)) type = org_kortforsyningen_proj_Type_TEMPORAL_DATUM;
+                else if (dynamic_cast<osgeo::proj::datum::EngineeringDatum       *>(rp)) type = org_kortforsyningen_proj_Type_ENGINEERING_DATUM;
                 break;
             }
         }
@@ -641,6 +643,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
                 CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, object);
                 value = (index ? cop->targetCRS() : cop->sourceCRS());
                 type  = org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_DATUM: {
+                value = get_shared_object<SingleCRS>(env, object)->datum();
+                type  = org_kortforsyningen_proj_Type_DATUM;
                 break;
             }
             case org_kortforsyningen_proj_Property_COORDINATE_SYSTEM: {
@@ -1160,9 +1167,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
                 case org_kortforsyningen_proj_Type_ANY:                         rp = pf->createObject                    (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_PRIME_MERIDIAN:              rp = pf->createPrimeMeridian             (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_ELLIPSOID:                   rp = pf->createEllipsoid                 (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_DATUM:                       rp = pf->createDatum                     (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_GEODETIC_REFERENCE_FRAME:    rp = pf->createGeodeticDatum             (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_VERTICAL_REFERENCE_FRAME:    rp = pf->createVerticalDatum             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_TEMPORAL_DATUM:              // No specific method - use generic one.
+                case org_kortforsyningen_proj_Type_ENGINEERING_DATUM:           // No specific method - use generic one.
+                case org_kortforsyningen_proj_Type_DATUM:                       rp = pf->createDatum                     (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_UNIT_OF_MEASURE:             rp = pf->createUnitOfMeasure             (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_CARTESIAN_CS:                // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_SPHERICAL_CS:                // No specific method - use generic one.

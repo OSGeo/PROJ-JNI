@@ -207,6 +207,11 @@ abstract class NativeResource {
         final org.kortforsyningen.proj.IdentifiableObject obj;
         switch (type) {
             case Type.IDENTIFIER:                  obj = new ObjectIdentifier    (ptr); break;
+            case Type.DATUM:                       obj = new Datum               (ptr); break;
+            case Type.GEODETIC_REFERENCE_FRAME:    obj = new Datum.Geodetic      (ptr); break;
+            case Type.VERTICAL_REFERENCE_FRAME:    obj = new Datum.Vertical      (ptr); break;
+            case Type.TEMPORAL_DATUM:              obj = new Datum.Temporal      (ptr); break;
+            case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering   (ptr); break;
             case Type.AXIS:                        obj = new Axis                (ptr); break;
             case Type.COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
             case Type.CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;

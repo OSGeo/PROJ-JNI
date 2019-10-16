@@ -391,34 +391,76 @@ final class AuthorityFactory extends NativeResource {
             throw new FactoryException("Not supported yet.");
         }
 
+        /**
+         * Returns a datum from a code.
+         *
+         * @param  code  value allocated by authority.
+         * @return the datum for the given code.
+         * @throws FactoryException if the object creation failed or the datum is another type.
+         */
         @Override
-        public Datum createDatum(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+        public org.opengis.referencing.datum.Datum createDatum(final String code) throws FactoryException {
+            return createGeodeticObject(Datum.class, Type.DATUM, code);
         }
 
+        /**
+         * Returns a datum for geodetic or geographic CRS.
+         *
+         * @param  code  value allocated by authority.
+         * @return the datum for the given code.
+         * @throws FactoryException if the object creation failed or the datum is another type.
+         */
         @Override
         public GeodeticDatum createGeodeticDatum(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(Datum.Geodetic.class, Type.GEODETIC_REFERENCE_FRAME, code);
         }
 
+        /**
+         * Returns a datum for vertical CRS.
+         *
+         * @param  code  value allocated by authority.
+         * @return the datum for the given code.
+         * @throws FactoryException if the object creation failed or the datum is another type.
+         */
         @Override
         public VerticalDatum createVerticalDatum(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(Datum.Vertical.class, Type.VERTICAL_REFERENCE_FRAME, code);
         }
 
+        /**
+         * Returns a datum for temporal CRS.
+         *
+         * @param  code  value allocated by authority.
+         * @return the datum for the given code.
+         * @throws FactoryException if the object creation failed or the datum is another type.
+         */
         @Override
         public TemporalDatum createTemporalDatum(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(Datum.Temporal.class, Type.TEMPORAL_DATUM, code);
         }
 
+        /**
+         * Returns a datum for engineering CRS.
+         *
+         * @param  code  value allocated by authority.
+         * @return the datum for the given code.
+         * @throws FactoryException if the object creation failed or the datum is another type.
+         */
         @Override
         public EngineeringDatum createEngineeringDatum(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(Datum.Engineering.class, Type.ENGINEERING_DATUM, code);
         }
 
+        /**
+         * Deprecated type removed from latest ISO standard.
+         *
+         * @param  code  value allocated by authority.
+         * @return the datum for the given code.
+         * @throws FactoryException if the object creation failed or the datum is another type.
+         */
         @Override
         public ImageDatum createImageDatum(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            throw new FactoryException(UNSUPPORTED);
         }
 
         /**

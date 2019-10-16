@@ -40,13 +40,7 @@ import org.opengis.referencing.datum.VerticalDatum;
  * @version 1.0
  * @since   1.0
  */
-@SuppressWarnings("OverlyStrongTypeCast")
 class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
-    /**
-     * Default number of dimensions when we can not infer it.
-     */
-    static final int DEFAULT_DIMENSION = 2;
-
     /**
      * Casts the given value to {@link CRS}.
      *
@@ -83,14 +77,37 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     }
 
     /**
+     * Returns the coordinate system casted to the given type.
+     * The target type is specified by the CRS subclass.
+     *
+     * @param  <T>   the compile-time value of {@code type} argument.
+     * @param  type  the expected coordinate system class.
+     * @return the coordinate system.
+     */
+    final <T extends CS> T getCoordinateSystem(final Class<T> type) {
+        return type.cast(impl.getObjectProperty(Property.COORDINATE_SYSTEM, 0));
+    }
+
+    /**
      * Returns the coordinate system of a single CRS, or a view over all coordinate systems of a compound CRS.
      *
      * @return the coordinate system.
      */
     @Override
-    @SuppressWarnings("OverlyStrongTypeCast")
     public CoordinateSystem getCoordinateSystem() {
-        return (CS) impl.getObjectProperty(Property.COORDINATE_SYSTEM, 0);
+        return getCoordinateSystem(CS.class);
+    }
+
+    /**
+     * Returns the datum casted to the given type.
+     * The target type is specified by the CRS subclass.
+     *
+     * @param  <T>   the compile-time value of {@code type} argument.
+     * @param  type  the expected datum class.
+     * @return the datum or reference frame.
+     */
+    final <T extends Datum> T getDatum(final Class<T> type) {
+        return type.cast(impl.getObjectProperty(Property.DATUM, 0));
     }
 
     /**
@@ -105,9 +122,12 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
             super(ptr);
         }
 
+        /**
+         * Returns the geodetic specialization of the datum.
+         */
         @Override
         public GeodeticDatum getDatum() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return getDatum(Datum.Geodetic.class);
         }
     }
 
@@ -128,7 +148,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
          */
         @Override
         public EllipsoidalCS getCoordinateSystem() {
-            return (CS.Ellipsoidal) super.getCoordinateSystem();
+            return getCoordinateSystem(CS.Ellipsoidal.class);
         }
     }
 
@@ -149,12 +169,15 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
          */
         @Override
         public VerticalCS getCoordinateSystem() {
-            return (CS.Vertical) super.getCoordinateSystem();
+            return getCoordinateSystem(CS.Vertical.class);
         }
 
+        /**
+         * Returns the vertical specialization of the datum.
+         */
         @Override
         public VerticalDatum getDatum() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return getDatum(Datum.Vertical.class);
         }
     }
 
@@ -175,12 +198,15 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
          */
         @Override
         public TimeCS getCoordinateSystem() {
-            return (CS.Time) super.getCoordinateSystem();
+            return getCoordinateSystem(CS.Time.class);
         }
 
+        /**
+         * Returns the temporal specialization of the datum.
+         */
         @Override
         public TemporalDatum getDatum() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return getDatum(Datum.Temporal.class);
         }
     }
 
@@ -196,9 +222,12 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
             super(ptr);
         }
 
+        /**
+         * Returns the engineering specialization of the datum.
+         */
         @Override
         public EngineeringDatum getDatum() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return getDatum(Datum.Engineering.class);
         }
     }
 }
