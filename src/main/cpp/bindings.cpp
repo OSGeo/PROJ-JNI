@@ -362,7 +362,7 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
  * @return Shared pointer to the PROJ object associated to the given Java object.
  * @throw  std::exception if this method can not get a non-null pointer.
  */
-template <class T> osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_object(JNIEnv *env, jobject object) {
+template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_object(JNIEnv *env, jobject object) {
     BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
     return NN_CHECK_THROW(std::dynamic_pointer_cast<T>(ptr));
 }
