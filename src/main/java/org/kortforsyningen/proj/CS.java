@@ -21,7 +21,13 @@
  */
 package org.kortforsyningen.proj;
 
-import org.opengis.referencing.cs.*;
+import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
+import org.opengis.referencing.cs.CartesianCS;
+import org.opengis.referencing.cs.SphericalCS;
+import org.opengis.referencing.cs.EllipsoidalCS;
+import org.opengis.referencing.cs.VerticalCS;
+import org.opengis.referencing.cs.TimeCS;
 
 
 /**

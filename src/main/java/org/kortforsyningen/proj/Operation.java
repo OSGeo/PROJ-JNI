@@ -315,8 +315,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
         public Formula getFormula() {
             return new Formula() {
                 @Override public InternationalString getFormula() {
-                    final String text = impl.getStringProperty(Property.FORMULA);
-                    return (text != null) ? new SimpleCitation(text) : null;
+                    return getProperty(Property.FORMULA);
                 }
 
                 @Override public Citation getCitation() {

@@ -22,13 +22,29 @@
 package org.kortforsyningen.proj;
 
 import java.util.Date;
-import org.opengis.referencing.datum.*;
+import javax.measure.Unit;
+import javax.measure.quantity.Angle;
+import javax.measure.quantity.Length;
 import org.opengis.util.InternationalString;
+//     org.opengis.referencing.datum.Datum            — Not imported because this class is also named Datum.
+//     org.opengis.referencing.datum.Ellipsoid        — Not imported because we define an Ellipsoid in this class.
+//     org.opengis.referencing.datum.PrimeMeridian    — Not imported because we define a PrimeMeridian in this class.
+import org.opengis.referencing.datum.GeodeticDatum;
+import org.opengis.referencing.datum.TemporalDatum;
+import org.opengis.referencing.datum.VerticalDatum;
+import org.opengis.referencing.datum.VerticalDatumType;
+import org.opengis.referencing.datum.EngineeringDatum;
 
 
 /**
  * Wrappers around {@code osgeo::proj::datum::Datum} subtypes.
  * Each subtype is represented by an inner class in this file.
+ *
+ * <p>This class has the same name as {@link org.opengis.referencing.datum.Datum} and contains
+ * inner classes of the same name than {@link org.opengis.referencing.datum.PrimeMeridian} and
+ * {@link org.opengis.referencing.datum.Ellipsoid} for making more natural to user to recognize
+ * what we implement when (s)he see the class name. The very minor inconvenience for PROJ-JNI
+ * implementation is offset by the user convenience.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -53,7 +69,7 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
      */
     @Override
     public InternationalString getAnchorPoint() {
-        return null;        // TODO
+        return getProperty(Property.ANCHOR_DEFINITION);
     }
 
     /**
@@ -64,6 +80,42 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
     @Override
     public Date getRealizationEpoch() {
         return null;        // TODO
+    }
+
+    /**
+     * A geodetic reference frame property.
+     */
+    static final class Ellipsoid extends IdentifiableObject implements org.opengis.referencing.datum.Ellipsoid {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Ellipsoid(final long ptr) {
+            super(ptr);
+        }
+
+        @Override public Unit<Length> getAxisUnit()          {return null;}      // TODO
+        @Override public double       getSemiMajorAxis()     {return impl.getNumericProperty(Property.SEMI_MAJOR);}
+        @Override public double       getSemiMinorAxis()     {return impl.getNumericProperty(Property.SEMI_MINOR);}
+        @Override public double       getInverseFlattening() {return impl.getNumericProperty(Property.INVERSE_FLAT);}
+        @Override public boolean      isIvfDefinitive()      {return impl.getBooleanProperty(Property.IVF_DEFINITIVE);}
+        @Override public boolean      isSphere()             {return impl.getBooleanProperty(Property.IS_SPHERE);}
+    }
+
+    /**
+     * A geodetic reference frame property.
+     */
+    static final class PrimeMeridian extends IdentifiableObject implements org.opengis.referencing.datum.PrimeMeridian {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        PrimeMeridian(final long ptr) {
+            super(ptr);
+        }
+
+        @Override public double      getGreenwichLongitude() {return impl.getNumericProperty(Property.GREENWICH);}
+        @Override public Unit<Angle> getAngularUnit()        {return null;}        // TODO
     }
 
     /**
@@ -80,20 +132,18 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
 
         /**
          * Returns the ellipsoid.
-         * @return the ellipsoid.
          */
-        @Override
-        public Ellipsoid getEllipsoid() {
-            return null;            // TODO
+        @SuppressWarnings("OverlyStrongTypeCast")       // Casting to final class is easier for the JVM.
+        @Override public org.opengis.referencing.datum.Ellipsoid getEllipsoid() {
+            return (Ellipsoid) impl.getObjectProperty(Property.ELLIPSOID);
         }
 
         /**
          * Returns the prime meridian.
-         * @return the prime meridian.
          */
-        @Override
-        public PrimeMeridian getPrimeMeridian() {
-            return null;            // TODO
+        @SuppressWarnings("OverlyStrongTypeCast")       // Casting to final class is easier for the JVM.
+        @Override public org.opengis.referencing.datum.PrimeMeridian getPrimeMeridian() {
+            return (PrimeMeridian) impl.getObjectProperty(Property.PRIME_MERIDIAN);
         }
     }
 
@@ -114,8 +164,6 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
          * This attribute is inherited from the specification published in 2003.
          * The 2007 revision of ISO 19111 removed this attribute, since this information
          * can be encoded in the <cite>anchor definition</cite>.
-         *
-         * @return the type of this vertical datum.
          */
         @Override
         public VerticalDatumType getVerticalDatumType() {
@@ -137,7 +185,6 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
 
         /**
          * The date and time origin of this temporal datum.
-         * @return the date and time origin of this temporal datum.
          */
         @Override
         public Date getOrigin() {

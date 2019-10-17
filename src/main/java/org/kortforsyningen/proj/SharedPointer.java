@@ -77,6 +77,15 @@ class SharedPointer extends NativeResource {
     final native double getNumericProperty(short property);
 
     /**
+     * Returns a property value as a boolean value.
+     *
+     * @param  property  one of {@link Property#IS_SPHERE}, <i>etc.</i> values.
+     * @return value of the specified property, or {@code false} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    final native boolean getBooleanProperty(short property);
+
+    /**
      * Returns the size of the identified property of kind {@code std::vector}.
      * If {@code property} is {@link Property#AXIS}, the returned value is the number of dimensions.
      *

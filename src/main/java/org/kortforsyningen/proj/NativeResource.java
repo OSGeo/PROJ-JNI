@@ -219,6 +219,8 @@ abstract class NativeResource {
             case Type.VERTICAL_REFERENCE_FRAME:    obj = new Datum.Vertical          (ptr); break;
             case Type.TEMPORAL_DATUM:              obj = new Datum.Temporal          (ptr); break;
             case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering       (ptr); break;
+            case Type.ELLIPSOID:                   obj = new Datum.Ellipsoid         (ptr); break;
+            case Type.PRIME_MERIDIAN:              obj = new Datum.PrimeMeridian     (ptr); break;
             case Type.COMPOUND_CRS:
             case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                     (ptr); break;
             case Type.GEODETIC_CRS:                obj = new CRS.Geodetic            (ptr); break;

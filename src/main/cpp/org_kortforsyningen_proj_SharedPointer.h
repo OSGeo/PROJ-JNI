@@ -33,6 +33,14 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    getBooleanProperty
+ * Signature: (S)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_getBooleanProperty
+  (JNIEnv *, jobject, jshort);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    getVectorSize
  * Signature: (S)I
  */

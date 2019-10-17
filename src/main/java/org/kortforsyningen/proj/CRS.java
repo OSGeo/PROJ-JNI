@@ -21,17 +21,24 @@
  */
 package org.kortforsyningen.proj;
 
-import org.opengis.referencing.crs.*;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.cs.TimeCS;
 import org.opengis.referencing.cs.VerticalCS;
-import org.opengis.referencing.datum.EngineeringDatum;
+//     org.opengis.referencing.datum.Datum            — Not imported because we use Datum class from this package.
 import org.opengis.referencing.datum.GeodeticDatum;
-import org.opengis.referencing.datum.TemporalDatum;
 import org.opengis.referencing.datum.VerticalDatum;
+import org.opengis.referencing.datum.TemporalDatum;
+import org.opengis.referencing.datum.EngineeringDatum;
 import org.opengis.referencing.operation.Projection;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.GeodeticCRS;
+import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.crs.ProjectedCRS;
+import org.opengis.referencing.crs.VerticalCRS;
+import org.opengis.referencing.crs.TemporalCRS;
+import org.opengis.referencing.crs.EngineeringCRS;
 
 
 /**

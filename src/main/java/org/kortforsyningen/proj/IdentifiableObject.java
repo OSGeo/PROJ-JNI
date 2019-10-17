@@ -182,7 +182,7 @@ abstract class IdentifiableObject implements Formattable {
      * @return value of the specified property, or {@code null} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
-    private InternationalString getProperty(final short property) {
+    final InternationalString getProperty(final short property) {
         final String value = impl.getStringProperty(property);
         return (value != null) ? new SimpleCitation(value) : null;
     }

@@ -57,6 +57,10 @@ using osgeo::proj::metadata::Citation;
 using osgeo::proj::metadata::Identifier;
 using osgeo::proj::common::IdentifiedObject;
 using osgeo::proj::common::ObjectUsage;
+using osgeo::proj::datum::Datum;
+using osgeo::proj::datum::Ellipsoid;
+using osgeo::proj::datum::PrimeMeridian;
+using osgeo::proj::datum::GeodeticReferenceFrame;
 using osgeo::proj::cs::CoordinateSystem;
 using osgeo::proj::cs::CoordinateSystemPtr;
 using osgeo::proj::cs::CoordinateSystemAxis;
@@ -639,6 +643,16 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
                 type  = org_kortforsyningen_proj_Type_IDENTIFIER;
                 break;
             }
+            case org_kortforsyningen_proj_Property_PRIME_MERIDIAN: {
+                value = get_shared_object<GeodeticReferenceFrame>(env, object)->primeMeridian().as_nullable();
+                type  = org_kortforsyningen_proj_Type_PRIME_MERIDIAN;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_ELLIPSOID: {
+                value = get_shared_object<GeodeticReferenceFrame>(env, object)->ellipsoid().as_nullable();
+                type  = org_kortforsyningen_proj_Type_ELLIPSOID;
+                break;
+            }
             case org_kortforsyningen_proj_Property_BASE_CRS: {
                 value = get_shared_object<DerivedCRS>(env, object)->baseCRS().as_nullable();
                 type  = org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM;
@@ -796,6 +810,10 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 value = get_shared_object<CoordinateSystemAxis>(env, object)->direction().toString();
                 break;
             }
+            case org_kortforsyningen_proj_Property_ANCHOR_DEFINITION: {
+                value = string_or_empty(get_shared_object<Datum>(env, object)->anchorDefinition());
+                break;
+            }
             case org_kortforsyningen_proj_Property_OPERATION_VERSION: {
                 value = string_or_empty(get_shared_object<CoordinateOperation>(env, object)->operationVersion());
                 break;
@@ -854,6 +872,22 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
                 value = get_shared_object<CoordinateSystemAxis>(env, object)->maximumValue();
                 break;
             }
+            case org_kortforsyningen_proj_Property_GREENWICH: {
+                value = get_shared_object<PrimeMeridian>(env, object)->longitude().value();
+                break;
+            }
+            case org_kortforsyningen_proj_Property_SEMI_MAJOR: {
+                value = get_shared_object<Ellipsoid>(env, object)->semiMajorAxis().value();
+                break;
+            }
+            case org_kortforsyningen_proj_Property_SEMI_MINOR: {
+                value = get_shared_object<Ellipsoid>(env, object)->computeSemiMinorAxis().value();
+                break;
+            }
+            case org_kortforsyningen_proj_Property_INVERSE_FLAT: {
+                value = get_shared_object<Ellipsoid>(env, object)->computedInverseFlattening();
+                break;
+            }
             default: {
                 return NAN;
             }
@@ -865,6 +899,33 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
     }
     return NAN;
+}
+
+
+/**
+ * Returns a property value as a boolean value.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get a property value.
+ * @param  property  One of IS_SPHERE, etc. values.
+ * @return Value of the specified property, or false if undefined.
+ */
+JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_getBooleanProperty
+  (JNIEnv *env, jobject object, jshort property)
+{
+    try {
+        switch (property) {
+            case org_kortforsyningen_proj_Property_IS_SPHERE: {
+                return get_shared_object<Ellipsoid>(env, object)->isSphere();
+            }
+            case org_kortforsyningen_proj_Property_IVF_DEFINITIVE: {
+                return get_shared_object<Ellipsoid>(env, object)->inverseFlattening().has_value();
+            }
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+    }
+    return JNI_FALSE;
 }
 
 
@@ -1062,7 +1123,7 @@ JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_isEquival
             (ptr2 = get_and_unwrap_ptr<BaseObject>(env, other)))
         {
             if (ptr1 == ptr2) {
-                return true;
+                return JNI_TRUE;
             }
             std::shared_ptr<IComparable> obj1, obj2;
             if ((obj1 = std::dynamic_pointer_cast<IComparable>(ptr1)) &&
@@ -1074,7 +1135,7 @@ JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_isEquival
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
     }
-    return false;
+    return JNI_FALSE;
 }
 
 

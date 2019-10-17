@@ -29,8 +29,10 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.AxisDirection;
-import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.cs.CartesianCS;
+import org.opengis.referencing.cs.EllipsoidalCS;
+import org.opengis.referencing.datum.Ellipsoid;
+import org.opengis.referencing.datum.PrimeMeridian;
 import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.operation.Projection;
 import org.opengis.referencing.operation.OperationMethod;
@@ -128,6 +130,16 @@ public final strictfp class AuthorityFactoryTest {
         final GeographicCRS base  = crs.getBaseCRS();
         assertSame(datum, base.getDatum());
         assertNotNull(datum);
+
+        final Ellipsoid ellipsoid = datum.getEllipsoid();
+        assertFalse(ellipsoid.isSphere());
+        assertTrue (ellipsoid.isIvfDefinitive());
+        assertEquals(6378137, ellipsoid.getSemiMajorAxis(),     0.5);
+        assertEquals(6356752, ellipsoid.getSemiMinorAxis(),     0.5);
+        assertEquals(298.257, ellipsoid.getInverseFlattening(), 0.0005);
+
+        final PrimeMeridian pm = datum.getPrimeMeridian();
+        assertEquals(0, pm.getGreenwichLongitude(), 0);
 
         final Projection conv = crs.getConversionFromBase();
         assertSame(base, conv.getSourceCRS());

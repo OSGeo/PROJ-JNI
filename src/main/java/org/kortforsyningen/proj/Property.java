@@ -71,16 +71,28 @@ final class Property {
                        CITATION_TITLE    =  5,
                        ABBREVIATION      =  6,
                        DIRECTION         =  7,
-                       SCOPE             =  8,
-                       REMARKS           =  9,
-                       FORMULA           = 10,
-                       FORMULA_TITLE     = 11,
-                       OPERATION_VERSION = 12;
+                       ANCHOR_DEFINITION =  8,
+                       SCOPE             =  9,
+                       REMARKS           = 10,
+                       FORMULA           = 11,
+                       FORMULA_TITLE     = 12,
+                       OPERATION_VERSION = 13;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getNumericProperty(short)} method.
      */
     @Native
-    static final short MINIMUM = 0,
-                       MAXIMUM = 1;
+    static final short MINIMUM      = 0,
+                       MAXIMUM      = 1,
+                       SEMI_MAJOR   = 2,
+                       SEMI_MINOR   = 3,
+                       INVERSE_FLAT = 4,
+                       GREENWICH    = 5;
+
+    /**
+     * Identify properties which can be returned by {@link SharedPointer#getBooleanProperty(short)} method.
+     */
+    @Native
+    static final short IS_SPHERE      = 0,
+                       IVF_DEFINITIVE = 1;
 }
