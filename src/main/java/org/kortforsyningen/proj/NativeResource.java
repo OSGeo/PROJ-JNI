@@ -225,6 +225,7 @@ abstract class NativeResource {
             case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                     (ptr); break;
             case Type.GEODETIC_CRS:                obj = new CRS.Geodetic            (ptr); break;
             case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic          (ptr); break;
+            case Type.GEOCENTRIC_CRS:              obj = new CRS.Geocentric          (ptr); break;
             case Type.PROJECTED_CRS:               obj = new CRS.Projected           (ptr); break;
             case Type.VERTICAL_CRS:                obj = new CRS.Vertical            (ptr); break;
             case Type.TEMPORAL_CRS:                obj = new CRS.Temporal            (ptr); break;

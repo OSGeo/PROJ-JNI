@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Formattable;
+import java.util.Formatter;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import org.opengis.util.GenericName;
@@ -388,7 +390,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * A specialization of coordinate operation used in projected CRS.
      * This type is specific to GeoAPI and does not exist in ISO 19111.
      */
-    static final class Projection implements org.opengis.referencing.operation.Projection {
+    static final class Projection implements org.opengis.referencing.operation.Projection, Formattable {
         /**
          * The projected CRS for which we are creating this projection.
          */
@@ -429,6 +431,10 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
         @Override public boolean                        equals(final Object other) {
             // Since the conversion was obtained from the CRS, comparing the CRS is sufficient.
             return (other instanceof Projection) && crs.equals(((Projection) other).crs);
+        }
+
+        @Override public void formatTo(final Formatter formatter, final int flags, final int width, final int precision) {
+            op.formatTo(formatter, flags, width, precision);
         }
     }
 

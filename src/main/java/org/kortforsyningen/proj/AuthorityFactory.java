@@ -232,7 +232,7 @@ final class AuthorityFactory extends NativeResource {
 
         @Override
         public Set<String> getAuthorityCodes(Class<? extends IdentifiedObject> type) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            throw new FactoryException("Not supported yet.");       // TODO
         }
 
         /**
@@ -266,7 +266,7 @@ final class AuthorityFactory extends NativeResource {
 
         @Override
         public Unit<?> createUnit(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            throw new FactoryException("Not supported yet.");       // TODO
         }
 
         /**
@@ -380,14 +380,28 @@ final class AuthorityFactory extends NativeResource {
             throw new FactoryException(UNSUPPORTED);
         }
 
+        /**
+         * Returns a prime meridian from a code.
+         *
+         * @param  code  value allocated by authority.
+         * @return the prime meridian for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public PrimeMeridian createPrimeMeridian(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(Datum.PrimeMeridian.class, Type.PRIME_MERIDIAN, code);
         }
 
+        /**
+         * Returns an ellipsoid from a code.
+         *
+         * @param  code  value allocated by authority.
+         * @return the ellipsoid for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public Ellipsoid createEllipsoid(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(Datum.Ellipsoid.class, Type.ELLIPSOID, code);
         }
 
         /**
@@ -486,9 +500,16 @@ final class AuthorityFactory extends NativeResource {
             return createGeodeticObject(CRS.Geographic.class, Type.GEOGRAPHIC_CRS, code);
         }
 
+        /**
+         * Returns a coordinate reference system which is expected to be geocentric.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public GeocentricCRS createGeocentricCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(CRS.Geocentric.class, Type.GEOCENTRIC_CRS, code);
         }
 
         /**
@@ -539,14 +560,21 @@ final class AuthorityFactory extends NativeResource {
             return createGeodeticObject(CRS.Engineering.class, Type.ENGINEERING_CRS, code);
         }
 
+        /**
+         * Deprecated type removed from latest ISO standard.
+         *
+         * @param  code  value allocated by authority.
+         * @return the CRS for the given code.
+         * @throws FactoryException if the object creation failed or the CRS is another type.
+         */
         @Override
         public ImageCRS createImageCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            throw new FactoryException(UNSUPPORTED);
         }
 
         @Override
         public DerivedCRS createDerivedCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            throw new FactoryException("Not supported yet.");       // TODO
         }
 
         @Override
@@ -554,9 +582,17 @@ final class AuthorityFactory extends NativeResource {
             throw new FactoryException("Not supported yet.");
         }
 
+        /**
+         * Returns an operation method for the given authority code.
+         * PROJ does not yet support this factory method.
+         *
+         * @param  code  value allocated by authority.
+         * @return the operation method for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public OperationMethod createOperationMethod(final String code) throws FactoryException {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException(UNSUPPORTED);
         }
 
         /**
@@ -573,7 +609,7 @@ final class AuthorityFactory extends NativeResource {
 
         @Override
         public Set<CoordinateOperation> createFromCoordinateReferenceSystemCodes(final String source, final String target) throws FactoryException {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException("Not supported yet.");      // TODO
         }
     }
 }

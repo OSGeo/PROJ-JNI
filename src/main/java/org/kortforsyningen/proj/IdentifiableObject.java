@@ -153,7 +153,7 @@ abstract class IdentifiableObject implements Formattable {
      * @return the CRS, datum or operation valid domain, or {@code null} if not available.
      */
     public Extent getDomainOfValidity() {
-        return null;
+        return null;                        // TODO
     }
 
     /**

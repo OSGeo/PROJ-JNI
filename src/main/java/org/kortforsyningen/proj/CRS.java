@@ -35,6 +35,7 @@ import org.opengis.referencing.operation.Projection;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeodeticCRS;
 import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.crs.GeocentricCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.crs.VerticalCRS;
 import org.opengis.referencing.crs.TemporalCRS;
@@ -158,6 +159,20 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
         @Override
         public EllipsoidalCS getCoordinateSystem() {
             return getCoordinateSystem(CS.Ellipsoidal.class);
+        }
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     * This type is not defined by ISO 19111 and may be removed in a future GeoAPI version.
+     */
+    static final class Geocentric extends Geodetic implements GeocentricCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Geocentric(final long ptr) {
+            super(ptr);
         }
     }
 

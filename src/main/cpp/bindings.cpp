@@ -441,10 +441,18 @@ again:  switch (type) {
                      if (dynamic_cast<osgeo::proj::crs::CompoundCRS    *>(rp)) type = org_kortforsyningen_proj_Type_COMPOUND_CRS;
                 else if (dynamic_cast<osgeo::proj::crs::ProjectedCRS   *>(rp)) type = org_kortforsyningen_proj_Type_PROJECTED_CRS;
                 else if (dynamic_cast<osgeo::proj::crs::GeographicCRS  *>(rp)) type = org_kortforsyningen_proj_Type_GEOGRAPHIC_CRS;
-                else if (dynamic_cast<osgeo::proj::crs::GeodeticCRS    *>(rp)) type = org_kortforsyningen_proj_Type_GEODETIC_CRS;
                 else if (dynamic_cast<osgeo::proj::crs::VerticalCRS    *>(rp)) type = org_kortforsyningen_proj_Type_VERTICAL_CRS;
                 else if (dynamic_cast<osgeo::proj::crs::TemporalCRS    *>(rp)) type = org_kortforsyningen_proj_Type_TEMPORAL_CRS;
                 else if (dynamic_cast<osgeo::proj::crs::EngineeringCRS *>(rp)) type = org_kortforsyningen_proj_Type_ENGINEERING_CRS;
+                else {
+                    osgeo::proj::crs::GeodeticCRS *gc = dynamic_cast<osgeo::proj::crs::GeodeticCRS*>(rp);
+                    if (gc) {
+                        type = org_kortforsyningen_proj_Type_GEODETIC_CRS;
+                        if (gc->isGeocentric()) {
+                            type = org_kortforsyningen_proj_Type_GEOCENTRIC_CRS;
+                        }
+                    }
+                }
                 break;
             }
             case org_kortforsyningen_proj_Type_COORDINATE_SYSTEM: {
@@ -1312,6 +1320,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
                 case org_kortforsyningen_proj_Type_VERTICAL_CS:                 // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_TEMPORAL_CS:                 // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_COORDINATE_SYSTEM:           rp = pf->createCoordinateSystem          (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_GEOCENTRIC_CRS:              // Handled as GeodeticCRS by ISO 19111.
                 case org_kortforsyningen_proj_Type_GEODETIC_CRS:                rp = pf->createGeodeticCRS               (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_GEOGRAPHIC_CRS:              rp = pf->createGeographicCRS             (code_utf).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_VERTICAL_CRS:                rp = pf->createVerticalCRS               (code_utf).as_nullable(); break;
