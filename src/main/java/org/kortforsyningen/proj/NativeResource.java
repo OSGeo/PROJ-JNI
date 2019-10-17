@@ -206,29 +206,31 @@ abstract class NativeResource {
     private IdentifiableObject wrapGeodeticObject(final short type, final long ptr) throws FactoryException {
         final org.kortforsyningen.proj.IdentifiableObject obj;
         switch (type) {
-            case Type.IDENTIFIER:                  obj = new ObjectIdentifier    (ptr); break;
-            case Type.DATUM:                       obj = new Datum               (ptr); break;
-            case Type.GEODETIC_REFERENCE_FRAME:    obj = new Datum.Geodetic      (ptr); break;
-            case Type.VERTICAL_REFERENCE_FRAME:    obj = new Datum.Vertical      (ptr); break;
-            case Type.TEMPORAL_DATUM:              obj = new Datum.Temporal      (ptr); break;
-            case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering   (ptr); break;
-            case Type.AXIS:                        obj = new Axis                (ptr); break;
-            case Type.COORDINATE_SYSTEM:           obj = new CS                  (ptr); break;
-            case Type.CARTESIAN_CS:                obj = new CS.Cartesian        (ptr); break;
-            case Type.SPHERICAL_CS:                obj = new CS.Spherical        (ptr); break;
-            case Type.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal      (ptr); break;
-            case Type.VERTICAL_CS:                 obj = new CS.Vertical         (ptr); break;
-            case Type.TEMPORAL_CS:                 obj = new CS.Time             (ptr); break;
+            case Type.IDENTIFIER:                  obj = new ObjectIdentifier        (ptr); break;
+            case Type.AXIS:                        obj = new Axis                    (ptr); break;
+            case Type.COORDINATE_SYSTEM:           obj = new CS                      (ptr); break;
+            case Type.CARTESIAN_CS:                obj = new CS.Cartesian            (ptr); break;
+            case Type.SPHERICAL_CS:                obj = new CS.Spherical            (ptr); break;
+            case Type.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal          (ptr); break;
+            case Type.VERTICAL_CS:                 obj = new CS.Vertical             (ptr); break;
+            case Type.TEMPORAL_CS:                 obj = new CS.Time                 (ptr); break;
+            case Type.DATUM:                       obj = new Datum                   (ptr); break;
+            case Type.GEODETIC_REFERENCE_FRAME:    obj = new Datum.Geodetic          (ptr); break;
+            case Type.VERTICAL_REFERENCE_FRAME:    obj = new Datum.Vertical          (ptr); break;
+            case Type.TEMPORAL_DATUM:              obj = new Datum.Temporal          (ptr); break;
+            case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering       (ptr); break;
             case Type.COMPOUND_CRS:
-            case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                 (ptr); break;
-            case Type.GEODETIC_CRS:                obj = new CRS.Geodetic        (ptr); break;
-            case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic      (ptr); break;
-            case Type.VERTICAL_CRS:                obj = new CRS.Vertical        (ptr); break;
-            case Type.TEMPORAL_CRS:                obj = new CRS.Temporal        (ptr); break;
-            case Type.PROJECTED_CRS:               obj = new CRS.Projected       (ptr); break;
-            case Type.ENGINEERING_CRS:             obj = new CRS.Engineering     (ptr); break;
-            case Type.CONVERSION:                  obj = new Operation.Conversion(ptr); break;
-            case Type.COORDINATE_OPERATION:        obj = new Operation           (ptr); break;
+            case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                     (ptr); break;
+            case Type.GEODETIC_CRS:                obj = new CRS.Geodetic            (ptr); break;
+            case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic          (ptr); break;
+            case Type.PROJECTED_CRS:               obj = new CRS.Projected           (ptr); break;
+            case Type.VERTICAL_CRS:                obj = new CRS.Vertical            (ptr); break;
+            case Type.TEMPORAL_CRS:                obj = new CRS.Temporal            (ptr); break;
+            case Type.ENGINEERING_CRS:             obj = new CRS.Engineering         (ptr); break;
+            case Type.COORDINATE_OPERATION:        obj = new Operation               (ptr); break;
+            case Type.OPERATION_METHOD:            obj = new Operation.Method        (ptr); break;
+            case Type.CONVERSION:                  obj = new Operation.Conversion    (ptr); break;
+            case Type.TRANSFORMATION:              obj = new Operation.Transformation(ptr); break;
             default: throw new FactoryException("Unknown object type.");
         }
         return obj.releaseWhenUnreachable();

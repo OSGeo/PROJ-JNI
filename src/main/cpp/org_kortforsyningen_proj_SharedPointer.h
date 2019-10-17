@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    getObjectProperty
- * Signature: (SI)Lorg/kortforsyningen/proj/IdentifiableObject;
+ * Signature: (S)Lorg/kortforsyningen/proj/IdentifiableObject;
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectProperty
-  (JNIEnv *, jobject, jshort, jint);
+  (JNIEnv *, jobject, jshort);
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
@@ -33,11 +33,19 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
- * Method:    getPropertySize
+ * Method:    getVectorSize
  * Signature: (S)I
  */
-JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getPropertySize
+JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
   (JNIEnv *, jobject, jshort);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    getVectorElement
+ * Signature: (SI)Lorg/kortforsyningen/proj/IdentifiableObject;
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorElement
+  (JNIEnv *, jobject, jshort, jint);
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer

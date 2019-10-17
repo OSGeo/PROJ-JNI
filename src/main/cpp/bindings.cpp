@@ -75,6 +75,8 @@ using osgeo::proj::operation::CoordinateOperationFactory;
 using osgeo::proj::operation::CoordinateOperationFactoryNNPtr;
 using osgeo::proj::operation::CoordinateOperationContext;
 using osgeo::proj::operation::CoordinateOperationContextNNPtr;
+using osgeo::proj::operation::OperationMethod;
+using osgeo::proj::operation::SingleOperation;
 
 
 
@@ -414,18 +416,21 @@ jobject specific_subclass(JNIEnv *env, jobject caller, BaseObjectPtr &object, js
 again:  switch (type) {
             case org_kortforsyningen_proj_Type_ANY: {
                      if (dynamic_cast<osgeo::proj::crs::CRS                       *>(rp)) type = org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM;
-                else if (dynamic_cast<osgeo::proj::operation::CoordinateOperation *>(rp)) type = org_kortforsyningen_proj_Type_COORDINATE_OPERATION;
                 else if (dynamic_cast<osgeo::proj::datum::Datum                   *>(rp)) type = org_kortforsyningen_proj_Type_DATUM;
                 else if (dynamic_cast<osgeo::proj::datum::Ellipsoid               *>(rp)) type = org_kortforsyningen_proj_Type_ELLIPSOID;
                 else if (dynamic_cast<osgeo::proj::datum::PrimeMeridian           *>(rp)) type = org_kortforsyningen_proj_Type_PRIME_MERIDIAN;
                 else if (dynamic_cast<osgeo::proj::cs::CoordinateSystem           *>(rp)) type = org_kortforsyningen_proj_Type_COORDINATE_SYSTEM;
+                else if (dynamic_cast<osgeo::proj::cs::CoordinateSystemAxis       *>(rp)) type = org_kortforsyningen_proj_Type_AXIS;
+                else if (dynamic_cast<osgeo::proj::operation::CoordinateOperation *>(rp)) type = org_kortforsyningen_proj_Type_COORDINATE_OPERATION;
+                else if (dynamic_cast<osgeo::proj::operation::OperationMethod     *>(rp)) type = org_kortforsyningen_proj_Type_OPERATION_METHOD;
                 else if (dynamic_cast<osgeo::proj::common::UnitOfMeasure          *>(rp)) type = org_kortforsyningen_proj_Type_UNIT_OF_MEASURE;
                 else if (dynamic_cast<osgeo::proj::metadata::Identifier           *>(rp)) type = org_kortforsyningen_proj_Type_IDENTIFIER;
                 else break;
                 goto again;
             }
             case org_kortforsyningen_proj_Type_COORDINATE_OPERATION: {
-                if (dynamic_cast<osgeo::proj::operation::Conversion *>(rp)) type = org_kortforsyningen_proj_Type_CONVERSION;
+                     if (dynamic_cast<osgeo::proj::operation::Conversion     *>(rp)) type = org_kortforsyningen_proj_Type_CONVERSION;
+                else if (dynamic_cast<osgeo::proj::operation::Transformation *>(rp)) type = org_kortforsyningen_proj_Type_TRANSFORMATION;
                 break;
             }
             case org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM: {
@@ -620,11 +625,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
  * @param  env       The JNI environment.
  * @param  object    The Java object wrapping the PROJ object for which to get a property value.
  * @param  property  One of COORDINATE_SYSTEM, etc. values.
- * @param  index     Index of the element to return. Ignored if the property is not a vector.
  * @return Value of the specified property, or null if undefined.
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectProperty
-  (JNIEnv *env, jobject object, jshort property, jint index)
+  (JNIEnv *env, jobject object, jshort property)
 {
     try {
         BaseObjectPtr value;
@@ -633,17 +637,6 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
             case org_kortforsyningen_proj_Property_NAME: {
                 value = get_shared_object<IdentifiedObject>(env, object)->name().as_nullable();
                 type  = org_kortforsyningen_proj_Type_IDENTIFIER;
-                break;
-            }
-            case org_kortforsyningen_proj_Property_IDENTIFIER: {
-                value = get_shared_object<IdentifiedObject>(env, object)->identifiers().at(index).as_nullable();
-                type  = org_kortforsyningen_proj_Type_IDENTIFIER;
-                break;
-            }
-            case org_kortforsyningen_proj_Property_SOURCE_TARGET_CRS: {
-                CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, object);
-                value = (index ? cop->targetCRS() : cop->sourceCRS());
-                type  = org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM;
                 break;
             }
             case org_kortforsyningen_proj_Property_BASE_CRS: {
@@ -664,6 +657,52 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
             case org_kortforsyningen_proj_Property_COORDINATE_SYSTEM: {
                 value = get_shared_object<SingleCRS>(env, object)->coordinateSystem().as_nullable();
                 type  = org_kortforsyningen_proj_Type_COORDINATE_SYSTEM;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_OPERATION_METHOD: {
+                value = get_shared_object<SingleOperation>(env, object)->method().as_nullable();
+                type  = org_kortforsyningen_proj_Type_OPERATION_METHOD;
+                break;
+            }
+            default: {
+                return nullptr;
+            }
+        }
+        if (value) {
+            return specific_subclass(env, object, value, type);
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+    }
+    return nullptr;
+}
+
+
+/**
+ * Returns a property value as an element in a std::vector.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get a property value.
+ * @param  property  One of AXIS, etc. values.
+ * @param  index     Index of the element to return.
+ * @return Value of the specified property, or null if undefined.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorElement
+  (JNIEnv *env, jobject object, jshort property, jint index)
+{
+    try {
+        BaseObjectPtr value;
+        jshort type;
+        switch (property) {
+            case org_kortforsyningen_proj_Property_IDENTIFIER: {
+                value = get_shared_object<IdentifiedObject>(env, object)->identifiers().at(index).as_nullable();
+                type  = org_kortforsyningen_proj_Type_IDENTIFIER;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_SOURCE_TARGET_CRS: {
+                CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, object);
+                value = (index ? cop->targetCRS() : cop->sourceCRS());
+                type  = org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM;
                 break;
             }
             case org_kortforsyningen_proj_Property_AXIS: {
@@ -699,6 +738,17 @@ inline std::string string_or_empty(osgeo::proj::util::optional<std::string> text
 
 
 /**
+ * Returns the title of the given citation, or an empty string if absent.
+ *
+ * @param  citation  the citation from which to get the title.
+ * @return title of the given citation, or an empty string if absent.
+ */
+inline std::string citation_title(osgeo::proj::util::optional<Citation> citation) {
+    return citation.has_value() ? string_or_empty(citation->title()) : std::string();
+}
+
+
+/**
  * Returns a property value as a string.
  *
  * @param  env       The JNI environment.
@@ -723,8 +773,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 break;
             }
             case org_kortforsyningen_proj_Property_CITATION_TITLE: {
-                osgeo::proj::util::optional<Citation> citation = get_shared_object<Identifier>(env, object)->authority();
-                value = citation.has_value() ? string_or_empty(citation->title()) : std::string();
+                value = citation_title(get_shared_object<Identifier>(env, object)->authority());
                 break;
             }
             case org_kortforsyningen_proj_Property_CODESPACE: {
@@ -745,6 +794,18 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
             }
             case org_kortforsyningen_proj_Property_DIRECTION: {
                 value = get_shared_object<CoordinateSystemAxis>(env, object)->direction().toString();
+                break;
+            }
+            case org_kortforsyningen_proj_Property_OPERATION_VERSION: {
+                value = string_or_empty(get_shared_object<CoordinateOperation>(env, object)->operationVersion());
+                break;
+            }
+            case org_kortforsyningen_proj_Property_FORMULA: {
+                value = string_or_empty(get_shared_object<OperationMethod>(env, object)->formula());
+                break;
+            }
+            case org_kortforsyningen_proj_Property_FORMULA_TITLE: {
+                value = citation_title(get_shared_object<OperationMethod>(env, object)->formulaCitation());
                 break;
             }
             case org_kortforsyningen_proj_Property_REMARKS: {
@@ -835,7 +896,7 @@ SingleCRSPtr as_single_crs(BaseObjectPtr &ptr) {
  * @param  property  One of IDENTIFIER, etc. values.
  * @return Vector length in wrapped object, or 0 if unknown.
  */
-JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getPropertySize
+JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
     (JNIEnv *env, jobject object, jshort property)
  {
     try {

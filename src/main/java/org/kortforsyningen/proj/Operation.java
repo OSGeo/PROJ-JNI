@@ -21,19 +21,26 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Set;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import org.opengis.util.GenericName;
+import org.opengis.util.InternationalString;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
+import org.opengis.metadata.citation.Citation;
+import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.quality.PositionalAccuracy;
+import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.GeneralDerivedCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
-import org.opengis.referencing.operation.Transformation;
+import org.opengis.referencing.operation.Formula;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
@@ -194,7 +201,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      * @return the specified CRS, or {@code null} in unknown.
      */
     private CRS getCRS(final int i) {
-        return (CRS) impl.getObjectProperty(Property.SOURCE_TARGET_CRS, i);
+        return (CRS) impl.getVectorElement(Property.SOURCE_TARGET_CRS, i);
     }
 
     /**
@@ -259,7 +266,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
      */
     @Override
     public String getOperationVersion() {
-        return null;
+        return impl.getStringProperty(Property.OPERATION_VERSION);
     }
 
     /**
@@ -273,26 +280,156 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     }
 
     /**
+     * Returns the operation method.
+     * This method is defined in {@link org.opengis.referencing.operation.SingleOperation}.
+     *
+     * @return the operation method.
+     */
+    @SuppressWarnings("OverlyStrongTypeCast")       // Casting to final class is easier for the JVM.
+    public OperationMethod getMethod() {
+        return (Method) impl.getObjectProperty(Property.OPERATION_METHOD);
+    }
+
+    /**
+     * Definition of an algorithm used to perform a coordinate operation.
+     */
+    static final class Method extends IdentifiableObject implements OperationMethod {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param  ptr  pointer to the wrapped PROJ object.
+         */
+        Method(final long ptr) {
+            super(ptr);
+        }
+
+        /** Removed from ISO 19111:2019. */ @Override public Integer getSourceDimensions() {return null;}
+        /** Removed from ISO 19111:2019. */ @Override public Integer getTargetDimensions() {return null;}
+
+        /**
+         * Formula(s) or procedure used by this operation method.
+         * This may be a reference to a publication.
+         *
+         * @return the formula used by this method.
+         */
+        @Override
+        public Formula getFormula() {
+            return new Formula() {
+                @Override public InternationalString getFormula() {
+                    final String text = impl.getStringProperty(Property.FORMULA);
+                    return (text != null) ? new SimpleCitation(text) : null;
+                }
+
+                @Override public Citation getCitation() {
+                    final String text = impl.getStringProperty(Property.FORMULA_TITLE);
+                    return (text != null) ? new SimpleCitation(text) : null;
+                }
+
+                @Override public String toString() {
+                    String text = impl.getStringProperty(Property.FORMULA_TITLE);
+                    if (text == null) {
+                        text = impl.getStringProperty(Property.FORMULA);
+                        if (text == null) {
+                            text = "Not specified";
+                        }
+                    }
+                    return text;
+                }
+            };
+        }
+
+        /**
+         * Returns a description of the parameter values.
+         *
+         * @return a description of the parameter values.
+         */
+        @Override
+        public ParameterDescriptorGroup getParameters() {
+            return null;    // TODO
+        }
+    }
+
+    /**
+     * Returns the parameter values.
+     * This method is defined in {@link org.opengis.referencing.operation.SingleOperation}.
+     *
+     * @return the parameter values.
+     */
+    public ParameterValueGroup getParameterValues() {
+        return null;    // TODO
+    }
+
+    /**
      * A specialization of coordinate operation when there is no datum change.
      * In such case, there is no accuracy lost expected (ignoring rounding errors).
      */
     static final class Conversion extends Operation implements org.opengis.referencing.operation.Conversion {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         * @param  ptr  pointer to the wrapped PROJ object.
          */
         Conversion(final long ptr) {
             super(ptr);
         }
+    }
 
-        @Override
-        public OperationMethod getMethod() {
-            return null;    // TODO
+    /**
+     * A specialization of coordinate operation when there is datum change.
+     */
+    static final class Transformation extends Operation implements org.opengis.referencing.operation.Transformation {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param  ptr  pointer to the wrapped PROJ object.
+         */
+        Transformation(final long ptr) {
+            super(ptr);
+        }
+    }
+
+    /**
+     * A specialization of coordinate operation used in projected CRS.
+     * This type is specific to GeoAPI and does not exist in ISO 19111.
+     */
+    static final class Projection implements org.opengis.referencing.operation.Projection {
+        /**
+         * The projected CRS for which we are creating this projection.
+         */
+        private final CRS.Projected crs;
+
+        /**
+         * The "base to projected CRS" conversion.
+         */
+        private final Conversion op;
+
+        /**
+         * Wraps the given conversion in a projection object.
+         *
+         * @param op   the "base to projected CRS" conversion.
+         * @param crs  the projected CRS for which we are creating this projection.
+         */
+        Projection(final CRS.Projected crs, final Conversion op) {
+            this.crs = crs;
+            this.op  = op;
         }
 
-        @Override
-        public ParameterValueGroup getParameterValues() {
-            throw new UnsupportedOperationException("Not supported yet.");  // TODO
+        @Override public ReferenceIdentifier            getName()                        {return op.getName();}
+        @Override public Collection<GenericName>        getAlias()                       {return op.getAlias();}
+        @Override public Set<ReferenceIdentifier>       getIdentifiers()                 {return op.getIdentifiers();}
+        @Override public InternationalString            getRemarks()                     {return op.getRemarks();}
+        @Override public String                         getOperationVersion()            {return op.getOperationVersion();}
+        @Override public OperationMethod                getMethod()                      {return op.getMethod();}
+        @Override public ParameterValueGroup            getParameterValues()             {return op.getParameterValues();}
+        @Override public Collection<PositionalAccuracy> getCoordinateOperationAccuracy() {return op.getCoordinateOperationAccuracy();}
+        @Override public Extent                         getDomainOfValidity()            {return op.getDomainOfValidity();}
+        @Override public InternationalString            getScope()                       {return op.getScope();}
+        @Override public MathTransform                  getMathTransform()               {return op.getMathTransform();}
+        @Override public String                         toWKT()                          {return op.toWKT();}
+        @Override public String                         toString()                       {return op.toString();}
+        @Override public CoordinateReferenceSystem      getTargetCRS()                   {return crs;}
+        @Override public CoordinateReferenceSystem      getSourceCRS()                   {return crs.getBaseCRS();}
+        @Override public int                            hashCode()                       {return crs.hashCode() ^ 37;}
+        @Override public boolean                        equals(final Object other) {
+            // Since the conversion was obtained from the CRS, comparing the CRS is sufficient.
+            return (other instanceof Projection) && crs.equals(((Projection) other).crs);
         }
     }
 

@@ -49,7 +49,7 @@ class CS extends IdentifiableObject implements CoordinateSystem {
      */
     @Override
     public int getDimension() {
-        return impl.getPropertySize(Property.AXIS);
+        return impl.getVectorSize(Property.AXIS);
     }
 
     /**
@@ -60,9 +60,9 @@ class CS extends IdentifiableObject implements CoordinateSystem {
      * @throws IndexOutOfBoundsException if {@code dimension} is out of bounds.
      */
     @Override
-    @SuppressWarnings("OverlyStrongTypeCast")
+    @SuppressWarnings("OverlyStrongTypeCast")       // Casting to final class is easier for the JVM.
     public CoordinateSystemAxis getAxis(int dimension) throws IndexOutOfBoundsException {
-        return (Axis) impl.getObjectProperty(Property.AXIS, dimension);
+        return (Axis) impl.getVectorElement(Property.AXIS, dimension);
     }
 
     /**

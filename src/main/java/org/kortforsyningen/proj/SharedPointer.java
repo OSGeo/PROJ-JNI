@@ -53,11 +53,10 @@ class SharedPointer extends NativeResource {
      * Returns a property value as an object.
      *
      * @param  property  one of {@link Property#COORDINATE_SYSTEM}, <i>etc.</i> values.
-     * @param  index     index of the element to return. Ignored if the property is not a vector.
      * @return value of the specified property, or {@code null} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
-    final native IdentifiableObject getObjectProperty(short property, int index);
+    final native IdentifiableObject getObjectProperty(short property);
 
     /**
      * Returns a property value as a string.
@@ -78,13 +77,24 @@ class SharedPointer extends NativeResource {
     final native double getNumericProperty(short property);
 
     /**
-     * Returns the size of the identified property.
+     * Returns the size of the identified property of kind {@code std::vector}.
      * If {@code property} is {@link Property#AXIS}, the returned value is the number of dimensions.
      *
-     * @param  property  one of {@link Property#IDENTIFIER}, <i>etc.</i> values.
+     * @param  property  one of {@link Property#AXIS}, <i>etc.</i> values.
      * @return number of elements in the vector of the C++ structure.
      */
-    final native int getPropertySize(short property);
+    final native int getVectorSize(short property);
+
+    /**
+     * Returns a property value as an object at the given index of a {@code std::vector}.
+     *
+     * @param  property  one of {@link Property#AXIS}, <i>etc.</i> values.
+     * @param  index     index of the element to return.
+     * @return value of the specified property at the given index, or {@code null} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     * @throws IndexOutOfBoundsException if the given index is out of bounds.
+     */
+    final native IdentifiableObject getVectorElement(short property, int index);
 
     /**
      * Creates the inverse of the wrapped operation.

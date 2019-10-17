@@ -124,9 +124,9 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @return the primary name, or {@code null} if this object does not provide a name.
      */
-    @SuppressWarnings("OverlyStrongTypeCast")
+    @SuppressWarnings("OverlyStrongTypeCast")       // Casting to final class is easier for the JVM.
     public ReferenceIdentifier getName() {
-        return (ObjectIdentifier) impl.getObjectProperty(Property.NAME, 0);
+        return (ObjectIdentifier) impl.getObjectProperty(Property.NAME);
     }
 
     /**
@@ -226,7 +226,7 @@ abstract class IdentifiableObject implements Formattable {
          */
         @Override
         public int size() {
-            return impl.getPropertySize(property);
+            return impl.getVectorSize(property);
         }
 
         /**
@@ -246,7 +246,7 @@ abstract class IdentifiableObject implements Formattable {
 
                 @Override public E next() {
                     if (index >= size) throw new NoSuchElementException();
-                    return type.cast(impl.getObjectProperty(property, index++));
+                    return type.cast(impl.getVectorElement(property, index++));
                 }
             };
         }

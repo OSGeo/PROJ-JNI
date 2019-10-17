@@ -290,7 +290,6 @@ final class AuthorityFactory extends NativeResource {
          * @throws FactoryException if the object creation failed.
          */
         @Override
-        @SuppressWarnings("OverlyStrongTypeCast")
         public CoordinateSystem createCoordinateSystem(final String code) throws FactoryException {
             return createGeodeticObject(CS.class, Type.COORDINATE_SYSTEM, code);
         }

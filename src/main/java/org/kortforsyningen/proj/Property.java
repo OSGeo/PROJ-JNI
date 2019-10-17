@@ -39,34 +39,43 @@ final class Property {
     }
 
     /**
-     * Identify properties which can be returned by {@link SharedPointer#getObjectProperty(short, int)} method.
+     * Identify properties which can be returned by {@link SharedPointer#getObjectProperty(short)} method.
      */
     @Native
-    static final short NAME              = 0,
-                       IDENTIFIER        = 1,
-                       AXIS              = 2,
-                       COORDINATE_SYSTEM = 3,
-                       DATUM             = 4,
-                       ELLIPSOID         = 5,
-                       PRIME_MERIDIAN    = 6,
-                       CONVERT_FROM_BASE = 7,
-                       BASE_CRS          = 8,
-                       SOURCE_TARGET_CRS = 9;       // Index 0 for source, 1 for target.
+    static final short NAME              =  0,
+                       COORDINATE_SYSTEM =  1,
+                       DATUM             =  2,
+                       ELLIPSOID         =  3,
+                       PRIME_MERIDIAN    =  4,
+                       BASE_CRS          =  5,
+                       CONVERT_FROM_BASE =  6,
+                       OPERATION_METHOD  =  7;
+
+    /**
+     * Identify properties which can be returned by {@link SharedPointer#getVectorElement(short, int)} method.
+     */
+    @Native
+    static final short AXIS              =  0,
+                       IDENTIFIER        =  1,
+                       SOURCE_TARGET_CRS =  2;       // Index 0 for source, 1 for target.
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getStringProperty(short)} method.
      */
     @Native
-    static final short NAME_STRING       = 0,
-                       IDENTIFIER_STRING = 1,
-                       CODESPACE         = 2,
-                       CODE              = 3,
-                       VERSION           = 4,
-                       CITATION_TITLE    = 5,
-                       ABBREVIATION      = 6,
-                       DIRECTION         = 7,
-                       SCOPE             = 8,
-                       REMARKS           = 9;
+    static final short NAME_STRING       =  0,
+                       IDENTIFIER_STRING =  1,
+                       CODESPACE         =  2,
+                       CODE              =  3,
+                       VERSION           =  4,
+                       CITATION_TITLE    =  5,
+                       ABBREVIATION      =  6,
+                       DIRECTION         =  7,
+                       SCOPE             =  8,
+                       REMARKS           =  9,
+                       FORMULA           = 10,
+                       FORMULA_TITLE     = 11,
+                       OPERATION_VERSION = 12;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getNumericProperty(short)} method.

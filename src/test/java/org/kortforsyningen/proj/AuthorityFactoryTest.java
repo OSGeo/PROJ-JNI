@@ -21,8 +21,8 @@
  */
 package org.kortforsyningen.proj;
 
-import java.util.Collection;
-import java.util.Iterator;
+import org.opengis.util.FactoryException;
+import org.opengis.util.InternationalString;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -31,10 +31,10 @@ import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.cs.CartesianCS;
-import org.opengis.util.FactoryException;
-import org.opengis.util.InternationalString;
-import org.junit.Test;
 import org.opengis.referencing.datum.GeodeticDatum;
+import org.opengis.referencing.operation.Projection;
+import org.opengis.referencing.operation.OperationMethod;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -125,11 +125,16 @@ public final strictfp class AuthorityFactoryTest {
         assertSame(AxisDirection.NORTH, cs.getAxis(1).getDirection());
 
         final GeodeticDatum datum = crs.getDatum();
+        final GeographicCRS base  = crs.getBaseCRS();
+        assertSame(datum, base.getDatum());
         assertNotNull(datum);
 
-        final GeographicCRS base = crs.getBaseCRS();
-        assertSame(datum, base.getDatum());
-        assertNotNull(crs.getConversionFromBase());
+        final Projection conv = crs.getConversionFromBase();
+        assertSame(base, conv.getSourceCRS());
+        assertSame(crs,  conv.getTargetCRS());
+
+        final OperationMethod method = conv.getMethod();
+        assertIdentifierEquals("EPSG", "9804", method.getIdentifiers());      // Mercator (variant A)
     }
 
     /**
@@ -181,22 +186,23 @@ public final strictfp class AuthorityFactoryTest {
     }
 
     /**
-     * Asserts that the given collection contains exactly one element,
-     * and that the element is equal to the given value.
+     * Asserts that the given collection contains an identifier for the given code space with the given value.
+     * If the collection contains also identifiers in other code spaces, those additional identifiers are ignored.
      *
-     * @param  codeSpace   the expected code space.
-     * @param  code        the expected code.
-     * @param  collection  the collection to verify.
+     * @param  codeSpace    the code space of the identifier to verify.
+     * @param  code         the expected code in the given code space.
+     * @param  identifiers  the collection to verify.
      */
     private static void assertIdentifierEquals(final String codeSpace, final String code,
-            final Collection<ReferenceIdentifier> collection)
+            final Iterable<ReferenceIdentifier> identifiers)
     {
-        assertEquals("size", 1, collection.size());
-        final Iterator<ReferenceIdentifier> it = collection.iterator();
-        assertTrue("Expected an element.", it.hasNext());
-        final ReferenceIdentifier id = it.next();
-        assertEquals("codeSpace", codeSpace, id.getCodeSpace());
-        assertEquals("code",      code,      id.getCode());
-        assertFalse("Unexpected element.", it.hasNext());
+        boolean found = false;
+        for (final ReferenceIdentifier id : identifiers) {
+            if (codeSpace.equalsIgnoreCase(id.getCodeSpace())) {
+                assertEquals("code", code, id.getCode());
+                found = true;
+            }
+        }
+        assertTrue("Identifier not found.", found);
     }
 }

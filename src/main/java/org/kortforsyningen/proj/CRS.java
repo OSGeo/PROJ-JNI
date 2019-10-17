@@ -21,14 +21,6 @@
  */
 package org.kortforsyningen.proj;
 
-import java.util.Set;
-import java.util.Collection;
-import org.opengis.util.GenericName;
-import org.opengis.util.InternationalString;
-import org.opengis.metadata.extent.Extent;
-import org.opengis.metadata.quality.PositionalAccuracy;
-import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.*;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.CoordinateSystem;
@@ -39,8 +31,6 @@ import org.opengis.referencing.datum.EngineeringDatum;
 import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.datum.TemporalDatum;
 import org.opengis.referencing.datum.VerticalDatum;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.OperationMethod;
 import org.opengis.referencing.operation.Projection;
 
 
@@ -85,7 +75,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
      * @return the number of dimensions of this CRS.
      */
     final int getDimension() {
-        return impl.getPropertySize(Property.AXIS);
+        return impl.getVectorSize(Property.AXIS);
     }
 
     /**
@@ -97,7 +87,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
      * @return the coordinate system.
      */
     final <T extends CS> T getCoordinateSystem(final Class<T> type) {
-        return type.cast(impl.getObjectProperty(Property.COORDINATE_SYSTEM, 0));
+        return type.cast(impl.getObjectProperty(Property.COORDINATE_SYSTEM));
     }
 
     /**
@@ -119,7 +109,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
      * @return the datum or reference frame.
      */
     final <T extends Datum> T getDatum(final Class<T> type) {
-        return type.cast(impl.getObjectProperty(Property.DATUM, 0));
+        return type.cast(impl.getObjectProperty(Property.DATUM));
     }
 
     /**
@@ -259,9 +249,9 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
          * Returns the base coordinate reference system, which must be geographic.
          */
         @Override
-        @SuppressWarnings("OverlyStrongTypeCast")
+        @SuppressWarnings("OverlyStrongTypeCast")       // Casting to final class is easier for the JVM.
         public GeographicCRS getBaseCRS() {
-            return (Geographic) impl.getObjectProperty(Property.BASE_CRS, 0);
+            return (Geographic) impl.getObjectProperty(Property.BASE_CRS);
         }
 
         /**
@@ -269,25 +259,8 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
          */
         @Override
         public Projection getConversionFromBase() {
-            final Operation.Conversion op = (Operation.Conversion) impl.getObjectProperty(Property.CONVERT_FROM_BASE, 0);
-            if (op == null) return null;
-            return new Projection() {
-                @Override public ReferenceIdentifier            getName()                        {return op.getName();}
-                @Override public Collection<GenericName>        getAlias()                       {return op.getAlias();}
-                @Override public Set<ReferenceIdentifier>       getIdentifiers()                 {return op.getIdentifiers();}
-                @Override public InternationalString            getRemarks()                     {return op.getRemarks();}
-                @Override public CoordinateReferenceSystem      getSourceCRS()                   {return op.getSourceCRS();}
-                @Override public CoordinateReferenceSystem      getTargetCRS()                   {return op.getTargetCRS();}
-                @Override public String                         getOperationVersion()            {return op.getOperationVersion();}
-                @Override public OperationMethod                getMethod()                      {return op.getMethod();}
-                @Override public ParameterValueGroup            getParameterValues()             {return op.getParameterValues();}
-                @Override public Collection<PositionalAccuracy> getCoordinateOperationAccuracy() {return op.getCoordinateOperationAccuracy();}
-                @Override public Extent                         getDomainOfValidity()            {return op.getDomainOfValidity();}
-                @Override public InternationalString            getScope()                       {return op.getScope();}
-                @Override public MathTransform                  getMathTransform()               {return op.getMathTransform();}
-                @Override public String                         toWKT()                          {return op.toWKT();}
-                @Override public String                         toString()                       {return op.toString();}
-            };
+            final Operation.Conversion op = (Operation.Conversion) impl.getObjectProperty(Property.CONVERT_FROM_BASE);
+            return (op != null) ? new Operation.Projection(this, op) : null;
         }
 
         /**
