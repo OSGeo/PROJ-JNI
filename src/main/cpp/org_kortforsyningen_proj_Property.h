@@ -27,8 +27,10 @@ extern "C" {
 #define org_kortforsyningen_proj_Property_AXIS 0L
 #undef org_kortforsyningen_proj_Property_IDENTIFIER
 #define org_kortforsyningen_proj_Property_IDENTIFIER 1L
+#undef org_kortforsyningen_proj_Property_CRS_COMPONENT
+#define org_kortforsyningen_proj_Property_CRS_COMPONENT 2L
 #undef org_kortforsyningen_proj_Property_SOURCE_TARGET_CRS
-#define org_kortforsyningen_proj_Property_SOURCE_TARGET_CRS 2L
+#define org_kortforsyningen_proj_Property_SOURCE_TARGET_CRS 3L
 #undef org_kortforsyningen_proj_Property_NAME_STRING
 #define org_kortforsyningen_proj_Property_NAME_STRING 0L
 #undef org_kortforsyningen_proj_Property_IDENTIFIER_STRING

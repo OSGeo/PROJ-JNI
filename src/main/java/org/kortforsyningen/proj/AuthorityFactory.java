@@ -577,9 +577,16 @@ final class AuthorityFactory extends NativeResource {
             throw new FactoryException("Not supported yet.");       // TODO
         }
 
+        /**
+         * Returns a coordinate reference system which is expected to be compound.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate reference system for the given code.
+         * @throws FactoryException if the object creation failed or the CRS is another type.
+         */
         @Override
         public CompoundCRS createCompoundCRS(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");
+            return createGeodeticObject(CRS.Compound.class, Type.COMPOUND_CRS, code);
         }
 
         /**

@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.AbstractSet;
+import java.util.AbstractList;
 import java.util.Formattable;
 import java.util.FormattableFlags;
 import java.util.Formatter;
@@ -189,11 +190,58 @@ abstract class IdentifiableObject implements Formattable {
 
     /**
      * Collection of objects stored by PROJ in a vector.
-     * This class assumes that the vector does not contain duplicated elements; we do not verify.
      *
      * <p>This class must be declared here, not in {@link SharedPointer}, because we need to keep
      * a strong reference to the enclosing {@link IdentifiableObject}. Otherwise unexpected behavior
      * could occur due to premature garbage collection.</p>
+     *
+     * @param  <E>  type of values returned by this collection.
+     */
+    final class PropertyList<E> extends AbstractList<E> {
+        /**
+         * Type of values returned by this collection.
+         */
+        final Class<? extends E> type;
+
+        /**
+         * The {@link Property} constant which identify which property to read.
+         */
+        private final short property;
+
+        /**
+         * Creates a new collection.
+         *
+         * @param  type      type of values returned by this collection.
+         * @param  property  the {@link Property} constant which identify which property to read.
+         */
+        PropertyList(final Class<? extends E> type, final short property) {
+            this.type     = type;
+            this.property = property;
+        }
+
+        /**
+         * Returns the length of the C++ vector.
+         *
+         * @return number of elements in the wrapped vector.
+         */
+        @Override
+        public int size() {
+            return impl.getVectorSize(property);
+        }
+
+        /**
+         * Returns the element at the given index.
+         */
+        @Override
+        public E get(final int index) {
+            return type.cast(impl.getVectorElement(property, index));
+        }
+    }
+
+    /**
+     * Collection of objects stored by PROJ in a vector.
+     * This class performs the same work than {@link PropertyList}, but viewed as a set.
+     * This class assumes that the vector does not contain duplicated elements; we do not verify.
      *
      * @param  <E>  type of values returned by this collection.
      */

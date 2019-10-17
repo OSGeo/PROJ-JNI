@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.List;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
 import org.opengis.referencing.ReferenceIdentifier;
@@ -28,9 +29,12 @@ import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
+import org.opengis.referencing.crs.VerticalCRS;
+import org.opengis.referencing.crs.CompoundCRS;
 import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.EllipsoidalCS;
+import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.PrimeMeridian;
 import org.opengis.referencing.datum.GeodeticDatum;
@@ -38,7 +42,7 @@ import org.opengis.referencing.operation.Projection;
 import org.opengis.referencing.operation.OperationMethod;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.opengis.test.Assert.*;
 
 
 /**
@@ -118,6 +122,7 @@ public final strictfp class AuthorityFactoryTest {
         final ProjectedCRS crs = factory.createProjectedCRS("3395");
         assertEquals("EPSG:3395", String.format("%#s", crs));
         assertIdentifierEquals("EPSG", "3395", crs.getIdentifiers());
+        assertEquals("dimension", 2, ((CRS) crs).getDimension());
 
         final CartesianCS cs = crs.getCoordinateSystem();
         assertEquals("dimension", 2, cs.getDimension());
@@ -158,8 +163,31 @@ public final strictfp class AuthorityFactoryTest {
     @Test
     public void testCreateCompoundCRS() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
-        final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("5698");
+        final CompoundCRS crs = factory.createCompoundCRS("5698");
         assertEquals("dimension", 3, ((CRS) crs).getDimension());
+
+        final List<CoordinateReferenceSystem> components = crs.getComponents();
+        assertEquals(2, components.size());
+        final CoordinateReferenceSystem horizontal = components.get(0);
+        final CoordinateReferenceSystem vertical   = components.get(1);
+        assertInstanceOf("horizontal", ProjectedCRS.class, horizontal);
+        assertInstanceOf("vertical",    VerticalCRS.class, vertical);
+        try {
+            components.get(2);
+            fail("Expected IndexOutOfBoundsException.");
+        } catch (IndexOutOfBoundsException e) {
+            assertNotNull(e.getMessage());
+        }
+        final CoordinateSystem cs = crs.getCoordinateSystem();
+        assertSame(AxisDirection.EAST,  cs.getAxis(0).getDirection());
+        assertSame(AxisDirection.NORTH, cs.getAxis(1).getDirection());
+        assertSame(AxisDirection.UP,    cs.getAxis(2).getDirection());
+        try {
+            cs.getAxis(3);
+            fail("Expected IndexOutOfBoundsException.");
+        } catch (IndexOutOfBoundsException e) {
+            assertNotNull(e.getMessage());
+        }
     }
 
     /**

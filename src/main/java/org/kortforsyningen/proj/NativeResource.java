@@ -221,7 +221,6 @@ abstract class NativeResource {
             case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering       (ptr); break;
             case Type.ELLIPSOID:                   obj = new Datum.Ellipsoid         (ptr); break;
             case Type.PRIME_MERIDIAN:              obj = new Datum.PrimeMeridian     (ptr); break;
-            case Type.COMPOUND_CRS:
             case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                     (ptr); break;
             case Type.GEODETIC_CRS:                obj = new CRS.Geodetic            (ptr); break;
             case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic          (ptr); break;
@@ -230,6 +229,7 @@ abstract class NativeResource {
             case Type.VERTICAL_CRS:                obj = new CRS.Vertical            (ptr); break;
             case Type.TEMPORAL_CRS:                obj = new CRS.Temporal            (ptr); break;
             case Type.ENGINEERING_CRS:             obj = new CRS.Engineering         (ptr); break;
+            case Type.COMPOUND_CRS:                obj = new CRS.Compound            (ptr); break;
             case Type.COORDINATE_OPERATION:        obj = new Operation               (ptr); break;
             case Type.OPERATION_METHOD:            obj = new Operation.Method        (ptr); break;
             case Type.CONVERSION:                  obj = new Operation.Conversion    (ptr); break;

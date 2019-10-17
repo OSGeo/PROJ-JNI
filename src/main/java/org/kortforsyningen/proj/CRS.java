@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.List;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.EllipsoidalCS;
@@ -40,6 +41,7 @@ import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.crs.VerticalCRS;
 import org.opengis.referencing.crs.TemporalCRS;
 import org.opengis.referencing.crs.EngineeringCRS;
+import org.opengis.referencing.crs.CompoundCRS;
 
 
 /**
@@ -83,7 +85,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
      * @return the number of dimensions of this CRS.
      */
     final int getDimension() {
-        return impl.getVectorSize(Property.AXIS);
+        return CompoundCS.getDimension(impl);
     }
 
     /**
@@ -256,7 +258,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     }
 
     /**
-     * A projected coordinate reference system specialization.
+     * A coordinate reference system specialization.
      */
     static final class Projected extends CRS implements ProjectedCRS {
         /**
@@ -299,6 +301,35 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
         @Override
         public GeodeticDatum getDatum() {
             return getDatum(Datum.Geodetic.class);
+        }
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     */
+    static final class Compound extends CRS implements CompoundCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Compound(final long ptr) {
+            super(ptr);
+        }
+
+        /**
+         * Returns a view over all coordinate systems of this compound CRS.
+         */
+        @Override
+        public CoordinateSystem getCoordinateSystem() {
+            return new CompoundCS(this);
+        }
+
+        /**
+         * Returns the components of this CRS.
+         */
+        @Override
+        public List<CoordinateReferenceSystem> getComponents() {
+            return new PropertyList<>(CRS.class, Property.CRS_COMPONENT);
         }
     }
 }

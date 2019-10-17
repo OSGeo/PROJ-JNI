@@ -57,7 +57,8 @@ final class Property {
     @Native
     static final short AXIS              =  0,
                        IDENTIFIER        =  1,
-                       SOURCE_TARGET_CRS =  2;       // Index 0 for source, 1 for target.
+                       CRS_COMPONENT     =  2,
+                       SOURCE_TARGET_CRS =  3;       // Index 0 for source, 1 for target.
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getStringProperty(short)} method.
