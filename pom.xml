@@ -146,6 +146,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.1.1</version>
         <configuration>
+          <excludePackageNames>org.kortforsyningen.proj.spi</excludePackageNames>
           <encoding>${project.build.sourceEncoding}</encoding>
           <docencoding>${project.build.sourceEncoding}</docencoding>
           <charset>${project.build.sourceEncoding}</charset>
