@@ -1171,32 +1171,58 @@ inline const SingleCRSPtr as_single_crs(const CRSPtr &ptr) {
 
 
 /**
+ * Returns the given CRS as a compound CRS or throws an exception.
+ *
+ * @param  crs    The CRS to cast to compound CRS. Must be non-null.
+ * @param  depth  Counter for protection against infinite recursivity.
+ * @return The compound CRS.
+ * @throws std::exception if the given CRS is not compound.
+ */
+inline const CompoundCRSPtr as_compound_crs(const CRSPtr &crs, int &depth) {
+    if (++depth >= 10) {                                // Arbitrary limit.
+        throw std::invalid_argument("Too many nesting of compound CRS.");
+    }
+    CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(crs);
+    if (compound) {
+        return compound;
+    }
+    throw std::invalid_argument("Not a recognized CRS type.");
+}
+
+
+/**
+ * Returns the axes of the given CRS or throws an exception if none.
+ *
+ * @param  crs  The CRS for which to get the axes. Must be non-null.
+ * @return The CRS axes.
+ * @throws std::exception if the given CRS has no coordinate system.
+ */
+inline std::vector<CoordinateSystemAxisNNPtr> get_axes(const SingleCRSPtr &crs) {
+    CoordinateSystemPtr cs = crs->coordinateSystem();
+    if (cs) {
+        return cs->axisList();
+    }
+    throw std::invalid_argument("Unspecified coordinate system.");
+}
+
+
+/**
  * Returns the number of dimensions in the given CRS.
  *
- * @param  crs   The CRS for which to get the number of dimensions.
- * @param  deep  Counter for protection against infinite recursivity.
+ * @param  crs    The CRS for which to get the number of dimensions.
+ * @param  depth  Counter for protection against infinite recursivity.
  * @return The number of dimensions.
  * @throw  std::invalid_argument if the given CRS is not a recognized type.
  */
-int getDimension(const CRSPtr &crs, int deep) {
+int get_dimension(const CRSPtr &crs, int depth) {
     SingleCRSPtr single = as_single_crs(crs);
     if (single) {
-        CoordinateSystemPtr cs = single->coordinateSystem();
-        if (!cs) {
-            throw std::invalid_argument("Unspecified coordinate system.");
-        }
-        return cs->axisList().size();
-    }
-    CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(crs);
-    if (!compound) {
-        throw std::invalid_argument("Not a recognized CRS type.");
-    }
-    if (++deep >= 10) {                        // Arbitrary limit.
-        throw std::invalid_argument("Deep tree of compound CRS.");
+        return get_axes(single).size();
     }
     int n = 0;
+    CompoundCRSPtr compound = as_compound_crs(crs, depth);
     for (CRSNNPtr component : compound->componentReferenceSystems()) {
-        n += getDimension(component.as_nullable(), deep);
+        n += get_dimension(component.as_nullable(), depth);
     }
     return n;
 }
@@ -1207,39 +1233,33 @@ int getDimension(const CRSPtr &crs, int deep) {
  * It is caller's responsibility to ensure that the given dimension is positive.
  * If the dimension is greater than the number of axes, then this method returns null.
  *
+ * The given dimension argument may be modified by this method. The number of dimensions
+ * of all CRS components that were skipped is subtracted from the dimension value.
+ *
  * @param  crs        The CRS for which to get an axis.
- * @param  dimension  Zero-based dimension index of the axis to get. Must be positive.
- * @param  deep       Counter for protection against infinite recursivity.
+ * @param  dimension  Zero-based dimension index of the axis to get. Must be positive. Will be updated.
+ * @param  depth      Counter for protection against infinite recursivity.
  * @return Axis at the given dimension index, or null if the specified dimension is greater than the number of axes.
  * @throw  std::invalid_argument if a CRS is not a recognized type.
  */
-CoordinateSystemAxisPtr getAxis(CompoundCRSPtr &crs, int dimension, int deep) {
+CoordinateSystemAxisPtr get_axis(CompoundCRSPtr &crs, int &dimension, int depth) {
     for (CRSNNPtr component : crs->componentReferenceSystems()) {
         SingleCRSPtr single = as_single_crs(component);
         if (single) {
-            CoordinateSystemPtr cs = single->coordinateSystem();
-            if (!cs) {
-                throw std::invalid_argument("Unspecified coordinate system.");
-            }
-            std::vector<CoordinateSystemAxisNNPtr> axes = cs->axisList();
+            std::vector<CoordinateSystemAxisNNPtr> axes = get_axes(single);
             const int cd = axes.size();
             if (dimension < cd) {
                 return axes[dimension].as_nullable();
             }
             dimension -= cd;
         } else {
-            CompoundCRSPtr compound = std::dynamic_pointer_cast<CompoundCRS>(crs);
-            if (!compound) {
-                throw std::invalid_argument("Not a recognized CRS type.");
-            }
-            if (deep >= 10) {                          // Arbitrary limit.
-                throw std::invalid_argument("Deep tree of compound CRS.");
-            }
-            CoordinateSystemAxisPtr axis = getAxis(compound, dimension, deep + 1);
+            CompoundCRSPtr compound = as_compound_crs(crs, depth);
+            CoordinateSystemAxisPtr axis = get_axis(compound, dimension, depth);
             if (axis) {
                 return axis;
             }
-            dimension -= getDimension(compound, deep);
+            // `dimension` has been decremented by above call to `get_axis(…)`.
+            depth--;      // Cancel the increment done by `as_compound_crs(…)`.
         }
     }
     return nullptr;
@@ -1256,7 +1276,7 @@ CoordinateSystemAxisPtr getAxis(CompoundCRSPtr &crs, int dimension, int deep) {
 JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_CompoundCS_getDimension(JNIEnv *env, jclass caller, jobject crs)
 {
     try {
-        return getDimension(get_and_unwrap_ptr<CRS>(env, crs), 0);
+        return get_dimension(get_and_unwrap_ptr<CRS>(env, crs), 0);
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
     }
@@ -1279,7 +1299,8 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_CompoundCS_getAxis
     if (dimension >= 0) {
         try {
             CompoundCRSPtr compound = get_and_unwrap_ptr<CompoundCRS>(env, crs);
-            BaseObjectPtr axis = getAxis(compound, dimension, 0);
+            int dimcp = dimension;      // Need a copy because will be modified by `get_axis`.
+            BaseObjectPtr axis = get_axis(compound, dimcp, 0);
             if (axis) {
                 return specific_subclass(env, crs, axis, org_kortforsyningen_proj_Type_AXIS);
             }
