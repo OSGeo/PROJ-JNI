@@ -8,8 +8,10 @@ Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
 
 ## Developer documentation:
 
+  * [Installation guide](https://kortforsyningen.github.io/PROJ-JNI/install.html)
   * [PROJ binding Javadoc](https://kortforsyningen.github.io/PROJ-JNI/index.html)
   * [GeoAPI 3.0.1 Javadoc](http://www.geoapi.org/3.0/javadoc/index.html)
+  * [Example](./example)
 
 **WARNING:** the `kortforsyningen` namespace in package name, module name, Maven artifact, _etc._
 is temporary. The final name will be selected later, tentatively in December 2019.
@@ -24,14 +26,3 @@ is temporary. The final name will be selected later, tentatively in December 201
   * For running:
     - Java Runtime Environment (JRE) version 11 or later.
     - PROJ 6.
-
-
-## Build instruction
-
-Build instructions are given in a
-[separated page](https://kortforsyningen.github.io/PROJ-JNI/install.html)
-
-
-## Example
-
-An example is given in the [example directory](./example).
