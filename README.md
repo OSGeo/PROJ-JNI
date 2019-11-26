@@ -18,42 +18,20 @@ is temporary. The final name will be selected later, tentatively in December 201
 
   * For building:
     - Java Developer Kit (JDK) version 11 or later.
-    - PROJ 6. On Linux platforms, it is provided by the **proj** package.
-    - PROJ 6 header files. On Linux platforms, it is provided by the **proj-devel** package.
+    - PROJ 6 with its header files.
     - **g++** compiler and **make** building tools.
     - Apache Maven.
   * For running:
     - Java Runtime Environment (JRE) version 11 or later.
-    - PROJ 6. On Linux platforms, it is provided by the **proj** package.
+    - PROJ 6.
 
 
 ## Build instruction
-If PROJ 6 is installed in the standard directories, the following should work:
 
-```
-cd src/main/cpp
-make
-cd -
-mvn install
-```
-
-If PROJ 6 is not available in the standard directories but instead has been downloaded
-and built in another directory, then the PROJ 6 location needs to be specified first.
-On Linux platform:
-
-```
-export PROJ_DIR=/path/to/PROJ/directory
-export PROJ_LIB=$PROJ_DIR/data
-```
-
-Then, follow the same instructions than the ones for standard directories.
+Build instructions are given in a
+[separated page](https://kortforsyningen.github.io/PROJ-JNI/install.html)
 
 
-## Troubleshooting
-For checking if the system finds all dependencies required by the native file
-(replace `linux` by `windows` or `darwin` if the operating system is Windows
-or MacOS respectively):
+## Example
 
-```
-ldd src/main/resources/org/kortforsyningen/proj/linux/libproj-binding.so
-```
+An example is given in the [example directory](./example).

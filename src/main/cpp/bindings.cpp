@@ -23,7 +23,7 @@
 #include <string>
 #include <cmath>
 #include <proj.h>
-#include "proj/crs.hpp"
+#include <proj/crs.hpp>
 #include "org_kortforsyningen_proj_Type.h"
 #include "org_kortforsyningen_proj_Property.h"
 #include "org_kortforsyningen_proj_NativeResource.h"
@@ -35,7 +35,7 @@
 #include "org_kortforsyningen_proj_Transform.h"
 
 // TODO: remove after PROJ 6.3 release.
-#include <../src/proj_experimental.h>
+#include <proj_experimental.h>
 
 using osgeo::proj::io::DatabaseContext;
 using osgeo::proj::io::DatabaseContextPtr;

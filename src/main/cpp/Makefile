@@ -72,10 +72,23 @@ SRC_FILES   = assertions.cpp bindings.cpp
 OUT_FILE    = libproj-binding.so
 INCLUDE_DIR = -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/$(SUBDIR)
 
+#
+# We want the "local/lib/" directory to be checked first in order to link against the PROJ version compiled locally,
+# if any. Otherwise the PROJ version installed by the package manager may have precedence.
+#
+ifeq ($(OS),Linux)
+    LIBS += -L/usr/local/lib
+endif
 ifeq ($(OS),Darwin)
     LIBS += -L/opt/local/lib
 endif
 
+#
+# If the user did not executed "make install" and prefer to link the "*.so" files directly in the project directory,
+# this configuration should make that possible. Note that in such case, user should also define the following:
+#
+#     export PROJ_LIB=$PROJ_DIR/data
+#
 ifdef PROJ_DIR
     INCLUDE_DIR += -I$(PROJ_DIR)/include -I$(PROJ_DIR)/src
     LIBS = -L$(PROJ_DIR)/src/.libs -lproj
