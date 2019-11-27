@@ -69,10 +69,14 @@ public final strictfp class EnumerationValueTest {
         lines.add("#include \"proj/coordinateoperation.hpp\"");
         lines.add("");
         lines.add("using osgeo::proj::util::IComparable;");
+        lines.add("using osgeo::proj::common::UnitOfMeasure;");
         lines.add("using osgeo::proj::operation::CoordinateOperationContext;");
         lines.add("");
         lines.add("");
         lines.add("// Verify that Java ordinal values are the same than C++ enumeration values.");
+
+        parent = "UnitOfMeasure";
+        addStaticAssert("Type", UnitType.values());
 
         parent = "IComparable";
         addStaticAssert("Criterion", ComparisonCriterion.values());
@@ -105,7 +109,7 @@ public final strictfp class EnumerationValueTest {
     }
 
     /**
-     * Regenerate the {@code assertions.cpp} file if its content changed.
+     * Regenerates the {@code assertions.cpp} file if its content changed.
      *
      * @throws IOException if an error occurred while reading or writing.
      */

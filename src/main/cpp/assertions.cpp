@@ -4,10 +4,17 @@
 #include "proj/coordinateoperation.hpp"
 
 using osgeo::proj::util::IComparable;
+using osgeo::proj::common::UnitOfMeasure;
 using osgeo::proj::operation::CoordinateOperationContext;
 
 
 // Verify that Java ordinal values are the same than C++ enumeration values.
+static_assert(static_cast<int>(UnitOfMeasure::Type::UNKNOWN) == 0, "Unexpected value for UNKNOWN");
+static_assert(static_cast<int>(UnitOfMeasure::Type::NONE) == 1, "Unexpected value for NONE");
+static_assert(static_cast<int>(UnitOfMeasure::Type::ANGULAR) == 2, "Unexpected value for ANGULAR");
+static_assert(static_cast<int>(UnitOfMeasure::Type::LINEAR) == 3, "Unexpected value for LINEAR");
+static_assert(static_cast<int>(UnitOfMeasure::Type::SCALE) == 4, "Unexpected value for SCALE");
+static_assert(static_cast<int>(UnitOfMeasure::Type::TIME) == 5, "Unexpected value for TIME");
 static_assert(static_cast<int>(IComparable::Criterion::STRICT) == 0, "Unexpected value for STRICT");
 static_assert(static_cast<int>(IComparable::Criterion::EQUIVALENT) == 1, "Unexpected value for EQUIVALENT");
 static_assert(static_cast<int>(IComparable::Criterion::EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS) == 2, "Unexpected value for EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS");

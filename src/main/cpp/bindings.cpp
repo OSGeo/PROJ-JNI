@@ -33,6 +33,7 @@
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
 #include "org_kortforsyningen_proj_ReferencingFormat$Convention.h"
 #include "org_kortforsyningen_proj_Transform.h"
+#include "org_kortforsyningen_proj_UnitOfMeasure.h"
 
 // TODO: remove after PROJ 6.3 release.
 #include <proj_experimental.h>
@@ -58,6 +59,7 @@ using osgeo::proj::metadata::Citation;
 using osgeo::proj::metadata::Identifier;
 using osgeo::proj::common::IdentifiedObject;
 using osgeo::proj::common::ObjectUsage;
+using osgeo::proj::common::UnitOfMeasure;
 using osgeo::proj::datum::Datum;
 using osgeo::proj::datum::Ellipsoid;
 using osgeo::proj::datum::PrimeMeridian;
@@ -1313,6 +1315,61 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_CompoundCS_getAxis
     if (c) env->ThrowNew(c, std::to_string(dimension).c_str());
     return nullptr;
 }
+
+
+
+
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                                    CLASS UnitOfMeasure                                     │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+/**
+ * Creates the Java UnitOfMeasure class from the information provided in a C++ UnitOfMeasure class.
+ *
+ * @param  env       The JNI environment.
+ * @param  uomClass  The Java UnitOfMeasure class to instantiate.
+ * @param  unit      The PROJ UnitOfMeasure instance to copy in Java.
+ */
+inline jobject create_unit(JNIEnv *env, jclass uomClass, const UnitOfMeasure* unit) {
+    jmethodID c = env->GetMethodID(uomClass, "<init>", "(ILjava/lang/String;D)V");
+    if (c) {
+        jstring name = env->NewStringUTF(unit->name().c_str());
+        if (name) {
+            return env->NewObject(uomClass, c, (jint) static_cast<int>(unit->type()),
+                                  name, (jdouble) unit->conversionToSI());
+        }
+    }
+    return nullptr;
+}
+
+/**
+ * Creates the Java UnitOfMeasure class for one of the PROJ predefined values.
+ *
+ * @param  env     The JNI environment.
+ * @param  caller  The Java UnitOfMeasure class to instantiate.
+ * @param  code    Code of the the PROJ UnitOfMeasure instance to copy in Java.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_UnitOfMeasure_create
+    (JNIEnv *env, jclass caller, jshort code)
+{
+    const UnitOfMeasure* unit;
+    switch (code) {
+        case org_kortforsyningen_proj_UnitOfMeasure_SCALE_UNITY:       unit = &UnitOfMeasure::SCALE_UNITY;       break;
+        case org_kortforsyningen_proj_UnitOfMeasure_PARTS_PER_MILLION: unit = &UnitOfMeasure::PARTS_PER_MILLION; break;
+        case org_kortforsyningen_proj_UnitOfMeasure_METRE:             unit = &UnitOfMeasure::METRE;             break;
+        case org_kortforsyningen_proj_UnitOfMeasure_RADIAN:            unit = &UnitOfMeasure::RADIAN;            break;
+        case org_kortforsyningen_proj_UnitOfMeasure_MICRORADIAN:       unit = &UnitOfMeasure::MICRORADIAN;       break;
+        case org_kortforsyningen_proj_UnitOfMeasure_DEGREE:            unit = &UnitOfMeasure::DEGREE;            break;
+        case org_kortforsyningen_proj_UnitOfMeasure_ARC_SECOND:        unit = &UnitOfMeasure::ARC_SECOND;        break;
+        case org_kortforsyningen_proj_UnitOfMeasure_GRAD:              unit = &UnitOfMeasure::GRAD;              break;
+        case org_kortforsyningen_proj_UnitOfMeasure_SECOND:            unit = &UnitOfMeasure::SECOND;            break;
+        case org_kortforsyningen_proj_UnitOfMeasure_YEAR:              unit = &UnitOfMeasure::YEAR;              break;
+        default: return nullptr;
+    }
+    return create_unit(env, caller, unit);
+}
+
 
 
 
