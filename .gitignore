@@ -1,6 +1,9 @@
 # Maven compilation output
 /target/
 
+# JNI compilation output
+libproj-binding.*
+
 # Log file
 *.log
 

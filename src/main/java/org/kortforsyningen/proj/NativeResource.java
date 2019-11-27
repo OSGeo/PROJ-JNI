@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import java.net.URL;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +48,11 @@ import org.opengis.util.FactoryException;
  * @since   1.0
  */
 abstract class NativeResource {
+    /**
+     * Name of the native library.
+     */
+    private static final String NATIVE_LIB = "libproj-binding";
+
     /**
      * Name of the logger to use for all warnings or debug messages emitted by this package.
      */
@@ -120,26 +126,52 @@ abstract class NativeResource {
             throw new UnsatisfiedLinkError("Unsupported operating system: " + os);
         }
         /*
-         * If the native file is inside the JAR file, we need to extract it to a temporary file.
-         * That file will be deleted on JVM exists, so a new file will be copied every time the
-         * application is executed.
+         * The resource may be a URL to an ordinary file (typically in the Maven "target/classes" directory)
+         * or a path to an entry inside the JAR file. The later case can be recognized by its "jar" protocol
+         * like this:
          *
-         * Example of URL for a JAR entry: jar:file:/home/…/proj.jar!/org/…/NativeResource.class
+         *      jar:file:/home/…/proj.jar!/org/…/libproj-binding.so
+         *
+         * The URL can be used directly only if it is an ordinary file (without "jar" protocol).
          */
-        final String nativeFile = libdir + "/libproj-binding." + suffix;
+        final String nativeFile = libdir + '/' + NATIVE_LIB + '.' + suffix;
         final URL res = NativeResource.class.getResource(nativeFile);
         if (res == null) {
             throw new UnsatisfiedLinkError("Missing native file: " + nativeFile);
         }
-        final Path location;
-        if ("jar".equals(res.getProtocol())) {
-            location = Files.createTempFile("libproj-binding", suffix);
-            location.toFile().deleteOnExit();
-            try (InputStream in = res.openStream()) {
-                Files.copy(in, location, StandardCopyOption.REPLACE_EXISTING);
+        if (!"jar".equals(res.getProtocol())) {
+            return Paths.get(res.toURI());
+        }
+        /*
+         * The native file is inside the JAR file. We need to extract it somewhere on the file system.
+         * If we can locate the directory containing JAR file and if we have write permission for it,
+         * we will copy the native file there so we can reuse it next time the application is launched.
+         */
+        Path location = null;
+        String file = res.getPath();
+        final int s = file.indexOf('!');
+        if (s >= 0) {
+            location = Paths.get(new URI(file.substring(0, s)));
+            final Path directory = location.getParent();
+            location = directory.resolve(NATIVE_LIB + '.' + suffix);
+            if (Files.isReadable(location)) {
+                return location;
             }
-        } else {
-            location = Paths.get(res.toURI());
+            if (Files.exists(location) || !Files.isWritable(directory)) {
+                location = null;
+            }
+        }
+        /*
+         * If we can not copy the native library close to the JAR file, copy in a temporary file.
+         * That file will be deleted on JVM exists, so a new file will be copied every time the
+         * application is launched.
+         */
+        if (location == null) {
+            location = Files.createTempFile(NATIVE_LIB, suffix);
+            location.toFile().deleteOnExit();
+        }
+        try (InputStream in = res.openStream()) {
+            Files.copy(in, location, StandardCopyOption.REPLACE_EXISTING);
         }
         return location;
     }

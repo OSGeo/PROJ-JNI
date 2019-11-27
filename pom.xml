@@ -99,6 +99,7 @@
           <release>11</release>
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
+          <useIncrementalCompilation>false</useIncrementalCompilation>
           <compilerArgs>
             <arg>-Xlint:all</arg>
             <arg>-Xdoclint:all</arg>
@@ -154,8 +155,8 @@
             <goals><goal>run</goal></goals>
             <configuration>
               <target>
-                <symlink link="${project.build.directory}" resource="${maven.dependency.javax.measure.unit-api.jar.path}"/>
-                <symlink link="${project.build.directory}" resource="${maven.dependency.org.opengis.geoapi.jar.path}"/>
+                <symlink overwrite="true" link="${project.build.directory}" resource="${maven.dependency.javax.measure.unit-api.jar.path}"/>
+                <symlink overwrite="true" link="${project.build.directory}" resource="${maven.dependency.org.opengis.geoapi.jar.path}"/>
               </target>
             </configuration>
           </execution>
