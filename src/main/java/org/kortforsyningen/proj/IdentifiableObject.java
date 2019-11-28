@@ -31,6 +31,8 @@ import java.util.FormattableFlags;
 import java.util.Formatter;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import javax.measure.Unit;
+import javax.measure.Quantity;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
 import org.opengis.referencing.ReferenceIdentifier;
@@ -298,6 +300,19 @@ abstract class IdentifiableObject implements Formattable {
                 }
             };
         }
+    }
+
+    /**
+     * Returns the given property value as an unit of the given type.
+     *
+     * @param  <Q>       compile time value of {@code type}.
+     * @param  type      the type of the unit to return.
+     * @param  property  property to get as an unit of measurement.
+     * @return the unit of measurement, or {@code null} if none.
+     */
+    final <Q extends Quantity<Q>> Unit<Q> getUnit(final Class<Q> type, final short property) {
+        final Unit<?> unit = (Unit<?>) impl.getObjectProperty(property);
+        return (unit != null) ? unit.asType(type) : null;
     }
 
     /**

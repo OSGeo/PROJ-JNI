@@ -34,6 +34,7 @@ import java.lang.annotation.Native;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import org.opengis.util.FactoryException;
+import javax.measure.Unit;
 
 
 /**
@@ -269,6 +270,20 @@ abstract class NativeResource {
             default: throw new FactoryException("Unknown object type.");
         }
         return obj.releaseWhenUnreachable();
+    }
+
+    /**
+     * Returns a unit of the given type with the given scale factor, or {@code null} if the caller
+     * should instantiate an {@link UnitOfMeasure} itself. This method is invoked from native code;
+     * it shall not be moved, renamed or have method signature modified unless the C++ bindings are
+     * updated accordingly.
+     *
+     * @param  ordinal  ordinal value of the {@link UnitType}.
+     * @param  scale    scale factor from the desired unit to its system unit.
+     * @return the unit, or {@code null} if caller should instantiate {@link UnitOfMeasure} itself.
+     */
+    private static Unit<?> getDefinedUnit(final int ordinal, final double scale) {
+        return UnitType.get(ordinal).getDefinedUnit(scale);
     }
 
     /**

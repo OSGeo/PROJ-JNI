@@ -35,6 +35,7 @@ import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.cs.CoordinateSystem;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.PrimeMeridian;
 import org.opengis.referencing.datum.GeodeticDatum;
@@ -54,6 +55,11 @@ import static org.opengis.test.Assert.*;
  */
 public final strictfp class AuthorityFactoryTest {
     /**
+     * Frequently used constant.
+     */
+    private static final String EPSG = "EPSG";
+
+    /**
      * Tests {@link AuthorityFactory} instantiation.
      *
      * @throws FactoryException if the factory can not be created.
@@ -61,11 +67,11 @@ public final strictfp class AuthorityFactoryTest {
     @Test
     public void testNewInstance() throws FactoryException {
         try (Context c = Context.acquire()) {
-            AuthorityFactory epsg = c.factory("EPSG");
+            AuthorityFactory epsg = c.factory(EPSG);
             AuthorityFactory iau  = c.factory("IAU");
             assertNotSame(epsg, iau);
 
-            assertSame(epsg, c.factory("EPSG"));
+            assertSame(epsg, c.factory(EPSG));
             assertSame(iau,  c.factory("IAU"));
         }
     }
@@ -78,14 +84,27 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testInvalidCode() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API(EPSG);
         try {
             factory.createCoordinateSystem("-52");
             fail("An exception should have been thrown.");
         } catch (NoSuchAuthorityCodeException e) {
-            assertEquals("getAuthority",    "EPSG", e.getAuthority());
+            assertEquals("getAuthority",     EPSG,  e.getAuthority());
             assertEquals("getAuthorityCode", "-52", e.getAuthorityCode());
         }
+    }
+
+    /**
+     * Tests indirectly {@link AuthorityFactory#createGeodeticObject(short, String)}.
+     *
+     * @throws FactoryException if the factory can not be created or if the prime meridian creation failed.
+     */
+    @Test
+    public void testCreatePrimeMeridian() throws FactoryException {
+        final AuthorityFactory.API factory = new AuthorityFactory.API(EPSG);
+        final PrimeMeridian meridian = factory.createPrimeMeridian("8903");
+        assertSame("unit", Units.GRAD, meridian.getAngularUnit());
+        assertEquals("longitude", 2.5969213, meridian.getGreenwichLongitude(), 1E-7);
     }
 
     /**
@@ -95,20 +114,24 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testCreateCoordinateSystem() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API(EPSG);
         final EllipsoidalCS cs = factory.createEllipsoidalCS("6422");
         assertEquals("EPSG:6422", String.format("%#s", cs));
         assertEquals("dimension", 2, cs.getDimension());
-        assertEquals("Lat", cs.getAxis(0).getAbbreviation());
-        assertEquals("Lon", cs.getAxis(1).getAbbreviation());
+        final CoordinateSystemAxis lat = cs.getAxis(0);
+        final CoordinateSystemAxis lon = cs.getAxis(1);
+        assertEquals("Lat", lat.getAbbreviation());
+        assertEquals("Lon", lon.getAbbreviation());
         try {
             cs.getAxis(2);
             fail("Expected IndexOutOfBoundsException.");
         } catch (IndexOutOfBoundsException e) {
             assertNotNull(e.getMessage());
         }
-        assertSame(AxisDirection.NORTH, cs.getAxis(0).getDirection());
-        assertSame(AxisDirection.EAST,  cs.getAxis(1).getDirection());
+        assertSame(AxisDirection.NORTH, lat.getDirection());
+        assertSame(AxisDirection.EAST,  lon.getDirection());
+        assertSame(Units.DEGREE,        lat.getUnit());
+        assertSame(Units.DEGREE,        lon.getUnit());
     }
 
     /**
@@ -118,10 +141,10 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testCreateProjectedCRS() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API(EPSG);
         final ProjectedCRS crs = factory.createProjectedCRS("3395");
         assertEquals("EPSG:3395", String.format("%#s", crs));
-        assertIdentifierEquals("EPSG", "3395", crs.getIdentifiers());
+        assertIdentifierEquals(EPSG, "3395", crs.getIdentifiers());
         assertEquals("dimension", 2, ((CRS) crs).getDimension());
 
         final CartesianCS cs = crs.getCoordinateSystem();
@@ -151,7 +174,7 @@ public final strictfp class AuthorityFactoryTest {
         assertSame(crs,  conv.getTargetCRS());
 
         final OperationMethod method = conv.getMethod();
-        assertIdentifierEquals("EPSG", "9804", method.getIdentifiers());      // Mercator (variant A)
+        assertIdentifierEquals(EPSG, "9804", method.getIdentifiers());        // Mercator (variant A)
     }
 
     /**
@@ -162,7 +185,7 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testCreateCompoundCRS() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API(EPSG);
         final CompoundCRS crs = factory.createCompoundCRS("5698");
         assertEquals("dimension", 3, ((CRS) crs).getDimension());
 
@@ -197,12 +220,12 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testGetDescriptionText() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API(EPSG);
         try {
             factory.getDescriptionText("-52");
             fail("An exception should have been thrown.");
         } catch (NoSuchAuthorityCodeException e) {
-            assertEquals("getAuthority",    "EPSG", e.getAuthority());
+            assertEquals("getAuthority",     EPSG,  e.getAuthority());
             assertEquals("getAuthorityCode", "-52", e.getAuthorityCode());
         }
         final InternationalString text = factory.getDescriptionText("4326");
@@ -217,7 +240,7 @@ public final strictfp class AuthorityFactoryTest {
      */
     @Test
     public void testCache() throws FactoryException  {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = new AuthorityFactory.API(EPSG);
         final EllipsoidalCS cs  = factory.createEllipsoidalCS("6422");
         final GeographicCRS crs = factory.createGeographicCRS("4326");
         assertSame(cs,  factory.createEllipsoidalCS("6422"));

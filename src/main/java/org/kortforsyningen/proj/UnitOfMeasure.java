@@ -112,8 +112,9 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
      * The unit name and conversion factor to SI will be provided by PROJ.
      *
      * @param  code  one of {@link UnitOfMeasure} constants.
+     * @return a mirror of PROJ unit of measurement, or {@code null} is the given code is unrecognized.
      */
-    static native <Q extends Quantity<Q>> UnitOfMeasure<Q> create(short code);
+    static native UnitOfMeasure<?> create(short code);
 
     /**
      * Returns the symbol of this unit, or {@code null} if this unit has no specific symbol associated with.
@@ -202,8 +203,11 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     private static final class Converter implements UnitConverter {
         /** The conversion factor. */ private final double factor;
 
-        /** Creates a new converter with the given conversion factor. */
-        Converter(final double factor) {this.factor = factor;}
+        /**
+         * Creates a new converter with the given conversion factor.
+         * @param  factor  conversion factor from source unit to target unit.
+         */
+        Converter(final double factor)                             {this.factor = factor;}
         @Override public UnitConverter       inverse()             {return new Converter(1 / factor);}
         @Override public boolean             isLinear()            {return true;}
         @Override public boolean             isIdentity()          {return factor == 1;}
@@ -327,16 +331,6 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     @Override
     public Unit<Q> transform(final UnitConverter operation) {
         throw new NoUnitImplementationException();
-    }
-
-    /**
-     * Verifies that this unit is equals to the given parameters,
-     * with an arbitrary tolerance threshold for the conversion factor.
-     * By convention, a negative value means that the factor needs to be inverted.
-     */
-    final boolean equals(final Class<?> t, double c) {
-        if (c < 0) c = -1 / c;
-        return type == t && Math.abs(toSI - c) < Math.ulp(toSI);
     }
 
     /**

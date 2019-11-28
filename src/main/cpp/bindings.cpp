@@ -60,6 +60,7 @@ using osgeo::proj::metadata::Identifier;
 using osgeo::proj::common::IdentifiedObject;
 using osgeo::proj::common::ObjectUsage;
 using osgeo::proj::common::UnitOfMeasure;
+using osgeo::proj::common::Measure;
 using osgeo::proj::datum::Datum;
 using osgeo::proj::datum::Ellipsoid;
 using osgeo::proj::datum::PrimeMeridian;
@@ -112,6 +113,7 @@ using osgeo::proj::operation::SingleOperation;
 jfieldID  java_field_for_pointer;
 jfieldID  java_field_debug_level;
 jmethodID java_method_findWrapper;
+jmethodID java_method_getDefinedUnit;
 jmethodID java_method_wrapGeodeticObject;
 jmethodID java_method_getLogger;
 jmethodID java_method_log;
@@ -137,6 +139,9 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize(J
         java_method_wrapGeodeticObject = env->GetMethodID(caller, "wrapGeodeticObject", "(SJ)Lorg/kortforsyningen/proj/IdentifiableObject;");
         if (java_method_wrapGeodeticObject) {
             java_method_findWrapper = env->GetMethodID(caller, "findWrapper", "(J)Lorg/kortforsyningen/proj/IdentifiableObject;");
+            if (java_method_findWrapper) {
+                java_method_getDefinedUnit = env->GetStaticMethodID(caller, "getDefinedUnit", "(ID)Ljavax/measure/Unit;");
+            }
         }
     }
     if (!env->ExceptionCheck()) {
@@ -204,7 +209,6 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
 #define JPJ_OUT_OF_BOUNDS_EXCEPTION    "java/lang/IndexOutOfBoundsException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
-#define JPJ_ILLEGAL_STATE_EXCEPTION    "java/lang/IllegalStateException"
 #define JPJ_RUNTIME_EXCEPTION          "java/lang/RuntimeException"
 
 /*
@@ -517,7 +521,13 @@ again:  switch (type) {
 
 
 /**
- * Creates the Java UnitOfMeasure class from the information provided in a C++ UnitOfMeasure class.
+ * Creates a Java UnitOfMeasure instance from the information provided in a C++ UnitOfMeasure.
+ * This method is used both for instantiating the predefined units enumerated in Units class,
+ * or for instantiating a new unit not in the predefined units list.
+ *
+ * Implementation is not very efficient (method ID searched in each method call), but it should
+ * not be invoked often. After initialization, it should be invoked only for uncommon units and
+ * only if there is no JSR-363 implementation on the classpath.
  *
  * @param  env       The JNI environment.
  * @param  uomClass  The Java UnitOfMeasure class to instantiate.
@@ -535,12 +545,45 @@ inline jobject create_unit(JNIEnv *env, jclass uomClass, const UnitOfMeasure* un
     return nullptr;
 }
 
+
+/**
+ * Returns a Java UnitOfMeasure instance for the given C++ UnitOfMeasure instance.
+ * This method returns one of the predefined instance if possible, or create a new
+ * instance otherwise.
+ *
+ * @param  env      The JNI environment.
+ * @param  object   The NativeResource for which a unit is fetched.
+ * @param  measure  The PROJ UnitOfMeasure instance to mirror in Java.
+ * @return instance of Java UnitOfMeasure class.
+ */
+jobject get_unit(JNIEnv *env, jobject object, const UnitOfMeasure* unit) {
+    jobject result = env->CallStaticObjectMethod(env->GetObjectClass(object),
+                                                 java_method_getDefinedUnit,
+                                                 (jint) static_cast<int>(unit->type()),
+                                                 (jdouble) unit->conversionToSI());
+    if (!result && !env->ExceptionCheck()) {
+        /*
+         * This block is not very efficient, but should not be invoked often.
+         * See the `create_unit(…)` documentation for rational.
+         */
+        jclass uomClass = env->FindClass("org/kortforsyningen/proj/UnitOfMeasure");
+        if (uomClass) {
+            result = create_unit(env, uomClass, unit);
+        }
+    }
+    return result;
+}
+
+
 /**
  * Creates the Java UnitOfMeasure class for one of the PROJ predefined values.
+ * This method is invoked only at initialization time, and only if no JSR-363
+ * implementation is provided on the classpath.
  *
  * @param  env     The JNI environment.
  * @param  caller  The Java UnitOfMeasure class to instantiate.
  * @param  code    Code of the the PROJ UnitOfMeasure instance to copy in Java.
+ * @return instance of Java UnitOfMeasure class, or null if the given code is unrecognized.
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_UnitOfMeasure_create
     (JNIEnv *env, jclass caller, jshort code)
@@ -738,6 +781,18 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
                 value = get_shared_object<SingleOperation>(env, object)->method().as_nullable();
                 type  = org_kortforsyningen_proj_Type_OPERATION_METHOD;
                 break;
+            }
+            case org_kortforsyningen_proj_Property_ELLIPSOID_UNIT: {
+                const Measure& measure = get_shared_object<Ellipsoid>(env, object)->semiMajorAxis();
+                return get_unit(env, object, &measure.unit());
+            }
+            case org_kortforsyningen_proj_Property_MERIDIAN_UNIT: {
+                const Measure& measure = get_shared_object<PrimeMeridian>(env, object)->longitude();
+                return get_unit(env, object, &measure.unit());
+            }
+            case org_kortforsyningen_proj_Property_AXIS_UNIT: {
+                const UnitOfMeasure& unit = get_shared_object<CoordinateSystemAxis>(env, object)->unit();
+                return get_unit(env, object, &unit);
             }
             default: {
                 return nullptr;
@@ -1488,36 +1543,40 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
 {
     const char *code_utf = env->GetStringUTFChars(code, nullptr);
     if (code_utf) {
+        const std::string code_str = code_utf;
         BaseObjectPtr rp = nullptr;
         try {
             AuthorityFactoryPtr pf = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
             switch (type) {
-                case org_kortforsyningen_proj_Type_ANY:                         rp = pf->createObject                    (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_PRIME_MERIDIAN:              rp = pf->createPrimeMeridian             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_ELLIPSOID:                   rp = pf->createEllipsoid                 (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_GEODETIC_REFERENCE_FRAME:    rp = pf->createGeodeticDatum             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_VERTICAL_REFERENCE_FRAME:    rp = pf->createVerticalDatum             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_ANY:                         rp = pf->createObject                    (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_PRIME_MERIDIAN:              rp = pf->createPrimeMeridian             (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_ELLIPSOID:                   rp = pf->createEllipsoid                 (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_GEODETIC_REFERENCE_FRAME:    rp = pf->createGeodeticDatum             (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_VERTICAL_REFERENCE_FRAME:    rp = pf->createVerticalDatum             (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_TEMPORAL_DATUM:              // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_ENGINEERING_DATUM:           // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_DATUM:                       rp = pf->createDatum                     (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_UNIT_OF_MEASURE:             rp = pf->createUnitOfMeasure             (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_DATUM:                       rp = pf->createDatum                     (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_CARTESIAN_CS:                // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_SPHERICAL_CS:                // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_ELLIPSOIDAL_CS:              // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_VERTICAL_CS:                 // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_TEMPORAL_CS:                 // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_COORDINATE_SYSTEM:           rp = pf->createCoordinateSystem          (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_COORDINATE_SYSTEM:           rp = pf->createCoordinateSystem          (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_GEOCENTRIC_CRS:              // Handled as GeodeticCRS by ISO 19111.
-                case org_kortforsyningen_proj_Type_GEODETIC_CRS:                rp = pf->createGeodeticCRS               (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_GEOGRAPHIC_CRS:              rp = pf->createGeographicCRS             (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_VERTICAL_CRS:                rp = pf->createVerticalCRS               (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_PROJECTED_CRS:               rp = pf->createProjectedCRS              (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_COMPOUND_CRS:                rp = pf->createCompoundCRS               (code_utf).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_GEODETIC_CRS:                rp = pf->createGeodeticCRS               (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_GEOGRAPHIC_CRS:              rp = pf->createGeographicCRS             (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_VERTICAL_CRS:                rp = pf->createVerticalCRS               (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_PROJECTED_CRS:               rp = pf->createProjectedCRS              (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_COMPOUND_CRS:                rp = pf->createCompoundCRS               (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_TEMPORAL_CRS:                // No specific method - use generic one.
                 case org_kortforsyningen_proj_Type_ENGINEERING_CRS:             // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM: rp = pf->createCoordinateReferenceSystem (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_CONVERSION:                  rp = pf->createConversion                (code_utf).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_COORDINATE_OPERATION:        rp = pf->createCoordinateOperation(code_utf, false).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM: rp = pf->createCoordinateReferenceSystem (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_CONVERSION:                  rp = pf->createConversion                (code_str).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_COORDINATE_OPERATION:        rp = pf->createCoordinateOperation(code_str, false).as_nullable(); break;
+                case org_kortforsyningen_proj_Type_UNIT_OF_MEASURE: {
+                    const UnitOfMeasure* unit = pf->createUnitOfMeasure(code_str).as_nullable().get();
+                    return get_unit(env, factory, unit);
+                }
                 default: {
                     jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
                     if (c) env->ThrowNew(c, "Unsupported object type.");

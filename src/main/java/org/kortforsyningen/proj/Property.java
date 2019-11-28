@@ -44,12 +44,15 @@ final class Property {
     @Native
     static final short NAME              =  0,
                        COORDINATE_SYSTEM =  1,
-                       DATUM             =  2,
-                       ELLIPSOID         =  3,
-                       PRIME_MERIDIAN    =  4,
-                       BASE_CRS          =  5,
-                       CONVERT_FROM_BASE =  6,
-                       OPERATION_METHOD  =  7;
+                       AXIS_UNIT         =  2,
+                       DATUM             =  3,
+                       ELLIPSOID         =  4,
+                       ELLIPSOID_UNIT    =  5,
+                       PRIME_MERIDIAN    =  6,
+                       MERIDIAN_UNIT     =  7,
+                       BASE_CRS          =  8,
+                       CONVERT_FROM_BASE =  9,
+                       OPERATION_METHOD  = 10;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getVectorElement(short, int)} method.

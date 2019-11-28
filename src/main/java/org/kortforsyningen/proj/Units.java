@@ -87,28 +87,37 @@ public final class Units {
     private static final Unit<?>[] PREDEFINED = new Unit<?>[UnitOfMeasure.YEAR + 1];
 
     /**
+     * The scale factors from {@code PREDEFINED[i]} unit to its system unit.
+     */
+    private static final double[] FACTORS = new double[PREDEFINED.length];
+
+    /**
      * Creates a unit of measurement for the given quantity type. If a JSR-363 implementation
      * is available, it will be used. Otherwise {@link UnitOfMeasure} is used as a fallback.
      *
+     * @param  <Q>   compile time value of {@code type}.
      * @param  type  the type of quantity represented by the unit of measurement.
      * @param  toSI  the conversion factory to system unit. By convention a negative value means that we shall divide.
      * @param  code  one of {@link UnitOfMeasure} constants.
+     * @return unit of measurement, either form JSR-363 implementation or as {@link UnitOfMeasure} instance.
      */
     private static <Q extends Quantity<Q>> Unit<Q> create(final Class<Q> type, final double toSI, final short code) {
+        final boolean isDivisor = (toSI < 0);
+        FACTORS[code] = isDivisor ? -1/toSI : toSI;
         Unit<Q> unit = null;
         if (SI != null) {
             unit = SI.getUnit(type);
             if (unit != null && toSI != 1) {
-                if (toSI >= 0) {
-                    unit = unit.multiply(toSI);
+                if (isDivisor) {
+                    unit = unit.divide(-toSI);      // May avoid rounding errors in some JSR-383 implementations.
                 } else {
-                    unit = unit.divide(-toSI);
+                    unit = unit.multiply(toSI);
                 }
             }
         }
         if (unit == null) {
-            unit = UnitOfMeasure.create(code);
-            assert ((UnitOfMeasure<?>) unit).equals(type, toSI) : unit;
+            unit = UnitOfMeasure.create(code).asType(type);
+            assert Math.abs(((UnitOfMeasure<?>) unit).toSI - FACTORS[code]) < Math.ulp(FACTORS[code]) : unit;
         }
         PREDEFINED[code] = unit;
         return unit;
@@ -182,8 +191,21 @@ public final class Units {
 
     /**
      * Returns a unit of measurement for this given {@link UnitOfMeasure} constant.
+     *
+     * @param  code  one of {@link UnitOfMeasure} constants.
+     * @return unit of measurement, either form JSR-363 implementation or as {@link UnitOfMeasure} instance.
      */
     static Unit<?> getUnit(final short code) {
         return PREDEFINED[code];
+    }
+
+    /**
+     * Returns the scale factors from {@code getUnit(i)} unit to its system unit.
+     *
+     * @param  code  one of {@link UnitOfMeasure} constants.
+     * @return scale factor from specified unit to its base unit.
+     */
+    static double getFactor(final short code) {
+        return FACTORS[code];
     }
 }

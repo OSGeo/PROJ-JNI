@@ -27,6 +27,7 @@ import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
 import javax.measure.quantity.Time;
 import javax.measure.quantity.Dimensionless;
+import org.opengis.util.FactoryException;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -86,5 +87,24 @@ public final strictfp class UnitsTest {
             assertSame   ("getSystemUnit", base[i], unit.getSystemUnit());
             assertNotNull("getName",       unit.getName());
         }
+    }
+
+
+    /**
+     * Tests unit creation from {@link AuthorityFactory#createGeodeticObject(short, String)}.
+     *
+     * @throws FactoryException if the factory can not be created or if the unit creation failed.
+     */
+    @Test
+    public void testCreateUnitOfMeasure() throws FactoryException {
+        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        assertSame(Units.METRE,       factory.createUnit("9001"));
+        assertSame(Units.RADIAN,      factory.createUnit("9101"));
+        assertSame(Units.MICRORADIAN, factory.createUnit("9109"));
+        assertSame(Units.DEGREE,      factory.createUnit("9122"));
+        assertSame(Units.ARC_SECOND,  factory.createUnit("9104"));
+        assertSame(Units.GRAD,        factory.createUnit("9105"));
+        assertSame(Units.SECOND,      factory.createUnit("1040"));
+        assertSame(Units.YEAR,        factory.createUnit("1029"));
     }
 }

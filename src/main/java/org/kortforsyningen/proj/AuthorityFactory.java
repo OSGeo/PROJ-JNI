@@ -97,7 +97,7 @@ final class AuthorityFactory extends NativeResource {
      * @return wrapper for the PROJ shared object, or {@code null} if out of memory.
      * @throws FactoryException if no object can be created for the given code.
      */
-    private native IdentifiableObject createGeodeticObject(short type, String code) throws FactoryException;
+    private native Object createGeodeticObject(short type, String code) throws FactoryException;
 
     /**
      * Finds a list of coordinate operation between the given source and target CRS.
@@ -182,9 +182,7 @@ final class AuthorityFactory extends NativeResource {
          * @return wrapper for the PROJ object.
          * @throws FactoryException if no object can be created for the given code.
          */
-        private <T extends IdentifiableObject> T createGeodeticObject(
-                final Class<T> classe, final short type, final String code) throws FactoryException
-        {
+        private <T> T createGeodeticObject(final Class<T> classe, final short type, final String code) throws FactoryException {
             Objects.requireNonNull(code);
             final T result;
             try (Context c = Context.acquire()) {
@@ -261,12 +259,19 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public IdentifiedObject createObject(final String code) throws FactoryException {
-            return (IdentifiedObject) createGeodeticObject(IdentifiableObject.class, Type.ANY, code);
+            return createGeodeticObject(IdentifiedObject.class, Type.ANY, code);
         }
 
+        /**
+         * Returns an unit of measurement from a code.
+         *
+         * @param  code  value allocated by authority.
+         * @return the unit of measurement for the given code.
+         * @throws FactoryException if the object creation failed.
+         */
         @Override
         public Unit<?> createUnit(final String code) throws FactoryException {
-            throw new FactoryException("Not supported yet.");       // TODO
+            return createGeodeticObject(Unit.class, Type.UNIT_OF_MEASURE, code);
         }
 
         /**

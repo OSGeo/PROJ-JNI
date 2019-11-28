@@ -79,7 +79,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public Unit<?> getUnit() {
-        return null;                // TODO
+        return (Unit<?>) impl.getObjectProperty(Property.AXIS_UNIT);
     }
 
     /**

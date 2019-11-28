@@ -94,7 +94,7 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
             super(ptr);
         }
 
-        @Override public Unit<Length> getAxisUnit()          {return null;}      // TODO
+        @Override public Unit<Length> getAxisUnit()          {return getUnit(Length.class, Property.ELLIPSOID_UNIT);}
         @Override public double       getSemiMajorAxis()     {return impl.getNumericProperty(Property.SEMI_MAJOR);}
         @Override public double       getSemiMinorAxis()     {return impl.getNumericProperty(Property.SEMI_MINOR);}
         @Override public double       getInverseFlattening() {return impl.getNumericProperty(Property.INVERSE_FLAT);}
@@ -115,7 +115,7 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
         }
 
         @Override public double      getGreenwichLongitude() {return impl.getNumericProperty(Property.GREENWICH);}
-        @Override public Unit<Angle> getAngularUnit()        {return null;}        // TODO
+        @Override public Unit<Angle> getAngularUnit()        {return getUnit(Angle.class, Property.MERIDIAN_UNIT);}
     }
 
     /**

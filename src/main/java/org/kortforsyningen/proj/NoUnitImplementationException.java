@@ -54,6 +54,8 @@ public class NoUnitImplementationException extends UnsupportedOperationException
 
     /**
      * Constructs an exception for an unexpected unit implementation.
+     *
+     * @param  type  class of the unexpected {@link Unit} instance.
      */
     NoUnitImplementationException(final Class<?> type) {
         super("PROJ-JNI can not handle unit of class " + type.getSimpleName());
