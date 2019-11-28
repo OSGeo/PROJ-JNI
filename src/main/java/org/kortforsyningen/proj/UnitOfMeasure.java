@@ -65,7 +65,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
             // If YEAR is no longer the last unit, update Units.PREDEFINED array length.
 
     /**
-     * The type of quantity represented by the unit of measurement.
+     * The type of quantity represented by this unit of measurement.
      */
     final Class<Q> type;
 
@@ -81,7 +81,8 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
 
     /**
      * Creates a new mirror of {@code osgeo::proj::common::UnitOfMeasure}.
-     * This constructor is invoked from native code.
+     * This constructor is invoked from native code; if the method signature
+     * is modified, then C/C++ code needs to be modified too.
      *
      * @param  type  the unit type as an {@link UnitType} ordinal value.
      * @param  name  unit name (provided by PROJ, matches the name in EPSG database).

@@ -25,7 +25,6 @@ import javax.measure.Unit;
 import javax.measure.Quantity;
 import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
-import javax.measure.quantity.Speed;
 import javax.measure.quantity.Time;
 import javax.measure.quantity.Dimensionless;
 import javax.measure.spi.ServiceProvider;
@@ -117,52 +116,61 @@ public final class Units {
 
     /**
      * System unit of measurement for scale factors.
+     * EPSG code is 9201.
      */
     public static final Unit<Dimensionless> SCALE_UNITY = create(Dimensionless.class, 1, UnitOfMeasure.SCALE_UNITY);
 
     /**
      * Unit of measurement for scale factors equals to one millionth of {@link #SCALE_UNITY}.
+     * EPSG code is 9202.
      */
     public static final Unit<Dimensionless> PARTS_PER_MILLION = create(Dimensionless.class, -1E+6, UnitOfMeasure.PARTS_PER_MILLION);
 
     /**
      * System unit of measurement for linear measurements.
+     * EPSG code is 9001.
      */
     public static final Unit<Length> METRE = create(Length.class, 1, UnitOfMeasure.METRE);
 
     /**
      * System unit of measurement for angular measurements.
+     * EPSG code is 9101.
      */
     public static final Unit<Angle> RADIAN = create(Angle.class, 1, UnitOfMeasure.RADIAN);
 
     /**
      * Unit of measurement for angular measurements equals to one millionth of {@link #RADIAN}.
+     * EPSG code is 9109.
      */
     public static final Unit<Angle> MICRORADIAN = create(Angle.class, -1E+6, UnitOfMeasure.MICRORADIAN);
 
     /**
      * Unit of measurement for angular measurements.
+     * EPSG code is 9122.
      */
     public static final Unit<Angle> DEGREE = create(Angle.class, Math.PI / 180, UnitOfMeasure.DEGREE);
 
     /**
      * Unit of measurement for angular measurements.
+     * EPSG code is 9104.
      */
     public static final Unit<Angle> ARC_SECOND = create(Angle.class, Math.PI / (180 * 60 * 60), UnitOfMeasure.ARC_SECOND);
 
     /**
      * Unit of measurement for angular measurements.
+     * EPSG code is 9105.
      */
     public static final Unit<Angle> GRAD = create(Angle.class, Math.PI / 200, UnitOfMeasure.GRAD);
 
     /**
-     * Unit of measurement for temporal measurements.
-     * This is a {@linkplain Unit#getSystemUnit() system unit}.
+     * System unit of measurement for temporal measurements.
+     * EPSG code is 1040.
      */
     public static final Unit<Time> SECOND = create(Time.class, 1, UnitOfMeasure.SECOND);
 
     /**
      * Unit of measurement for temporal measurements.
+     * EPSG code is 1029.
      */
     public static final Unit<Time> YEAR = create(Time.class, 31556925.445, UnitOfMeasure.YEAR);
 
