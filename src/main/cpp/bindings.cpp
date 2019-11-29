@@ -59,6 +59,8 @@ using osgeo::proj::util::IComparable;
 using osgeo::proj::metadata::Citation;
 using osgeo::proj::metadata::Identifier;
 using osgeo::proj::common::IdentifiedObject;
+using osgeo::proj::common::IdentifiedObjectPtr;
+using osgeo::proj::common::IdentifiedObjectNNPtr;
 using osgeo::proj::common::ObjectUsage;
 using osgeo::proj::common::UnitOfMeasure;
 using osgeo::proj::common::Measure;
@@ -87,9 +89,11 @@ using osgeo::proj::operation::CoordinateOperationFactory;
 using osgeo::proj::operation::CoordinateOperationFactoryNNPtr;
 using osgeo::proj::operation::CoordinateOperationContext;
 using osgeo::proj::operation::CoordinateOperationContextNNPtr;
+using osgeo::proj::operation::OperationParameterValue;
+using osgeo::proj::operation::ParameterValue;
+using osgeo::proj::operation::ParameterValueNNPtr;
 using osgeo::proj::operation::OperationMethod;
 using osgeo::proj::operation::SingleOperation;
-using osgeo::proj::operation::ParameterValue;
 
 
 
@@ -401,6 +405,21 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
 template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_object(JNIEnv *env, jobject object) {
     BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
     return NN_CHECK_THROW(std::dynamic_pointer_cast<T>(ptr));
+}
+
+
+/**
+ * Specialization of `get_shared_object` for `IdentifiedObject` type. We provide a special case
+ * if the object is an `OperationParameterValue`: that class does not extend `IdentifiedObject`
+ * directly, but provides information indirectly through a parameter descriptor.
+ */
+IdentifiedObjectNNPtr get_identified_object(JNIEnv *env, jobject object) {
+    BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
+    IdentifiedObjectPtr id = std::dynamic_pointer_cast<IdentifiedObject>(ptr);
+    if (id) {
+        return NN_CHECK_ASSERT(id);
+    }
+    return NN_CHECK_THROW(std::dynamic_pointer_cast<OperationParameterValue>(ptr))->parameter();
 }
 
 
@@ -745,7 +764,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
         jshort type;
         switch (property) {
             case org_kortforsyningen_proj_Property_NAME: {
-                value = get_shared_object<IdentifiedObject>(env, object)->name().as_nullable();
+                value = get_identified_object(env, object)->name().as_nullable();
                 type  = org_kortforsyningen_proj_Type_IDENTIFIER;
                 break;
             }
@@ -797,7 +816,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
                 return get_unit(env, object, &measure.unit());
             }
             case org_kortforsyningen_proj_Property_PARAMETER_UNIT: {
-                const Measure& measure = get_shared_object<ParameterValue>(env, object)->value();
+                const Measure& measure = get_shared_object<OperationParameterValue>(env, object)->parameterValue()->value();
                 return get_unit(env, object, &measure.unit());
             }
             default: {
@@ -831,13 +850,23 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorE
         jshort type;
         switch (property) {
             case org_kortforsyningen_proj_Property_IDENTIFIER: {
-                value = get_shared_object<IdentifiedObject>(env, object)->identifiers().at(index).as_nullable();
+                value = get_identified_object(env, object)->identifiers().at(index).as_nullable();
                 type  = org_kortforsyningen_proj_Type_IDENTIFIER;
                 break;
             }
             case org_kortforsyningen_proj_Property_AXIS: {
                 value = get_shared_object<CoordinateSystem>(env, object)->axisList().at(index).as_nullable();
                 type  = org_kortforsyningen_proj_Type_AXIS;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_METHOD_PARAMETER: {
+                value = get_shared_object<OperationMethod>(env, object)->parameters().at(index).as_nullable();
+                type  = org_kortforsyningen_proj_Type_PARAMETER;
+                break;
+            }
+            case org_kortforsyningen_proj_Property_OPERATION_PARAMETER: {
+                value = get_shared_object<SingleOperation>(env, object)->parameterValues().at(index).as_nullable();
+                type  = org_kortforsyningen_proj_Type_PARAMETER;
                 break;
             }
             case org_kortforsyningen_proj_Property_CRS_COMPONENT: {
@@ -873,7 +902,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorE
  * @param  text  the optional string to return as a plain string.
  * @return the plain string, or an empty string if absent.
  */
-inline std::string string_or_empty(osgeo::proj::util::optional<std::string> text) {
+inline std::string string_or_empty(const osgeo::proj::util::optional<std::string>& text) {
     return text.has_value() ? *text : std::string();
 }
 
@@ -884,7 +913,7 @@ inline std::string string_or_empty(osgeo::proj::util::optional<std::string> text
  * @param  citation  the citation from which to get the title.
  * @return title of the given citation, or an empty string if absent.
  */
-inline std::string citation_title(osgeo::proj::util::optional<Citation> citation) {
+inline std::string citation_title(const osgeo::proj::util::optional<Citation>& citation) {
     return citation.has_value() ? string_or_empty(citation->title()) : std::string();
 }
 
@@ -904,11 +933,11 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
         const char* value;
         switch (property) {
             case org_kortforsyningen_proj_Property_NAME_STRING: {
-                value = get_shared_object<IdentifiedObject>(env, object)->nameStr().c_str();
+                value = get_identified_object(env, object)->nameStr().c_str();
                 break;
             }
             case org_kortforsyningen_proj_Property_IDENTIFIER_STRING: {
-                int code = get_shared_object<IdentifiedObject>(env, object)->getEPSGCode();
+                int code = get_identified_object(env, object)->getEPSGCode();
                 if (code == 0) return nullptr;
                 return env->NewStringUTF(("EPSG:" + std::to_string(code)).c_str());
             }
@@ -940,12 +969,6 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 value = string_or_empty(get_shared_object<Datum>(env, object)->anchorDefinition()).c_str();
                 break;
             }
-            case org_kortforsyningen_proj_Property_PARAMETER_STRING: {
-                value = get_shared_object<ParameterValue>(env, object)->stringValue().c_str();
-            }
-            case org_kortforsyningen_proj_Property_PARAMETER_FILE: {
-                value = get_shared_object<ParameterValue>(env, object)->valueFile().c_str();
-            }
             case org_kortforsyningen_proj_Property_OPERATION_VERSION: {
                 value = string_or_empty(get_shared_object<CoordinateOperation>(env, object)->operationVersion()).c_str();
                 break;
@@ -959,7 +982,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 break;
             }
             case org_kortforsyningen_proj_Property_REMARKS: {
-                value = get_shared_object<IdentifiedObject>(env, object)->remarks().c_str();
+                value = get_identified_object(env, object)->remarks().c_str();
                 break;
             }
             case org_kortforsyningen_proj_Property_SCOPE: {
@@ -967,6 +990,22 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 for (const osgeo::proj::common::ObjectDomainNNPtr domain : usage->domains()) {
                     jstring scope = non_empty_string(env, string_or_empty(domain->scope()));
                     if (scope) return scope;            // Returns the first non-empty value.
+                }
+                return nullptr;
+            }
+            case org_kortforsyningen_proj_Property_PARAMETER_STRING: {
+                ParameterValueNNPtr param = get_shared_object<OperationParameterValue>(env, object)->parameterValue();
+                if (param->type() == ParameterValue::Type::STRING) {
+                    value = param->stringValue().c_str();
+                    break;
+                }
+                return nullptr;
+            }
+            case org_kortforsyningen_proj_Property_PARAMETER_FILE: {
+                ParameterValueNNPtr param = get_shared_object<OperationParameterValue>(env, object)->parameterValue();
+                if (param->type() == ParameterValue::Type::FILENAME) {
+                    value = param->valueFile().c_str();
+                    break;
                 }
                 return nullptr;
             }
@@ -1023,7 +1062,7 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
                 break;
             }
             case org_kortforsyningen_proj_Property_PARAMETER_VALUE: {
-                const Measure& measure = get_shared_object<ParameterValue>(env, object)->value();
+                const Measure& measure = get_shared_object<OperationParameterValue>(env, object)->parameterValue()->value();
                 return measure.value();
             }
             default: {
@@ -1054,10 +1093,10 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getIntegerPro
     try {
         switch (property) {
             case org_kortforsyningen_proj_Property_PARAMETER_TYPE: {
-                return static_cast<int>(get_shared_object<ParameterValue>(env, object)->type());
+                return static_cast<int>(get_shared_object<OperationParameterValue>(env, object)->parameterValue()->type());
             }
             case org_kortforsyningen_proj_Property_PARAMETER_INT: {
-                return get_shared_object<ParameterValue>(env, object)->integerValue();
+                return get_shared_object<OperationParameterValue>(env, object)->parameterValue()->integerValue();
             }
         }
     } catch (const std::exception &e) {
@@ -1087,7 +1126,7 @@ JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_getBoolea
                 return get_shared_object<Ellipsoid>(env, object)->inverseFlattening().has_value();
             }
             case org_kortforsyningen_proj_Property_PARAMETER_BOOL: {
-                return get_shared_object<ParameterValue>(env, object)->booleanValue();
+                return get_shared_object<OperationParameterValue>(env, object)->parameterValue()->booleanValue();
             }
         }
     } catch (const std::exception &e) {
@@ -1111,10 +1150,16 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
     try {
         switch (property) {
             case org_kortforsyningen_proj_Property_IDENTIFIER: {
-                return get_shared_object<IdentifiedObject>(env, object)->identifiers().size();
+                return get_identified_object(env, object)->identifiers().size();
             }
             case org_kortforsyningen_proj_Property_AXIS: {
                 return get_and_unwrap_ptr<CoordinateSystem>(env, object)->axisList().size();
+            }
+            case org_kortforsyningen_proj_Property_METHOD_PARAMETER: {
+                return get_shared_object<OperationMethod>(env, object)->parameters().size();
+            }
+            case org_kortforsyningen_proj_Property_OPERATION_PARAMETER: {
+                return get_shared_object<SingleOperation>(env, object)->parameterValues().size();
             }
             case org_kortforsyningen_proj_Property_CRS_COMPONENT: {
                 return get_shared_object<CompoundCRS>(env, object)->componentReferenceSystems().size();

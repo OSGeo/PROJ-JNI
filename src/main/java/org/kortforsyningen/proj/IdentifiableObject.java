@@ -127,9 +127,8 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @return the primary name, or {@code null} if this object does not provide a name.
      */
-    @SuppressWarnings("OverlyStrongTypeCast")       // Casting to final class is easier for the JVM.
     public ReferenceIdentifier getName() {
-        return (ObjectIdentifier) impl.getObjectProperty(Property.NAME);
+        return ((ObjectIdentifier) impl.getObjectProperty(Property.NAME)).new PrimaryName(this);
     }
 
     /**

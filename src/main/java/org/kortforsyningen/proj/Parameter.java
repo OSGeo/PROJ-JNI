@@ -158,7 +158,7 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
      * @throws InvalidParameterTypeException if the value is not a numeric type.
      */
     @Override
-    public double doubleValue() throws IllegalStateException {
+    public double doubleValue() {
         return impl.getNumericProperty(Property.PARAMETER_VALUE);
     }
 
@@ -169,7 +169,7 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
      * @throws InvalidParameterTypeException if the value is not an integer type.
      */
     @Override
-    public int intValue() throws IllegalStateException {
+    public int intValue() {
         return impl.getIntegerProperty(Property.PARAMETER_INT);
     }
 
@@ -180,7 +180,7 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
      * @throws InvalidParameterTypeException if the value is not a boolean type.
      */
     @Override
-    public boolean booleanValue() throws IllegalStateException {
+    public boolean booleanValue() {
         return impl.getBooleanProperty(Property.PARAMETER_BOOL);
     }
 
@@ -191,7 +191,7 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
      * @throws InvalidParameterTypeException if the value is not a string.
      */
     @Override
-    public String stringValue() throws IllegalStateException {
+    public String stringValue() {
         return impl.getStringProperty(Property.PARAMETER_STRING);
     }
 
@@ -202,7 +202,7 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
      * @throws InvalidParameterTypeException if the value is not a reference to a file or a URI.
      */
     @Override
-    public URI valueFile() throws IllegalStateException {
+    public URI valueFile() {
         final String file = impl.getStringProperty(Property.PARAMETER_STRING);
         return (file != null) ? new File(file).toURI() : null;
     }
@@ -274,11 +274,14 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
 
     /**
      * Returns a string representation of this parameter for debugging purposes.
+     * This method format a pseudo-WKT string, with the parameter name between quotes.
+     * If the parameter name is unspecified, then the first identifier is formatted as
+     * if it was the name (because the name is supposed to be mandatory).
      */
     @Override
     public String toString() {
         final StringBuilder buffer = new StringBuilder("PARAMETER[\"");
-        String name = getName().getCode();
+        String name = getNameString(false);
         if (name == null) {
             for (final ReferenceIdentifier id : getIdentifiers()) {
                 name = id.getCode();

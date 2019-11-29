@@ -30,7 +30,7 @@ import org.opengis.test.referencing.TransformTestCase;
 
 
 /**
- * Tests transform executed with {@link Operation}.
+ * Tests coordinate operations executed with {@link Operation}.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0

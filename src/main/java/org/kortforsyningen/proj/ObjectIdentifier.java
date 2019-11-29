@@ -108,4 +108,119 @@ final class ObjectIdentifier extends IdentifiableObject implements ReferenceIden
     public String getVersion() {
         return impl.getStringProperty(Property.VERSION);
     }
+
+
+
+
+    /**
+     * An identifier which fallback on {@link Property#NAME_STRING} when the code value is missing.
+     * The identifier code should be mandatory, but PROJ does not always provide it.
+     * This class is a workaround for the case where the code is missing.
+     */
+    final class PrimaryName implements ReferenceIdentifier {
+        /**
+         * The object from which to fetch {@link Property#NAME_STRING} if needed.
+         */
+        private final IdentifiableObject parent;
+
+        /**
+         * Creates a new identifier for the primary name of the given parent.
+         *
+         * @param  parent  the object from which to fetch {@link Property#NAME_STRING} if needed.
+         */
+        PrimaryName(final IdentifiableObject parent) {
+            this.parent = parent;
+        }
+
+        /**
+         * Returns the identifier code, with fallback on the parent primary name if the code is missing.
+         */
+        @Override
+        public String getCode() {
+            String code = ObjectIdentifier.this.getCode();
+            if (code == null) {
+                code = parent.impl.getStringProperty(Property.NAME_STRING);
+            }
+            return code;
+        }
+
+        @Override public String   getCodeSpace() {return ObjectIdentifier.this.getCodeSpace();}
+        @Override public Citation getAuthority() {return ObjectIdentifier.this.getAuthority();}
+        @Override public String   getVersion()   {return ObjectIdentifier.this.getVersion();}
+
+        /**
+         * Returns a hash code value for this object.
+         * This method is defined for consistency with {@link #equals(Object)}.
+         *
+         * @return a hash code value for this object.
+         */
+        @Override
+        public int hashCode() {
+            return ObjectIdentifier.this.hashCode() + parent.hashCode();
+        }
+
+        /**
+         * Returns {@code true} if this native resource is wrapping the same PROJ object than {@code other}.
+         *
+         * @param  other  the other object to compare with this native resource.
+         * @return whether the two objects are wrapping the same PROJ object.
+         */
+        @Override
+        public boolean equals(final Object other) {
+            if (other instanceof PrimaryName) {
+                final PrimaryName p = (PrimaryName) other;
+                return p.wrapperFor(impl) && parent.equals(p.parent);
+            }
+            return false;
+        }
+
+        /**
+         * Returns whether this identifier is a wrapper for the given PROJ identifier.
+         *
+         * @param  other  pointer to the PROJ identifier.
+         * @return whether this object is (indirectly) a wrapper for the given identifier.
+         */
+        private boolean wrapperFor(final SharedPointer other) {
+            return impl.rawPointer() == other.rawPointer();
+        }
+
+        /**
+         * Returns a string representation of this identifier.
+         *
+         * @return a pseudo-WKT for this identifier.
+         */
+        @Override
+        public String toString() {
+            return format(this);
+        }
+    }
+
+    /**
+     * Returns a string representation of this identifier.
+     *
+     * @return a pseudo-WKT for this identifier.
+     */
+    @Override
+    public String toString() {
+        return format(this);
+    }
+
+    /**
+     * Returns a string representation of the given identifier.
+     *
+     * @param  id  the identifier for which to get string representation.
+     * @return a pseudo-WKT for the given identifier.
+     */
+    private static String format(final ReferenceIdentifier id) {
+        final StringBuilder buffer = new StringBuilder("ID[\"");
+        String t = id.getCodeSpace();
+        if (t != null) {
+            buffer.append(t).append(':');
+        }
+        t = id.getCode();
+        if (t != null) {
+            buffer.append(t);
+        }
+        return buffer.append("\"]").toString();
+    }
 }

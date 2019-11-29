@@ -58,7 +58,7 @@ import org.opengis.referencing.operation.TransformException;
  * @version 1.0
  * @since   1.0
  */
-class Operation extends IdentifiableObject implements CoordinateOperation, MathTransform {
+class Operation extends ParameterGroup implements CoordinateOperation, MathTransform {
     /**
      * The maximum number of {@link Transform} instances to cache. This maximum should be the expected
      * maximum number of threads (or the "optimal" number of threads) using the same {@link Operation}
@@ -186,6 +186,16 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     }
 
     /**
+     * The property to request for getting parameter values.
+     * This is the value of the fist argument to be given to
+     * {@link SharedPointer#getVectorElement(short, int)}.
+     */
+    @Override
+    final short parameterProperty() {
+        return Property.OPERATION_PARAMETER;
+    }
+
+    /**
      * Returns the number of dimension of the specified CRS, or 0 if unknown.
      *
      * @param  i  0 for source CRS, or 1 for target CRS.
@@ -295,7 +305,7 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
     /**
      * Definition of an algorithm used to perform a coordinate operation.
      */
-    static final class Method extends IdentifiableObject implements OperationMethod {
+    static final class Method extends ParameterGroup implements OperationMethod, ParameterDescriptorGroup {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
          * @param  ptr  pointer to the wrapped PROJ object.
@@ -306,6 +316,16 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
 
         /** Removed from ISO 19111:2019. */ @Override public Integer getSourceDimensions() {return null;}
         /** Removed from ISO 19111:2019. */ @Override public Integer getTargetDimensions() {return null;}
+
+        /**
+         * The property to request for getting parameter descriptors.
+         * This is the value of the fist argument to be given to
+         * {@link SharedPointer#getVectorElement(short, int)}.
+         */
+        @Override
+        final short parameterProperty() {
+            return Property.METHOD_PARAMETER;
+        }
 
         /**
          * Formula(s) or procedure used by this operation method.
@@ -345,25 +365,17 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
          */
         @Override
         public ParameterDescriptorGroup getParameters() {
-            return null;    // TODO
+            return this;
         }
-    }
-
-    /**
-     * Returns the parameter values.
-     * This method is defined in {@link org.opengis.referencing.operation.SingleOperation}.
-     *
-     * @return the parameter values.
-     */
-    public ParameterValueGroup getParameterValues() {
-        return null;    // TODO
     }
 
     /**
      * A specialization of coordinate operation when there is no datum change.
      * In such case, there is no accuracy lost expected (ignoring rounding errors).
      */
-    static final class Conversion extends Operation implements org.opengis.referencing.operation.Conversion {
+    static final class Conversion extends Operation implements org.opengis.referencing.operation.Conversion,
+            ParameterValueGroup, ParameterDescriptorGroup     // Implemented directly by this class for convenience.
+    {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
          * @param  ptr  pointer to the wrapped PROJ object.
@@ -371,12 +383,17 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
         Conversion(final long ptr) {
             super(ptr);
         }
+
+        @Override public ParameterValueGroup getParameterValues() {return this;}
+        @Override public ParameterDescriptorGroup getDescriptor() {return this;}
     }
 
     /**
      * A specialization of coordinate operation when there is datum change.
      */
-    static final class Transformation extends Operation implements org.opengis.referencing.operation.Transformation {
+    static final class Transformation extends Operation implements org.opengis.referencing.operation.Transformation,
+            ParameterValueGroup, ParameterDescriptorGroup     // Implemented directly by this class for convenience.
+    {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
          * @param  ptr  pointer to the wrapped PROJ object.
@@ -384,6 +401,9 @@ class Operation extends IdentifiableObject implements CoordinateOperation, MathT
         Transformation(final long ptr) {
             super(ptr);
         }
+
+        @Override public ParameterValueGroup getParameterValues() {return this;}
+        @Override public ParameterDescriptorGroup getDescriptor() {return this;}
     }
 
     /**
