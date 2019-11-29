@@ -267,6 +267,7 @@ abstract class NativeResource {
             case Type.OPERATION_METHOD:            obj = new Operation.Method        (ptr); break;
             case Type.CONVERSION:                  obj = new Operation.Conversion    (ptr); break;
             case Type.TRANSFORMATION:              obj = new Operation.Transformation(ptr); break;
+            case Type.PARAMETER:                   obj = new Parameter               (ptr); break;
             default: throw new FactoryException("Unknown object type.");
         }
         return obj.releaseWhenUnreachable();

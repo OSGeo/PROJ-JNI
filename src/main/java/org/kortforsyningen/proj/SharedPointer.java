@@ -77,6 +77,16 @@ class SharedPointer extends NativeResource {
     final native double getNumericProperty(short property);
 
     /**
+     * Returns a property value as an integer number.
+     * This method can be used for enumeration values.
+     *
+     * @param  property  one of {@link Property#PARAMETER_TYPE}, <i>etc.</i> values.
+     * @return value of the specified property, or {@link Double#NaN} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    final native int getIntegerProperty(short property);
+
+    /**
      * Returns a property value as a boolean value.
      *
      * @param  property  one of {@link Property#IS_SPHERE}, <i>etc.</i> values.

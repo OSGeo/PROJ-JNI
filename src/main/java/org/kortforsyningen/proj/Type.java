@@ -72,5 +72,6 @@ final class Type {
             COORDINATE_OPERATION        = 26,
             OPERATION_METHOD            = 27,
             CONVERSION                  = 28,
-            TRANSFORMATION              = 29;
+            TRANSFORMATION              = 29,
+            PARAMETER                   = 30;
 }

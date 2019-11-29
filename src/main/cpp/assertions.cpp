@@ -5,6 +5,7 @@
 
 using osgeo::proj::util::IComparable;
 using osgeo::proj::common::UnitOfMeasure;
+using osgeo::proj::operation::ParameterValue;
 using osgeo::proj::operation::CoordinateOperationContext;
 
 
@@ -15,6 +16,11 @@ static_assert(static_cast<int>(UnitOfMeasure::Type::ANGULAR) == 2, "Unexpected v
 static_assert(static_cast<int>(UnitOfMeasure::Type::LINEAR) == 3, "Unexpected value for LINEAR");
 static_assert(static_cast<int>(UnitOfMeasure::Type::SCALE) == 4, "Unexpected value for SCALE");
 static_assert(static_cast<int>(UnitOfMeasure::Type::TIME) == 5, "Unexpected value for TIME");
+static_assert(static_cast<int>(ParameterValue::Type::MEASURE) == 0, "Unexpected value for MEASURE");
+static_assert(static_cast<int>(ParameterValue::Type::STRING) == 1, "Unexpected value for STRING");
+static_assert(static_cast<int>(ParameterValue::Type::INTEGER) == 2, "Unexpected value for INTEGER");
+static_assert(static_cast<int>(ParameterValue::Type::BOOLEAN) == 3, "Unexpected value for BOOLEAN");
+static_assert(static_cast<int>(ParameterValue::Type::FILENAME) == 4, "Unexpected value for FILENAME");
 static_assert(static_cast<int>(IComparable::Criterion::STRICT) == 0, "Unexpected value for STRICT");
 static_assert(static_cast<int>(IComparable::Criterion::EQUIVALENT) == 1, "Unexpected value for EQUIVALENT");
 static_assert(static_cast<int>(IComparable::Criterion::EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS) == 2, "Unexpected value for EQUIVALENT_EXCEPT_AXIS_ORDER_GEOGCRS");

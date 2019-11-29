@@ -52,51 +52,65 @@ final class Property {
                        MERIDIAN_UNIT     =  7,
                        BASE_CRS          =  8,
                        CONVERT_FROM_BASE =  9,
-                       OPERATION_METHOD  = 10;
+                       OPERATION_METHOD  = 10,
+                       PARAMETER_UNIT    = 11;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getVectorElement(short, int)} method.
      */
     @Native
-    static final short AXIS              =  0,
-                       IDENTIFIER        =  1,
-                       CRS_COMPONENT     =  2,
-                       SOURCE_TARGET_CRS =  3;       // Index 0 for source, 1 for target.
+    static final short AXIS                = 100,
+                       IDENTIFIER          = 101,
+                       METHOD_PARAMETER    = 102,
+                       OPERATION_PARAMETER = 103,
+                       CRS_COMPONENT       = 104,
+                       SOURCE_TARGET_CRS   = 105;           // Index 0 for source, 1 for target.
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getStringProperty(short)} method.
      */
     @Native
-    static final short NAME_STRING       =  0,
-                       IDENTIFIER_STRING =  1,
-                       CODESPACE         =  2,
-                       CODE              =  3,
-                       VERSION           =  4,
-                       CITATION_TITLE    =  5,
-                       ABBREVIATION      =  6,
-                       DIRECTION         =  7,
-                       ANCHOR_DEFINITION =  8,
-                       SCOPE             =  9,
-                       REMARKS           = 10,
-                       FORMULA           = 11,
-                       FORMULA_TITLE     = 12,
-                       OPERATION_VERSION = 13;
+    static final short NAME_STRING       = 200,
+                       IDENTIFIER_STRING = 201,
+                       CODESPACE         = 202,
+                       CODE              = 203,
+                       VERSION           = 204,
+                       CITATION_TITLE    = 205,
+                       ABBREVIATION      = 206,
+                       DIRECTION         = 207,
+                       ANCHOR_DEFINITION = 208,
+                       SCOPE             = 209,
+                       REMARKS           = 210,
+                       FORMULA           = 211,
+                       FORMULA_TITLE     = 212,
+                       OPERATION_VERSION = 213,
+                       PARAMETER_STRING  = 214,
+                       PARAMETER_FILE    = 215;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getNumericProperty(short)} method.
      */
     @Native
-    static final short MINIMUM      = 0,
-                       MAXIMUM      = 1,
-                       SEMI_MAJOR   = 2,
-                       SEMI_MINOR   = 3,
-                       INVERSE_FLAT = 4,
-                       GREENWICH    = 5;
+    static final short MINIMUM         = 300,
+                       MAXIMUM         = 301,
+                       SEMI_MAJOR      = 302,
+                       SEMI_MINOR      = 303,
+                       INVERSE_FLAT    = 304,
+                       GREENWICH       = 305,
+                       PARAMETER_VALUE = 306;
+
+    /**
+     * Identify properties which can be returned by {@link SharedPointer#getIntegerProperty(short)} method.
+     */
+    @Native
+    static final short PARAMETER_TYPE = 400,
+                       PARAMETER_INT  = 401;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getBooleanProperty(short)} method.
      */
     @Native
-    static final short IS_SPHERE      = 0,
-                       IVF_DEFINITIVE = 1;
+    static final short IS_SPHERE      = 500,
+                       IVF_DEFINITIVE = 501,
+                       PARAMETER_BOOL = 502;
 }

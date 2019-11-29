@@ -70,6 +70,7 @@ public final strictfp class EnumerationValueTest {
         lines.add("");
         lines.add("using osgeo::proj::util::IComparable;");
         lines.add("using osgeo::proj::common::UnitOfMeasure;");
+        lines.add("using osgeo::proj::operation::ParameterValue;");
         lines.add("using osgeo::proj::operation::CoordinateOperationContext;");
         lines.add("");
         lines.add("");
@@ -77,6 +78,9 @@ public final strictfp class EnumerationValueTest {
 
         parent = "UnitOfMeasure";
         addStaticAssert("Type", UnitType.values());
+
+        parent = "ParameterValue";
+        addStaticAssert("Type", ParameterType.values());
 
         parent = "IComparable";
         addStaticAssert("Criterion", ComparisonCriterion.values());

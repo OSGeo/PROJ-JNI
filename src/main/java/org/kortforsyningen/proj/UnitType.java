@@ -88,11 +88,6 @@ enum UnitType {
     private final short[] predefined;
 
     /**
-     * All values, fetched only once.
-     */
-    private static final UnitType[] VALUES = values();
-
-    /**
      * Creates a new enumeration value.
      *
      * @param  type        the type of quantity represented by the unit, or {@code null} if unknown.
@@ -102,6 +97,11 @@ enum UnitType {
         this.type       = type;
         this.predefined = predefined;
     }
+
+    /**
+     * All values, fetched only once.
+     */
+    private static final UnitType[] VALUES = values();
 
     /**
      * Returns the unit type from the given ordinal value.

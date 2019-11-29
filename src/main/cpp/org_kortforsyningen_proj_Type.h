@@ -67,6 +67,8 @@ extern "C" {
 #define org_kortforsyningen_proj_Type_CONVERSION 28L
 #undef org_kortforsyningen_proj_Type_TRANSFORMATION
 #define org_kortforsyningen_proj_Type_TRANSFORMATION 29L
+#undef org_kortforsyningen_proj_Type_PARAMETER
+#define org_kortforsyningen_proj_Type_PARAMETER 30L
 #ifdef __cplusplus
 }
 #endif
