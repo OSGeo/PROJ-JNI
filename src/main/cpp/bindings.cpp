@@ -90,10 +90,20 @@ using osgeo::proj::operation::CoordinateOperationFactoryNNPtr;
 using osgeo::proj::operation::CoordinateOperationContext;
 using osgeo::proj::operation::CoordinateOperationContextNNPtr;
 using osgeo::proj::operation::OperationParameterValue;
+using osgeo::proj::operation::OperationParameterValueNNPtr;
 using osgeo::proj::operation::ParameterValue;
 using osgeo::proj::operation::ParameterValueNNPtr;
 using osgeo::proj::operation::OperationMethod;
 using osgeo::proj::operation::SingleOperation;
+
+
+/*
+ * DEFINITIONS OF TERMS:
+ *
+ *     In this file, "function" is a C/C++ function (either PROJ or JNI)
+ *     and "method" is a Java method, including the ones implemented in
+ *     this file.
+ */
 
 
 
@@ -127,11 +137,11 @@ jmethodID java_method_log;
 
 /**
  * Invoked at initialization time for setting the values of global variables.
- * This function must be invoked from the class which contains the "ptr" field.
+ * This method must be invoked from the class which contains the "ptr" field.
  * If this operation fails, a NoSuchFieldError will be thrown in Java code.
  *
  * @param  env     The JNI environment.
- * @param  caller  The class from which this function has been invoked.
+ * @param  caller  The class from which this method has been invoked.
  *                 Must be the class containing the pointer fields.
  */
 JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize(JNIEnv *env, jclass caller) {
@@ -193,7 +203,7 @@ inline jfieldID get_database_field(JNIEnv *env, jobject context) {
  * Returns the PROJ release number.
  *
  * @param  env     The JNI environment.
- * @param  caller  The class from which this function has been invoked.
+ * @param  caller  The class from which this method has been invoked.
  * @return The PROJ release number, or null.
  */
 JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(JNIEnv *env, jclass caller) {
@@ -212,6 +222,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
 #define JPJ_NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
 #define JPJ_TRANSFORM_EXCEPTION        "org/opengis/referencing/operation/TransformException"
 #define JPJ_NON_INVERTIBLE_EXCEPTION   "org/opengis/referencing/operation/NoninvertibleTransformException"
+#define JPJ_INVALID_PARAMETER_TYPE     "org/opengis/parameter/InvalidParameterTypeException"
 #define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
 #define JPJ_OUT_OF_BOUNDS_EXCEPTION    "java/lang/IndexOutOfBoundsException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
@@ -228,7 +239,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
 
 /**
  * Converts the given C++ string into a Java string if non-empty, or returns null if the string is empty.
- * This method assumes UTF-8 encoding with no null character and no supplementary Unicode characters.
+ * This function assumes UTF-8 encoding with no null character and no supplementary Unicode characters.
  *
  * @param  env   The JNI environment.
  * @param  text  The text to convert to Java string.
@@ -327,7 +338,7 @@ template <class T> inline std::shared_ptr<T> unwrap_shared_ptr(jlong ptr) {
 /**
  * Frees the memory block wrapping the shared pointer.
  * The use count of that shared pointer is decreased by one.
- * This method does nothing if the memory block has already been released
+ * This function does nothing if the memory block has already been released
  * (it would be a bug if it happens, but we nevertheless try to be safe).
  *
  * @param  ptr  Address returned by wrap_shared_ptr(…).
@@ -343,7 +354,7 @@ template <class T> inline void release_shared_ptr(jlong ptr) {
 
 /**
  * Gets the value of the `ptr` field of given object and sets that value to zero.
- * This method is invoked for implementation of `release()` or `destroy()` methods.
+ * This function is invoked for implementation of `release()` or `destroy()` functions.
  * In theory we are not allowed to change the value of a final field. But no Java
  * code should use this field and the Java object should be garbage collected soon
  * anyway. We set this field to zero because the consequence of accidentally using
@@ -372,7 +383,7 @@ inline jlong get_and_clear_ptr(JNIEnv *env, jobject object) {
  *       rethrow_as_some_java_exception(env, e);
  *   }
  *
- * This method never returns null. Instead, a C++ exception is thrown if the pointer is missing.
+ * This function never returns null. Instead, a C++ exception is thrown if the pointer is missing.
  *
  * @param  env     The JNI environment.
  * @param  object  The Java object wrapping the PROJ structure.
@@ -392,7 +403,7 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
 
 /**
  * Returns the non-null shared pointer for the specified osgeo::proj::util::BaseObject subtype.
- * This method is equivalent to above `get_and_unwrap_ptr` method for the case where the object
+ * This function is equivalent to above `get_and_unwrap_ptr` function for the case where the object
  * is a BaseObject subtype (a CRS, CoordinateOperation, etc.), but with additional safety checks.
  * We assume that the cost of those additional checks is low compared to the cost of other tasks
  * (JNI, PROJ operation, etc.).
@@ -400,7 +411,7 @@ template <class T> std::shared_ptr<T> get_and_unwrap_ptr(JNIEnv *env, jobject ob
  * @param  env     The JNI environment.
  * @param  object  The Java object wrapping the osgeo::proj::util::BaseObject subtype.
  * @return Shared pointer to the PROJ object associated to the given Java object.
- * @throw  std::exception if this method can not get a non-null pointer.
+ * @throw  std::exception if this function can not get a non-null pointer.
  */
 template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_object(JNIEnv *env, jobject object) {
     BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
@@ -412,6 +423,11 @@ template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_shared_o
  * Specialization of `get_shared_object` for `IdentifiedObject` type. We provide a special case
  * if the object is an `OperationParameterValue`: that class does not extend `IdentifiedObject`
  * directly, but provides information indirectly through a parameter descriptor.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the osgeo::proj::common::IdentifiedObject subtype.
+ * @return Shared pointer to the PROJ object associated to the given Java object.
+ * @throw  std::exception if this function can not get a non-null pointer.
  */
 IdentifiedObjectNNPtr get_identified_object(JNIEnv *env, jobject object) {
     BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
@@ -424,10 +440,32 @@ IdentifiedObjectNNPtr get_identified_object(JNIEnv *env, jobject object) {
 
 
 /**
+ * Throws a Java exception when a parameter value is requested on a parameter of wrong type.
+ *
+ * @param  env      The JNI environment.
+ * @param  param    The parameter of wrong type.
+ * @param  message  The message to put in Java exception.
+ */
+void invalid_parameter_type(JNIEnv *env, OperationParameterValueNNPtr param, const char* message) {
+    jclass c = env->FindClass(JPJ_INVALID_PARAMETER_TYPE);
+    if (c) {
+        jmethodID method = env->GetMethodID(c, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
+        if (method) {
+            jstring msg = env->NewStringUTF(message);
+            if (msg) {
+                jobject jt = env->NewObject(c, method, msg, non_empty_string(env, param->parameter()->nameStr()));
+                if (jt) env->Throw(static_cast<jthrowable>(jt));
+            }
+        }
+    }
+}
+
+
+/**
  * Rethrows the given C++ exception as a Java exception with the same message. If a Java exception
  * is already pending (this may happen if the exception was thrown by the JNI framework), then this
- * method does nothing. This method returns normally; the exception will be thrown only when execution
- * returns to Java code.
+ * function does nothing. This function returns normally; the exception will be thrown only when
+ * execution returns to Java code.
  *
  * @param  env   The JNI environment.
  * @param  type  Java class name of the exception to throw.
@@ -444,14 +482,14 @@ void rethrow_as_java_exception(JNIEnv *env, const char *type, const std::excepti
 
 /**
  * Wraps the given PROJ object into the most specific Java object provided by the PROJ-JNI bindings.
- * This method tries to find a more specialized type for the given object, then calls the Java method
- * `wrapGeodeticObject(…)` with that type in argument. If the type is unknown, then this method returns
+ * This function tries to find a more specialized type for the given object, then calls the Java method
+ * `wrapGeodeticObject(…)` with that type in argument. If the type is unknown, then this function returns
  * null and an exception is thrown in Java code.
  *
  * @param  env     The JNI environment.
  * @param  caller  The Java object which is creating another object.
  * @param  object  Shared pointer to wrap. Shall not be empty.
- * @param  type    Base type of the object to wrap. This method will use a more specialized type if possible.
+ * @param  type    Base type of the object to wrap. This function will use a more specialized type if possible.
  * @return Wrapper for a PROJ object, or null if an error occurred.
  */
 jobject specific_subclass(JNIEnv *env, jobject caller, BaseObjectPtr &object, jshort type) {
@@ -543,7 +581,7 @@ again:  switch (type) {
 
 /**
  * Creates a Java UnitOfMeasure instance from the information provided in a C++ UnitOfMeasure.
- * This method is used both for instantiating the predefined units enumerated in Units class,
+ * This function is used both for instantiating the predefined units enumerated in Units class,
  * or for instantiating a new unit not in the predefined units list.
  *
  * Implementation is not very efficient (method ID searched in each method call), but it should
@@ -569,8 +607,8 @@ inline jobject create_unit(JNIEnv *env, jclass uomClass, const UnitOfMeasure* un
 
 /**
  * Returns a Java UnitOfMeasure instance for the given C++ UnitOfMeasure instance.
- * This method returns one of the predefined instance if possible, or create a new
- * instance otherwise.
+ * This function returns one of the predefined instance if possible, or create a
+ * new instance otherwise.
  *
  * @param  env      The JNI environment.
  * @param  object   The NativeResource for which a unit is fetched.
@@ -639,7 +677,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_UnitOfMeasure_create
  * Each thread should have its own PJ_CONTEXT instance.
  *
  * @param  env     The JNI environment.
- * @param  caller  The class from which this function has been invoked.
+ * @param  caller  The class from which this method has been invoked.
  * @return The address of the new PJ_CONTEXT structure, or 0 in case of failure.
  */
 JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_Context_create(JNIEnv *env, jclass caller) {
@@ -695,7 +733,7 @@ DatabaseContextPtr get_database_context(JNIEnv *env, jobject context) {
 
 
 /**
- * Releases a PJ_CONTEXT and its associated database context. This function sets the `ptr` and `database`
+ * Releases a PJ_CONTEXT and its associated database context. This method sets the `ptr` and `database`
  * fields in the Java object to zero as a safety in case there is two attempts to destroy the same object.
  *
  * @param  env      The JNI environment.
@@ -816,8 +854,12 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
                 return get_unit(env, object, &measure.unit());
             }
             case org_kortforsyningen_proj_Property_PARAMETER_UNIT: {
-                const Measure& measure = get_shared_object<OperationParameterValue>(env, object)->parameterValue()->value();
-                return get_unit(env, object, &measure.unit());
+                ParameterValueNNPtr param = get_shared_object<OperationParameterValue>(env, object)->parameterValue();
+                if (param->type() == ParameterValue::Type::MEASURE) {
+                    const Measure& measure = param->value();
+                    return get_unit(env, object, &measure.unit());
+                }
+                return nullptr;
             }
             default: {
                 return nullptr;
@@ -893,6 +935,43 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorE
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
     }
     return nullptr;
+}
+
+
+/**
+ * Returns the size of the identified property.
+ * This method should contain the same cases than `getVectorElement` except `SOURCE_TARGET_CRS`.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get the vector length.
+ * @param  property  One of IDENTIFIER, etc. values.
+ * @return Vector length in wrapped object, or 0 if unknown.
+ */
+JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
+    (JNIEnv *env, jobject object, jshort property)
+{
+    try {
+        switch (property) {
+            case org_kortforsyningen_proj_Property_IDENTIFIER: {
+                return get_identified_object(env, object)->identifiers().size();
+            }
+            case org_kortforsyningen_proj_Property_AXIS: {
+                return get_and_unwrap_ptr<CoordinateSystem>(env, object)->axisList().size();
+            }
+            case org_kortforsyningen_proj_Property_METHOD_PARAMETER: {
+                return get_shared_object<OperationMethod>(env, object)->parameters().size();
+            }
+            case org_kortforsyningen_proj_Property_OPERATION_PARAMETER: {
+                return get_shared_object<SingleOperation>(env, object)->parameterValues().size();
+            }
+            case org_kortforsyningen_proj_Property_CRS_COMPONENT: {
+                return get_shared_object<CompoundCRS>(env, object)->componentReferenceSystems().size();
+            }
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+    }
+    return 0;
 }
 
 
@@ -994,20 +1073,28 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 return nullptr;
             }
             case org_kortforsyningen_proj_Property_PARAMETER_STRING: {
-                ParameterValueNNPtr param = get_shared_object<OperationParameterValue>(env, object)->parameterValue();
-                if (param->type() == ParameterValue::Type::STRING) {
-                    value = param->stringValue().c_str();
-                    break;
+                OperationParameterValueNNPtr opv = get_shared_object<OperationParameterValue>(env, object);
+                ParameterValueNNPtr param = opv->parameterValue();
+                switch (param->type()) {
+                    case ParameterValue::Type::STRING:   value = param->stringValue().c_str(); break;
+                    case ParameterValue::Type::FILENAME: value = param->valueFile().c_str();   break;
+                    default: {
+                        invalid_parameter_type(env, opv, "This parameter is not a string.");
+                        return nullptr;
+                    }
                 }
-                return nullptr;
+                break;
             }
             case org_kortforsyningen_proj_Property_PARAMETER_FILE: {
-                ParameterValueNNPtr param = get_shared_object<OperationParameterValue>(env, object)->parameterValue();
+                OperationParameterValueNNPtr opv = get_shared_object<OperationParameterValue>(env, object);
+                ParameterValueNNPtr param = opv->parameterValue();
                 if (param->type() == ParameterValue::Type::FILENAME) {
                     value = param->valueFile().c_str();
                     break;
+                } else {
+                    invalid_parameter_type(env, opv, "This parameter is not a filename.");
+                    return nullptr;
                 }
-                return nullptr;
             }
             default: {
                 return nullptr;
@@ -1062,8 +1149,14 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
                 break;
             }
             case org_kortforsyningen_proj_Property_PARAMETER_VALUE: {
-                const Measure& measure = get_shared_object<OperationParameterValue>(env, object)->parameterValue()->value();
-                return measure.value();
+                OperationParameterValueNNPtr opv = get_shared_object<OperationParameterValue>(env, object);
+                ParameterValueNNPtr param = opv->parameterValue();
+                switch (param->type()) {
+                    case ParameterValue::Type::MEASURE: return param->value().value();
+                    case ParameterValue::Type::INTEGER: return param->integerValue();
+                }
+                invalid_parameter_type(env, opv, "This parameter is not a measure.");
+                return NAN;
             }
             default: {
                 return NAN;
@@ -1096,7 +1189,14 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getIntegerPro
                 return static_cast<int>(get_shared_object<OperationParameterValue>(env, object)->parameterValue()->type());
             }
             case org_kortforsyningen_proj_Property_PARAMETER_INT: {
-                return get_shared_object<OperationParameterValue>(env, object)->parameterValue()->integerValue();
+                OperationParameterValueNNPtr opv = get_shared_object<OperationParameterValue>(env, object);
+                ParameterValueNNPtr param = opv->parameterValue();
+                switch (param->type()) {
+                    case ParameterValue::Type::INTEGER: return param->integerValue();
+                    case ParameterValue::Type::BOOLEAN: return param->booleanValue() ? 1 : 0;
+                }
+                invalid_parameter_type(env, opv, "This parameter is not an integer.");
+                break;
             }
         }
     } catch (const std::exception &e) {
@@ -1126,49 +1226,19 @@ JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_getBoolea
                 return get_shared_object<Ellipsoid>(env, object)->inverseFlattening().has_value();
             }
             case org_kortforsyningen_proj_Property_PARAMETER_BOOL: {
-                return get_shared_object<OperationParameterValue>(env, object)->parameterValue()->booleanValue();
+                OperationParameterValueNNPtr opv = get_shared_object<OperationParameterValue>(env, object);
+                ParameterValueNNPtr param = opv->parameterValue();
+                if (param->type() == ParameterValue::Type::BOOLEAN) {
+                    return param->booleanValue();
+                }
+                invalid_parameter_type(env, opv, "This parameter is not a boolean.");
+                break;
             }
         }
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
     }
     return JNI_FALSE;
-}
-
-
-/**
- * Returns the size of the identified property.
- *
- * @param  env       The JNI environment.
- * @param  object    The Java object wrapping the PROJ object for which to get the vector length.
- * @param  property  One of IDENTIFIER, etc. values.
- * @return Vector length in wrapped object, or 0 if unknown.
- */
-JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
-    (JNIEnv *env, jobject object, jshort property)
-{
-    try {
-        switch (property) {
-            case org_kortforsyningen_proj_Property_IDENTIFIER: {
-                return get_identified_object(env, object)->identifiers().size();
-            }
-            case org_kortforsyningen_proj_Property_AXIS: {
-                return get_and_unwrap_ptr<CoordinateSystem>(env, object)->axisList().size();
-            }
-            case org_kortforsyningen_proj_Property_METHOD_PARAMETER: {
-                return get_shared_object<OperationMethod>(env, object)->parameters().size();
-            }
-            case org_kortforsyningen_proj_Property_OPERATION_PARAMETER: {
-                return get_shared_object<SingleOperation>(env, object)->parameterValues().size();
-            }
-            case org_kortforsyningen_proj_Property_CRS_COMPONENT: {
-                return get_shared_object<CompoundCRS>(env, object)->componentReferenceSystems().size();
-            }
-        }
-    } catch (const std::exception &e) {
-        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
-    }
-    return 0;
 }
 
 
@@ -1427,9 +1497,9 @@ int get_dimension(const CRSPtr &crs, int depth) {
 /**
  * Returns the axis at the given dimension.
  * It is caller's responsibility to ensure that the given dimension is positive.
- * If the dimension is greater than the number of axes, then this method returns null.
+ * If the dimension is greater than the number of axes, then this function returns null.
  *
- * The given dimension argument may be modified by this method. The number of dimensions
+ * The given dimension argument may be modified by this function. The number of dimensions
  * of all CRS components that were skipped is subtracted from the dimension value.
  *
  * @param  crs        The CRS for which to get an axis.
@@ -1523,7 +1593,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_CompoundCS_getAxis
  * The factory should be used by only one thread at a time.
  *
  * @param  env        The JNI environment.
- * @param  caller     The class from which this function has been invoked.
+ * @param  caller     The class from which this method has been invoked.
  * @param  context    The wrapper of the PJ_CONTEXT for the current thread.
  * @param  authority  Name of the authority for which to create the factory.
  * @return The address of the new authority factory, or 0 in case of failure.
@@ -1569,7 +1639,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_release(JN
 
 /**
  * Rethrows the given C++ exception as a Java exception with the same message, authority name
- * and authority code. This method returns normally; the exception will be thrown in Java only.
+ * and authority code. This function returns normally; the exception will be thrown in Java only.
  *
  * @param  env  The JNI environment.
  * @param  e    The C++ exception to rethrow in Java.
@@ -1621,7 +1691,7 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_getDesc
 
 /**
  * Returns the wrapper for an osgeo::proj::common::IdentifiedObject from the specified code.
- * The PROJ method invoked by this function is determined by the type argument.
+ * The PROJ function invoked by this method is determined by the type argument.
  *
  * @param  env      The JNI environment.
  * @param  factory  The Java object wrapping the authority factory to use.
@@ -1644,14 +1714,14 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
                 case org_kortforsyningen_proj_Type_ELLIPSOID:                   rp = pf->createEllipsoid                 (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_GEODETIC_REFERENCE_FRAME:    rp = pf->createGeodeticDatum             (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_VERTICAL_REFERENCE_FRAME:    rp = pf->createVerticalDatum             (code_str).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_TEMPORAL_DATUM:              // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_ENGINEERING_DATUM:           // No specific method - use generic one.
+                case org_kortforsyningen_proj_Type_TEMPORAL_DATUM:              // No specific function - use generic one.
+                case org_kortforsyningen_proj_Type_ENGINEERING_DATUM:           // No specific function - use generic one.
                 case org_kortforsyningen_proj_Type_DATUM:                       rp = pf->createDatum                     (code_str).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_CARTESIAN_CS:                // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_SPHERICAL_CS:                // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_ELLIPSOIDAL_CS:              // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_VERTICAL_CS:                 // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_TEMPORAL_CS:                 // No specific method - use generic one.
+                case org_kortforsyningen_proj_Type_CARTESIAN_CS:                // No specific function - use generic one.
+                case org_kortforsyningen_proj_Type_SPHERICAL_CS:                // No specific function - use generic one.
+                case org_kortforsyningen_proj_Type_ELLIPSOIDAL_CS:              // No specific function - use generic one.
+                case org_kortforsyningen_proj_Type_VERTICAL_CS:                 // No specific function - use generic one.
+                case org_kortforsyningen_proj_Type_TEMPORAL_CS:                 // No specific function - use generic one.
                 case org_kortforsyningen_proj_Type_COORDINATE_SYSTEM:           rp = pf->createCoordinateSystem          (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_GEOCENTRIC_CRS:              // Handled as GeodeticCRS by ISO 19111.
                 case org_kortforsyningen_proj_Type_GEODETIC_CRS:                rp = pf->createGeodeticCRS               (code_str).as_nullable(); break;
@@ -1659,8 +1729,8 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
                 case org_kortforsyningen_proj_Type_VERTICAL_CRS:                rp = pf->createVerticalCRS               (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_PROJECTED_CRS:               rp = pf->createProjectedCRS              (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_COMPOUND_CRS:                rp = pf->createCompoundCRS               (code_str).as_nullable(); break;
-                case org_kortforsyningen_proj_Type_TEMPORAL_CRS:                // No specific method - use generic one.
-                case org_kortforsyningen_proj_Type_ENGINEERING_CRS:             // No specific method - use generic one.
+                case org_kortforsyningen_proj_Type_TEMPORAL_CRS:                // No specific function - use generic one.
+                case org_kortforsyningen_proj_Type_ENGINEERING_CRS:             // No specific function - use generic one.
                 case org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM: rp = pf->createCoordinateReferenceSystem (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_CONVERSION:                  rp = pf->createConversion                (code_str).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_COORDINATE_OPERATION:        rp = pf->createCoordinateOperation(code_str, false).as_nullable(); break;
@@ -1809,7 +1879,7 @@ inline PJ* get_PJ(JNIEnv *env, jobject transform) {
 
 /**
  * Assigns a PJ_CONTEXT to the PJ wrapped by the Transform.
- * This function must be invoked before and after call to transform method.
+ * This method must be invoked before and after call to transform method.
  *
  * @param  env        The JNI environment.
  * @param  transform  The Java object wrapping the PJ to use.
@@ -1832,7 +1902,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_assign(JNIEnv *en
  *
  * Note that PJ are context-dependent. If the method is invoked in
  * a context different than the one for which PJ has been created,
- * then the following method shall be invoked first:
+ * then the following function shall be invoked first:
  *
  *    void proj_assign_context(PJ* pj, PJ_CONTEXT* ctx);
  *
@@ -1854,7 +1924,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_transform
          * GetDoubleArrayElements/ReleaseDoubleArrayElements increase the chances that
          * the JVM returns direct reference to its internal array without copying data.
          * However we must promise to run the "critical" code fast, to not make any
-         * system call that may wait for the JVM and to not invoke any other JNI method.
+         * system call that may wait for the JVM and to not invoke any other JNI function.
          */
         double *data = reinterpret_cast<jdouble*>(env->GetPrimitiveArrayCritical(coordinates, nullptr));
         if (data) {

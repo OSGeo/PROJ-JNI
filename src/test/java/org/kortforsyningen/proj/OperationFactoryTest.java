@@ -28,6 +28,7 @@ import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterDescriptor;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.GeneralParameterDescriptor;
+import org.opengis.parameter.InvalidParameterTypeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.OperationMethod;
@@ -119,6 +120,13 @@ public final strictfp class OperationFactoryTest {
         assertEquals(0, first.doubleValue(), 0);
         assertSame(Units.DEGREE, first.getUnit());
         assertLatitude(first.getDescriptor());
+        try {
+            first.intValue();
+            fail("Expected InvalidParameterTypeException.");
+        } catch (InvalidParameterTypeException e) {
+            assertEquals("This parameter is not an integer.", e.getMessage());
+            assertNotNull(e.getParameterName());
+        }
     }
 
     /**
