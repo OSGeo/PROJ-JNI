@@ -21,17 +21,9 @@
  */
 package org.kortforsyningen.proj;
 
-import java.util.List;
-import java.util.Locale;
 import org.opengis.util.FactoryException;
-import org.opengis.parameter.ParameterValue;
-import org.opengis.parameter.ParameterDescriptor;
-import org.opengis.parameter.GeneralParameterValue;
-import org.opengis.parameter.GeneralParameterDescriptor;
-import org.opengis.parameter.InvalidParameterTypeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
-import org.opengis.referencing.operation.OperationMethod;
 import org.opengis.referencing.operation.Conversion;
 import org.junit.Test;
 
@@ -60,29 +52,6 @@ public final strictfp class OperationFactoryTest {
     }
 
     /**
-     * Asserts that the given string starts with the given prefix.
-     *
-     * @param  prefix  the expected prefix.
-     * @param  actual  the text to verify.
-     */
-    private static void assertStartsWith(final String prefix, final String actual) {
-        if (!actual.startsWith(prefix)) {
-            // Let JUnit format an error message with an emphasis on the difference.
-            assertEquals(prefix, actual.substring(Math.min(prefix.length(), actual.length())));
-        }
-    }
-
-    /**
-     * Asserts that the given parameter descriptor has a name starting with "latitude", ignoring case.
-     * We actually expect "Latitude of natural origin" but be tolerant in case "latitude_something" is used.
-     *
-     * @param  descriptor  the descriptor to verify.
-     */
-    private static void assertLatitude(final ParameterDescriptor<?> descriptor) {
-        assertStartsWith("latitude", descriptor.getName().getCode().toLowerCase(Locale.US));
-    }
-
-    /**
      * Tests creation of Mercator projection from a pair of CRS.
      *
      * @throws FactoryException if an error occurred while creating a CRS or the operation.
@@ -93,40 +62,10 @@ public final strictfp class OperationFactoryTest {
         final CoordinateReferenceSystem source    = crsFactory.createCoordinateReferenceSystem("4326");
         final CoordinateReferenceSystem target    = crsFactory.createCoordinateReferenceSystem("3395");
         final CoordinateOperation       operation = factory.createOperation(source, target);
-        assertStartsWith("CONVERSION[\"World Mercator\",", operation.toWKT());
-        assertEquals("World Mercator",  operation.getName().getCode());
         assertSame("sourceCRS", source, operation.getSourceCRS());
         assertSame("targetCRS", target, operation.getTargetCRS());
-        /*
-         * Verify the parameter description (without values). The expected parameter values are
-         * Latitude of natural origin, Longitude of natural origin, Scale factor at natural origin,
-         * False easting, False northing, but we do not test that in case there is some variations
-         * between different PROJ versions.
-         */
-        @SuppressWarnings("OverlyStrongTypeCast")                               // For testing the type.
-        final OperationMethod method = ((Conversion) operation).getMethod();
-        final List<GeneralParameterDescriptor> descriptors = method.getParameters().descriptors();
-        assertStartsWith("Mercator", method.getName().getCode());
-        assertFalse(descriptors.isEmpty());
-        assertLatitude((ParameterDescriptor) descriptors.get(0));
-        /*
-         * Verify the parameter values.
-         */
-        @SuppressWarnings("OverlyStrongTypeCast")
-        final List<GeneralParameterValue> parameters = ((Conversion) operation).getParameterValues().values();
-        assertEquals(descriptors.size(), parameters.size());
-        final ParameterValue<?> first = (ParameterValue) parameters.get(0);
-        assertEquals(Double.class, first.getDescriptor().getValueClass());
-        assertEquals(0, first.doubleValue(), 0);
-        assertSame(Units.DEGREE, first.getUnit());
-        assertLatitude(first.getDescriptor());
-        try {
-            first.intValue();
-            fail("Expected InvalidParameterTypeException.");
-        } catch (InvalidParameterTypeException e) {
-            assertEquals("This parameter is not an integer.", e.getMessage());
-            assertNotNull(e.getParameterName());
-        }
+        ParameterTest.assertStartsWith("CONVERSION[\"World Mercator\",", operation.toWKT());
+        ParameterTest.verifyWorldMercator((Conversion) operation);
     }
 
     /**

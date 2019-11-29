@@ -65,6 +65,14 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorE
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    searchVectorElement
+ * Signature: (SLjava/lang/String;)Lorg/kortforsyningen/proj/IdentifiableObject;
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_searchVectorElement
+  (JNIEnv *, jobject, jshort, jstring);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    inverse
  * Signature: ()Lorg/kortforsyningen/proj/IdentifiableObject;
  */

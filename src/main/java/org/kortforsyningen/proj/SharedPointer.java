@@ -116,6 +116,16 @@ class SharedPointer extends NativeResource {
     final native IdentifiableObject getVectorElement(short property, int index);
 
     /**
+     * Returns a property value as an object for the given name.
+     *
+     * @param  property  one of {@link Property#OPERATION_PARAMETER}, <i>etc.</i> values.
+     * @param  name      name of the element to return, case insensitive.
+     * @return value of the specified property for the given name, or {@code null} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    final native IdentifiableObject searchVectorElement(short property, String name);
+
+    /**
      * Creates the inverse of the wrapped operation.
      * This method can be used with the following types:
      *

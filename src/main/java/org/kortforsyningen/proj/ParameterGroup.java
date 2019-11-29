@@ -22,6 +22,7 @@
 package org.kortforsyningen.proj;
 
 import java.util.List;
+import java.util.Objects;
 import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.GeneralParameterValue;
@@ -116,7 +117,7 @@ abstract class ParameterGroup extends IdentifiableObject {
      * @throws ParameterNotFoundException if there is no parameter for the given identifier.
      */
     public final GeneralParameterDescriptor descriptor(final String name) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (GeneralParameterDescriptor) impl.searchVectorElement(parameterProperty(), Objects.requireNonNull(name));
     }
 
     /**
@@ -127,7 +128,7 @@ abstract class ParameterGroup extends IdentifiableObject {
      * @throws ParameterNotFoundException if there is no parameter for the given identifier.
      */
     public final ParameterValue<?> parameter(final String name) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (ParameterValue<?>) impl.searchVectorElement(parameterProperty(), Objects.requireNonNull(name));
     }
 
     /**

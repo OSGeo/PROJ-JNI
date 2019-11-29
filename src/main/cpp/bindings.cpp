@@ -89,7 +89,10 @@ using osgeo::proj::operation::CoordinateOperationFactory;
 using osgeo::proj::operation::CoordinateOperationFactoryNNPtr;
 using osgeo::proj::operation::CoordinateOperationContext;
 using osgeo::proj::operation::CoordinateOperationContextNNPtr;
+using osgeo::proj::operation::GeneralOperationParameterNNPtr;
+using osgeo::proj::operation::GeneralParameterValueNNPtr;
 using osgeo::proj::operation::OperationParameterValue;
+using osgeo::proj::operation::OperationParameterValuePtr;
 using osgeo::proj::operation::OperationParameterValueNNPtr;
 using osgeo::proj::operation::ParameterValue;
 using osgeo::proj::operation::ParameterValueNNPtr;
@@ -870,6 +873,58 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
         }
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+    }
+    return nullptr;
+}
+
+
+/**
+ * Returns a property value as an element in a std::vector for the given name.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get a property value.
+ * @param  property  One of OPERATION_PARAMETER, etc. values.
+ * @param  name      Name of the element to return, case insensitive.
+ * @return Value of the specified property, or null if undefined.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_searchVectorElement
+    (JNIEnv *env, jobject object, jshort property, jstring name)
+{
+    const char *name_utf = env->GetStringUTFChars(name, nullptr);
+    if (name_utf) {
+        try {
+            BaseObjectPtr value;
+            switch (property) {
+                case org_kortforsyningen_proj_Property_METHOD_PARAMETER: {
+                    for (GeneralOperationParameterNNPtr param : get_shared_object<OperationMethod>(env, object)->parameters()) {
+                        if (!strcasecmp(name_utf, param->nameStr().c_str())) {
+                            value = param.as_nullable();
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case org_kortforsyningen_proj_Property_OPERATION_PARAMETER: {
+                    for (GeneralParameterValueNNPtr param : get_shared_object<SingleOperation>(env, object)->parameterValues()) {
+                        OperationParameterValuePtr single = std::dynamic_pointer_cast<OperationParameterValue>(param.as_nullable());
+                        if (single && !strcasecmp(name_utf, single->parameter()->nameStr().c_str())) {
+                            value = single;
+                            break;
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    return nullptr;
+                }
+            }
+            if (value) {
+                return specific_subclass(env, object, value, org_kortforsyningen_proj_Type_PARAMETER);
+            }
+        } catch (const std::exception &e) {
+            rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+        }
+        env->ReleaseStringUTFChars(name, name_utf);     // Must be after the catch block in case an exception happens.
     }
     return nullptr;
 }
