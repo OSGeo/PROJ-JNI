@@ -21,8 +21,8 @@
  */
 package org.kortforsyningen.proj;
 
-import java.util.Locale;
 import javax.measure.Unit;
+import org.opengis.util.CodeList;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.RangeMeaning;
@@ -65,11 +65,30 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public AxisDirection getDirection() {
-        String dir = impl.getStringProperty(Property.DIRECTION);
-        if (dir != null) {
-            dir = dir.toUpperCase(Locale.US).trim().replace(' ', '_');
-        }
-        return AxisDirection.valueOf(dir);
+        final String dir = impl.getStringProperty(Property.DIRECTION);
+        return search(AxisDirection.class, dir);
+    }
+
+    /**
+     * Searches for the given code, ignoring case. The string should be the UML identifier,
+     * not Java or C/C++ field name. However this method accepts both.
+     *
+     * @param  <T>   compile-time value of {@code type}.
+     * @param  type  class of the code to search.
+     * @param  code  name of the code that we are searching.
+     * @return the code list for the given UML identifier.
+     */
+    private static <T extends CodeList<T>> T search(final Class<T> type, final String code) {
+        return CodeList.valueOf(type, new CodeList.Filter() {
+            @Override public String codename() {
+                return code;
+            }
+
+            @Override public boolean accept(final CodeList<?> candidate) {
+                return code.equalsIgnoreCase(candidate.identifier()) ||
+                       code.equalsIgnoreCase(candidate.name());
+            }
+        });
     }
 
     /**

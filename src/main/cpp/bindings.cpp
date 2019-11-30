@@ -31,6 +31,7 @@
 #include "org_kortforsyningen_proj_Context.h"
 #include "org_kortforsyningen_proj_SharedPointer.h"
 #include "org_kortforsyningen_proj_CompoundCS.h"
+#include "org_kortforsyningen_proj_ObjectFactory.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
 #include "org_kortforsyningen_proj_ReferencingFormat$Convention.h"
 #include "org_kortforsyningen_proj_Transform.h"
@@ -56,8 +57,10 @@ using osgeo::proj::io::JSONFormatterNNPtr;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
 using osgeo::proj::util::IComparable;
+using osgeo::proj::util::PropertyMap;
 using osgeo::proj::metadata::Citation;
 using osgeo::proj::metadata::Identifier;
+using osgeo::proj::metadata::IdentifierNNPtr;
 using osgeo::proj::common::IdentifiedObject;
 using osgeo::proj::common::IdentifiedObjectPtr;
 using osgeo::proj::common::IdentifiedObjectNNPtr;
@@ -68,6 +71,7 @@ using osgeo::proj::datum::Datum;
 using osgeo::proj::datum::Ellipsoid;
 using osgeo::proj::datum::PrimeMeridian;
 using osgeo::proj::datum::GeodeticReferenceFrame;
+using osgeo::proj::cs::AxisDirection;
 using osgeo::proj::cs::CoordinateSystem;
 using osgeo::proj::cs::CoordinateSystemPtr;
 using osgeo::proj::cs::CoordinateSystemAxis;
@@ -583,6 +587,30 @@ again:  switch (type) {
 
 
 /**
+ * Returns a predefined PROJ unit of measurement from given code. This function does
+ * not create new unit. See `unit_from_id(…)` for a function that may create new units.
+ *
+ * @param  code  one of the constants enumerated in the Java `UnitOfMeasure` class.
+ * @return the PROJ unit of measure, or null if none.
+ */
+inline const UnitOfMeasure* get_predefined_unit(int code) {
+    switch (code) {
+        case org_kortforsyningen_proj_UnitOfMeasure_SCALE_UNITY:       return &UnitOfMeasure::SCALE_UNITY;
+        case org_kortforsyningen_proj_UnitOfMeasure_PARTS_PER_MILLION: return &UnitOfMeasure::PARTS_PER_MILLION;
+        case org_kortforsyningen_proj_UnitOfMeasure_METRE:             return &UnitOfMeasure::METRE;
+        case org_kortforsyningen_proj_UnitOfMeasure_RADIAN:            return &UnitOfMeasure::RADIAN;
+        case org_kortforsyningen_proj_UnitOfMeasure_MICRORADIAN:       return &UnitOfMeasure::MICRORADIAN;
+        case org_kortforsyningen_proj_UnitOfMeasure_DEGREE:            return &UnitOfMeasure::DEGREE;
+        case org_kortforsyningen_proj_UnitOfMeasure_ARC_SECOND:        return &UnitOfMeasure::ARC_SECOND;
+        case org_kortforsyningen_proj_UnitOfMeasure_GRAD:              return &UnitOfMeasure::GRAD;
+        case org_kortforsyningen_proj_UnitOfMeasure_SECOND:            return &UnitOfMeasure::SECOND;
+        case org_kortforsyningen_proj_UnitOfMeasure_YEAR:              return &UnitOfMeasure::YEAR;
+    }
+    return nullptr;
+}
+
+
+/**
  * Creates a Java UnitOfMeasure instance from the information provided in a C++ UnitOfMeasure.
  * This function is used both for instantiating the predefined units enumerated in Units class,
  * or for instantiating a new unit not in the predefined units list.
@@ -593,15 +621,18 @@ again:  switch (type) {
  *
  * @param  env       The JNI environment.
  * @param  uomClass  The Java UnitOfMeasure class to instantiate.
- * @param  unit      The PROJ UnitOfMeasure instance to copy in Java.
+ * @param  unit      The PROJ UnitOfMeasure instance to copy in Java, or null.
+ * @return The Java unit of measurement, or null.
  */
-inline jobject create_unit(JNIEnv *env, jclass uomClass, const UnitOfMeasure* unit) {
-    jmethodID c = env->GetMethodID(uomClass, "<init>", "(ILjava/lang/String;D)V");
-    if (c) {
-        jstring name = env->NewStringUTF(unit->name().c_str());
-        if (name) {
-            return env->NewObject(uomClass, c, (jint) static_cast<int>(unit->type()),
-                                  name, (jdouble) unit->conversionToSI());
+inline jobject create_unit_fallback(JNIEnv *env, jclass uomClass, const UnitOfMeasure* unit) {
+    if (unit) {
+        jmethodID c = env->GetMethodID(uomClass, "<init>", "(ILjava/lang/String;D)V");
+        if (c) {
+            jstring name = env->NewStringUTF(unit->name().c_str());
+            if (name) {
+                return env->NewObject(uomClass, c, (jint) static_cast<int>(unit->type()),
+                                      name, (jdouble) unit->conversionToSI());
+            }
         }
     }
     return nullptr;
@@ -618,7 +649,7 @@ inline jobject create_unit(JNIEnv *env, jclass uomClass, const UnitOfMeasure* un
  * @param  measure  The PROJ UnitOfMeasure instance to mirror in Java.
  * @return instance of Java UnitOfMeasure class.
  */
-jobject get_unit(JNIEnv *env, jobject object, const UnitOfMeasure* unit) {
+jobject to_java_unit(JNIEnv *env, jobject object, const UnitOfMeasure* unit) {
     jobject result = env->CallStaticObjectMethod(env->GetObjectClass(object),
                                                  java_method_getDefinedUnit,
                                                  (jint) static_cast<int>(unit->type()),
@@ -626,11 +657,11 @@ jobject get_unit(JNIEnv *env, jobject object, const UnitOfMeasure* unit) {
     if (!result && !env->ExceptionCheck()) {
         /*
          * This block is not very efficient, but should not be invoked often.
-         * See the `create_unit(…)` documentation for rational.
+         * See the `create_unit_fallback(…)` documentation for rational.
          */
         jclass uomClass = env->FindClass("org/kortforsyningen/proj/UnitOfMeasure");
         if (uomClass) {
-            result = create_unit(env, uomClass, unit);
+            result = create_unit_fallback(env, uomClass, unit);
         }
     }
     return result;
@@ -650,21 +681,8 @@ jobject get_unit(JNIEnv *env, jobject object, const UnitOfMeasure* unit) {
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_UnitOfMeasure_create
     (JNIEnv *env, jclass caller, jshort code)
 {
-    const UnitOfMeasure* unit;
-    switch (code) {
-        case org_kortforsyningen_proj_UnitOfMeasure_SCALE_UNITY:       unit = &UnitOfMeasure::SCALE_UNITY;       break;
-        case org_kortforsyningen_proj_UnitOfMeasure_PARTS_PER_MILLION: unit = &UnitOfMeasure::PARTS_PER_MILLION; break;
-        case org_kortforsyningen_proj_UnitOfMeasure_METRE:             unit = &UnitOfMeasure::METRE;             break;
-        case org_kortforsyningen_proj_UnitOfMeasure_RADIAN:            unit = &UnitOfMeasure::RADIAN;            break;
-        case org_kortforsyningen_proj_UnitOfMeasure_MICRORADIAN:       unit = &UnitOfMeasure::MICRORADIAN;       break;
-        case org_kortforsyningen_proj_UnitOfMeasure_DEGREE:            unit = &UnitOfMeasure::DEGREE;            break;
-        case org_kortforsyningen_proj_UnitOfMeasure_ARC_SECOND:        unit = &UnitOfMeasure::ARC_SECOND;        break;
-        case org_kortforsyningen_proj_UnitOfMeasure_GRAD:              unit = &UnitOfMeasure::GRAD;              break;
-        case org_kortforsyningen_proj_UnitOfMeasure_SECOND:            unit = &UnitOfMeasure::SECOND;            break;
-        case org_kortforsyningen_proj_UnitOfMeasure_YEAR:              unit = &UnitOfMeasure::YEAR;              break;
-        default: return nullptr;
-    }
-    return create_unit(env, caller, unit);
+    const UnitOfMeasure* unit = get_predefined_unit(code);
+    return create_unit_fallback(env, caller, unit);
 }
 
 
@@ -846,21 +864,21 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
             }
             case org_kortforsyningen_proj_Property_AXIS_UNIT: {
                 const UnitOfMeasure& unit = get_shared_object<CoordinateSystemAxis>(env, object)->unit();
-                return get_unit(env, object, &unit);
+                return to_java_unit(env, object, &unit);
             }
             case org_kortforsyningen_proj_Property_ELLIPSOID_UNIT: {
                 const Measure& measure = get_shared_object<Ellipsoid>(env, object)->semiMajorAxis();
-                return get_unit(env, object, &measure.unit());
+                return to_java_unit(env, object, &measure.unit());
             }
             case org_kortforsyningen_proj_Property_MERIDIAN_UNIT: {
                 const Measure& measure = get_shared_object<PrimeMeridian>(env, object)->longitude();
-                return get_unit(env, object, &measure.unit());
+                return to_java_unit(env, object, &measure.unit());
             }
             case org_kortforsyningen_proj_Property_PARAMETER_UNIT: {
                 ParameterValueNNPtr param = get_shared_object<OperationParameterValue>(env, object)->parameterValue();
                 if (param->type() == ParameterValue::Type::MEASURE) {
                     const Measure& measure = param->value();
-                    return get_unit(env, object, &measure.unit());
+                    return to_java_unit(env, object, &measure.unit());
                 }
                 return nullptr;
             }
@@ -1637,6 +1655,190 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_CompoundCS_getAxis
 
 
 
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                                    CLASS ObjectFactory                                     │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+/**
+ * Returns a PROJ unit of measurement from given code.
+ *
+ * @param  code  one of the constants enumerated in the Java UnitOfMeasure class.
+ * @return the PROJ unit of measure, or null if none.
+ * @throws std::invalid_argument if the given unit is unsupported.
+ */
+const UnitOfMeasure& unit_from_id(int code) {
+    const UnitOfMeasure* unit = get_predefined_unit(code);
+    if (unit) {
+        return *unit;
+    }
+    // TODO: implement here the support of customized units.
+    throw std::invalid_argument("Unsupported unit of measurement.");
+}
+
+
+/**
+ * Returns an array element as a C++ string object.
+ *
+ * @param  env           The JNI environment.
+ * @param  stringValues  The Java `String[]` array.
+ * @param  index         Index of the element to get in the given array.
+ * @return The element at the given index.
+ * @throws std::invalid_argument if there is not value at the given index.
+ */
+inline const std::string string_array_element(JNIEnv *env, jobjectArray stringValues, int index) {
+    jstring value = (jstring) env->GetObjectArrayElement(stringValues, index);
+    if (value) {
+        const char* utf = env->GetStringUTFChars(value, nullptr);
+        if (utf) {
+            std::string str = std::string(utf);
+            env->ReleaseStringUTFChars(value, utf);
+            return str;
+        }
+    }
+    throw std::invalid_argument("Missing parameter value.");
+}
+
+
+/**
+ * Returns the non-null shared pointer for the element at the specified index in the array.
+ *
+ * @param  env         The JNI environment.
+ * @param  components  The Java `IdentifiableObject[]` array.
+ * @param  index       Index of the element to get in the given array.
+ * @return Shared pointer to the PROJ object associated to the specified Java object.
+ * @throw  std::exception if this function can not get a non-null pointer.
+ */
+template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_component(JNIEnv *env, jobjectArray components, int index) {
+    jobject object = env->GetObjectArrayElement(components, index);
+    return get_shared_object<T>(env, object);
+}
+
+
+/**
+ * Creates a geodetic object of the given type.
+ *
+ * @param  env           The JNI environment.
+ * @param  factory       The ObjectFactory instance creating a new object.
+ * @param  properties    the result of {@code properties(Map, int)} call.
+ * @param  components    the components of the geodetic object to create.
+ * @param  stringValues  any arguments that need to be passed as character string.
+ * @param  doubleValues  any arguments that need to be passed as floating point value.
+ * @param  unit          unit of measurement as given by {@link Units#findUnitID(Unit)}.
+ * @param  type          one of the {@link Type} constants.
+ * @return the geodetic object.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
+    (JNIEnv *env, jobject factory, jobjectArray properties, jobjectArray components,
+        jobjectArray stringValues, jdoubleArray doubleValues, jint unit, jshort type)
+{
+    /*
+     * Convert the `properties` flat array into a PROJ `PropertyMap` object.
+     * All create functions will need this property map, so we build it unconditionally.
+     */
+    PropertyMap propertyMap = PropertyMap();
+    if (properties) {
+        PropertyMap identifierMap = PropertyMap();
+        for (int i = env->GetArrayLength(properties); --i >= 0;) {
+            jstring value = (jstring) env->GetObjectArrayElement(properties, i);
+            if (value) {
+                const char* utf = env->GetStringUTFChars(value, nullptr);
+                if (!utf) return nullptr;                                       // May be an OutOfMemoryError — abort.
+                try {
+                    switch (i) {
+                        case org_kortforsyningen_proj_ObjectFactory_NAME: {
+                            propertyMap.set(IdentifiedObject::NAME_KEY, utf);       // This will copy the character string.
+                            break;
+                        }
+                        case org_kortforsyningen_proj_ObjectFactory_ALIAS: {
+                            propertyMap.set(IdentifiedObject::ALIAS_KEY, utf);
+                            break;
+                        }
+                        case org_kortforsyningen_proj_ObjectFactory_IDENTIFIER: {
+                            identifierMap.set(Identifier::CODE_KEY, utf);
+                            IdentifierNNPtr id = Identifier::create(std::string(), identifierMap);
+                            propertyMap.set(IdentifiedObject::IDENTIFIERS_KEY, id);
+                            break;
+                        }
+                        case org_kortforsyningen_proj_ObjectFactory_CODESPACE: {
+                            identifierMap.set(Identifier::CODESPACE_KEY, utf);
+                            break;
+                        }
+                        case org_kortforsyningen_proj_ObjectFactory_REMARKS: {
+                            propertyMap.set(IdentifiedObject::REMARKS_KEY, utf);
+                            break;
+                        }
+                        case org_kortforsyningen_proj_ObjectFactory_DEPRECATED: {
+                            propertyMap.set(IdentifiedObject::DEPRECATED_KEY, *utf == 't');
+                            break;
+                        }
+                    }
+                } catch (const std::exception &e) {
+                    rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
+                }
+                env->ReleaseStringUTFChars(value, utf);
+                if (env->ExceptionCheck()) return nullptr;
+            }
+        }
+    }
+    /*
+     * At this point we got the `PropertyMap` ready. Now dispatch to a PROJ constructor.
+     */
+    BaseObjectPtr object = nullptr;
+    try {
+        switch (type) {
+            case org_kortforsyningen_proj_Type_AXIS: {
+                std::string abbreviation = string_array_element(env, stringValues, 0);
+                std::string directionStr = string_array_element(env, stringValues, 1);
+                const AxisDirection* direction = AxisDirection::valueOf(directionStr);
+                if (!direction) {
+                    throw std::invalid_argument("Unsupported axis direction: " + directionStr);
+                }
+                object = CoordinateSystemAxis::create(propertyMap, abbreviation, *direction, unit_from_id(unit)).as_nullable();
+                break;
+            }
+            case org_kortforsyningen_proj_Type_VERTICAL_CS: {
+                CoordinateSystemAxisNNPtr axis = get_component<CoordinateSystemAxis>(env, components, 0);
+                object = osgeo::proj::cs::VerticalCS::create(propertyMap, axis).as_nullable();
+                break;
+            }
+            case org_kortforsyningen_proj_Type_TEMPORAL_CS: {
+                CoordinateSystemAxisNNPtr axis = get_component<CoordinateSystemAxis>(env, components, 0);
+                object = osgeo::proj::cs::TemporalMeasureCS::create(propertyMap, axis).as_nullable();
+                break;
+            }
+            case org_kortforsyningen_proj_Type_CARTESIAN_CS:
+            case org_kortforsyningen_proj_Type_SPHERICAL_CS:
+            case org_kortforsyningen_proj_Type_ELLIPSOIDAL_CS: {
+                CoordinateSystemAxisNNPtr axis0 = get_component<CoordinateSystemAxis>(env, components, 0);
+                CoordinateSystemAxisNNPtr axis1 = get_component<CoordinateSystemAxis>(env, components, 1);
+                if (env->GetArrayLength(components) >= 3) {
+                    CoordinateSystemAxisNNPtr axis2 = get_component<CoordinateSystemAxis>(env, components, 2);
+                    switch (type) {
+                        case org_kortforsyningen_proj_Type_CARTESIAN_CS:   object = osgeo::proj::cs::CartesianCS  ::create(propertyMap, axis0, axis1, axis2).as_nullable(); break;
+                        case org_kortforsyningen_proj_Type_ELLIPSOIDAL_CS: object = osgeo::proj::cs::EllipsoidalCS::create(propertyMap, axis0, axis1, axis2).as_nullable(); break;
+                        case org_kortforsyningen_proj_Type_SPHERICAL_CS:   object = osgeo::proj::cs::SphericalCS  ::create(propertyMap, axis0, axis1, axis2).as_nullable(); break;
+                    }
+                } else {
+                    switch (type) {
+                        case org_kortforsyningen_proj_Type_CARTESIAN_CS:   object = osgeo::proj::cs::CartesianCS  ::create(propertyMap, axis0, axis1).as_nullable(); break;
+                        case org_kortforsyningen_proj_Type_ELLIPSOIDAL_CS: object = osgeo::proj::cs::EllipsoidalCS::create(propertyMap, axis0, axis1).as_nullable(); break;
+                    }
+                }
+                break;
+            }
+        }
+        if (object) {
+            return specific_subclass(env, factory, object, type);
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
+    }
+    return nullptr;
+}
+
+
+
 
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                                   CLASS AuthorityFactory                                   │
@@ -1759,7 +1961,8 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
 {
     const char *code_utf = env->GetStringUTFChars(code, nullptr);
     if (code_utf) {
-        const std::string code_str = code_utf;
+        const std::string code_str = std::string(code_utf);                     // This constructor creates a copy.
+        env->ReleaseStringUTFChars(code, code_utf);
         BaseObjectPtr rp = nullptr;
         try {
             AuthorityFactoryPtr pf = get_and_unwrap_ptr<AuthorityFactory>(env, factory);
@@ -1791,7 +1994,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
                 case org_kortforsyningen_proj_Type_COORDINATE_OPERATION:        rp = pf->createCoordinateOperation(code_str, false).as_nullable(); break;
                 case org_kortforsyningen_proj_Type_UNIT_OF_MEASURE: {
                     const UnitOfMeasure* unit = pf->createUnitOfMeasure(code_str).as_nullable().get();
-                    return get_unit(env, factory, unit);
+                    return to_java_unit(env, factory, unit);
                 }
                 default: {
                     jclass c = env->FindClass(JPJ_FACTORY_EXCEPTION);
@@ -1803,7 +2006,6 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createG
         } catch (const std::exception &e) {
             rethrow_as_java_exception(env, JPJ_FACTORY_EXCEPTION, e);
         }
-        env->ReleaseStringUTFChars(code, code_utf);
         if (rp) try {
             return specific_subclass(env, factory, rp, type);
         } catch (const std::exception &e) {

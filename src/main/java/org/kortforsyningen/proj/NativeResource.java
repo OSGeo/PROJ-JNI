@@ -76,6 +76,14 @@ abstract class NativeResource {
     private final long ptr;
 
     /**
+     * Creates a new instance with no native resource allocated on the heap.
+     * This constructor is used when the native resource consists in calls to static C/C++ functions only.
+     */
+    NativeResource() {
+        ptr = 0;
+    }
+
+    /**
      * Wraps the PROJ resource at the given address.
      * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
      *
@@ -229,45 +237,45 @@ abstract class NativeResource {
      * Creates an object of the given type. This method is invoked by native code; it shall not be moved,
      * renamed or have method signature modified unless the C++ bindings are updated accordingly.
      * If an exception is thrown in this Java method, the native method will release the memory allocated
-     * for {@code ptr}.
+     * for {@code rawPointer}.
      *
-     * @param  type  one of the {@link Type#COORDINATE_REFERENCE_SYSTEM}, <i>etc.</i> constants.
-     * @param  ptr   pointer to the shared pointer for the object allocated by PROJ.
+     * @param  type        one of the {@link Type#COORDINATE_REFERENCE_SYSTEM}, <i>etc.</i> constants.
+     * @param  rawPointer  pointer to the shared pointer for the object allocated by PROJ.
      * @return the Java object wrapping the PROJ object.
      * @throws FactoryException if the given type is not recognized.
      */
-    private IdentifiableObject wrapGeodeticObject(final short type, final long ptr) throws FactoryException {
+    private IdentifiableObject wrapGeodeticObject(final short type, final long rawPointer) throws FactoryException {
         final org.kortforsyningen.proj.IdentifiableObject obj;
         switch (type) {
-            case Type.IDENTIFIER:                  obj = new ObjectIdentifier        (ptr); break;
-            case Type.AXIS:                        obj = new Axis                    (ptr); break;
-            case Type.COORDINATE_SYSTEM:           obj = new CS                      (ptr); break;
-            case Type.CARTESIAN_CS:                obj = new CS.Cartesian            (ptr); break;
-            case Type.SPHERICAL_CS:                obj = new CS.Spherical            (ptr); break;
-            case Type.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal          (ptr); break;
-            case Type.VERTICAL_CS:                 obj = new CS.Vertical             (ptr); break;
-            case Type.TEMPORAL_CS:                 obj = new CS.Time                 (ptr); break;
-            case Type.DATUM:                       obj = new Datum                   (ptr); break;
-            case Type.GEODETIC_REFERENCE_FRAME:    obj = new Datum.Geodetic          (ptr); break;
-            case Type.VERTICAL_REFERENCE_FRAME:    obj = new Datum.Vertical          (ptr); break;
-            case Type.TEMPORAL_DATUM:              obj = new Datum.Temporal          (ptr); break;
-            case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering       (ptr); break;
-            case Type.ELLIPSOID:                   obj = new Datum.Ellipsoid         (ptr); break;
-            case Type.PRIME_MERIDIAN:              obj = new Datum.PrimeMeridian     (ptr); break;
-            case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                     (ptr); break;
-            case Type.GEODETIC_CRS:                obj = new CRS.Geodetic            (ptr); break;
-            case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic          (ptr); break;
-            case Type.GEOCENTRIC_CRS:              obj = new CRS.Geocentric          (ptr); break;
-            case Type.PROJECTED_CRS:               obj = new CRS.Projected           (ptr); break;
-            case Type.VERTICAL_CRS:                obj = new CRS.Vertical            (ptr); break;
-            case Type.TEMPORAL_CRS:                obj = new CRS.Temporal            (ptr); break;
-            case Type.ENGINEERING_CRS:             obj = new CRS.Engineering         (ptr); break;
-            case Type.COMPOUND_CRS:                obj = new CRS.Compound            (ptr); break;
-            case Type.COORDINATE_OPERATION:        obj = new Operation               (ptr); break;
-            case Type.OPERATION_METHOD:            obj = new Operation.Method        (ptr); break;
-            case Type.CONVERSION:                  obj = new Operation.Conversion    (ptr); break;
-            case Type.TRANSFORMATION:              obj = new Operation.Transformation(ptr); break;
-            case Type.PARAMETER:                   obj = new Parameter               (ptr); break;
+            case Type.IDENTIFIER:                  obj = new ObjectIdentifier        (rawPointer); break;
+            case Type.AXIS:                        obj = new Axis                    (rawPointer); break;
+            case Type.COORDINATE_SYSTEM:           obj = new CS                      (rawPointer); break;
+            case Type.CARTESIAN_CS:                obj = new CS.Cartesian            (rawPointer); break;
+            case Type.SPHERICAL_CS:                obj = new CS.Spherical            (rawPointer); break;
+            case Type.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal          (rawPointer); break;
+            case Type.VERTICAL_CS:                 obj = new CS.Vertical             (rawPointer); break;
+            case Type.TEMPORAL_CS:                 obj = new CS.Time                 (rawPointer); break;
+            case Type.DATUM:                       obj = new Datum                   (rawPointer); break;
+            case Type.GEODETIC_REFERENCE_FRAME:    obj = new Datum.Geodetic          (rawPointer); break;
+            case Type.VERTICAL_REFERENCE_FRAME:    obj = new Datum.Vertical          (rawPointer); break;
+            case Type.TEMPORAL_DATUM:              obj = new Datum.Temporal          (rawPointer); break;
+            case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering       (rawPointer); break;
+            case Type.ELLIPSOID:                   obj = new Datum.Ellipsoid         (rawPointer); break;
+            case Type.PRIME_MERIDIAN:              obj = new Datum.PrimeMeridian     (rawPointer); break;
+            case Type.COORDINATE_REFERENCE_SYSTEM: obj = new CRS                     (rawPointer); break;
+            case Type.GEODETIC_CRS:                obj = new CRS.Geodetic            (rawPointer); break;
+            case Type.GEOGRAPHIC_CRS:              obj = new CRS.Geographic          (rawPointer); break;
+            case Type.GEOCENTRIC_CRS:              obj = new CRS.Geocentric          (rawPointer); break;
+            case Type.PROJECTED_CRS:               obj = new CRS.Projected           (rawPointer); break;
+            case Type.VERTICAL_CRS:                obj = new CRS.Vertical            (rawPointer); break;
+            case Type.TEMPORAL_CRS:                obj = new CRS.Temporal            (rawPointer); break;
+            case Type.ENGINEERING_CRS:             obj = new CRS.Engineering         (rawPointer); break;
+            case Type.COMPOUND_CRS:                obj = new CRS.Compound            (rawPointer); break;
+            case Type.COORDINATE_OPERATION:        obj = new Operation               (rawPointer); break;
+            case Type.OPERATION_METHOD:            obj = new Operation.Method        (rawPointer); break;
+            case Type.CONVERSION:                  obj = new Operation.Conversion    (rawPointer); break;
+            case Type.TRANSFORMATION:              obj = new Operation.Transformation(rawPointer); break;
+            case Type.PARAMETER:                   obj = new Parameter               (rawPointer); break;
             default: throw new FactoryException("Unknown object type.");
         }
         return obj.releaseWhenUnreachable();

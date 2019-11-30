@@ -26,10 +26,11 @@ package org.kortforsyningen.proj;
  * Thrown when a method can not execute because a given argument value is not a PROJ implementation.
  * This exception may happen when invoking a method with arguments declared as GeoAPI interfaces,
  * but that method can work only with values provided by this PROJ-JNI implementation.
- * In may happen in particular with methods expecting arguments of the following types:
+ * In may happen in particular in the following contexts:
  *
  * <ul>
- *   <li>{@link org.opengis.referencing.crs.CoordinateReferenceSystem}</li>
+ *   <li>Methods expecting {@link org.opengis.referencing.crs.CoordinateReferenceSystem} argument.</li>
+ *   <li>Any method from {@link org.opengis.referencing.crs.CRSFactory} or other component factory.</li>
  * </ul>
  *
  * This exception can happen only if PROJ-JNI is used together with another implementation of GeoAPI

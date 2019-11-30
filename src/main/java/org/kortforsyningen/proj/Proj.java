@@ -24,6 +24,7 @@ package org.kortforsyningen.proj;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.opengis.util.Factory;
 import org.opengis.util.FactoryException;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
@@ -98,7 +99,7 @@ public final class Proj {
      * <ul>
      *   <li>{@code "EPSG"} — de facto standard for coordinate reference systems on Earth.</li>
      *   <li>{@code "IAU"} — extraterrestrial coordinate reference systems.</li>
-     *   <li>{@code ""} (empty string) — PROJ default set set of authorities.</li>
+     *   <li>{@code ""} (empty string) — PROJ default set of authorities.</li>
      * </ul>
      *
      * After a factory has been obtained, its {@link CRSAuthorityFactory#createCoordinateReferenceSystem(String)
@@ -159,6 +160,53 @@ public final class Proj {
      */
     public static CoordinateOperationFactory getOperationFactory(final CoordinateOperationContext context) {
         return new OperationFactory(context);
+    }
+
+    /**
+     * Returns a factory of the given type. This method recognizes three groups of factories:
+     *
+     * <ul class="verbose">
+     *   <li>
+     *     {@link org.opengis.referencing.crs.CRSAuthorityFactory},
+     *     {@link org.opengis.referencing.cs.CSAuthorityFactory},
+     *     {@link org.opengis.referencing.datum.DatumAuthorityFactory} and
+     *     {@link org.opengis.referencing.operation.CoordinateOperationAuthorityFactory}:
+     *     equivalent to the factories returned by
+     *     <code>{@linkplain #getAuthorityFactory(String) getAuthorityFactory}("")</code>.
+     *   </li><li>
+     *     {@link org.opengis.referencing.crs.CRSFactory},
+     *     {@link org.opengis.referencing.cs.CSFactory} and
+     *     {@link org.opengis.referencing.datum.DatumFactory}: no equivalence.
+     *     Those factories allow to create customized CRS from components such as
+     *     axes, datum, map projection parameters, <i>etc.</i>
+     *   </li><li>
+     *     {@link org.opengis.referencing.operation.CoordinateOperationFactory}:
+     *     equivalent to the factory returned by
+     *     <code>{@linkplain #getOperationFactory(CoordinateOperationContext) getOperationFactory}(null)</code>.
+     *   </li>
+     * </ul>
+     *
+     * @param  <F>   compile-time value of {@code type} argument.
+     * @param  type  type of factory desired.
+     * @return factory of the given type.
+     * @throws IllegalArgumentException if the specified type is not one of the above-listed types.
+     */
+    public static <F extends Factory> F getFactory(final Class<F> type) {
+        final Factory factory;
+        if (org.opengis.referencing.cs.CSFactory.class.equals(type)) {
+            factory = ObjectFactory.INSTANCE;
+        } else if (org.opengis.referencing.crs.CRSAuthorityFactory.class.equals(type) ||
+                   org.opengis.referencing.cs.CSAuthorityFactory.class.equals(type) ||
+                   org.opengis.referencing.datum.DatumAuthorityFactory.class.equals(type) ||
+                   org.opengis.referencing.operation.CoordinateOperationAuthorityFactory.class.equals(type))
+        {
+            factory = new AuthorityFactory.API("");
+        } else if (CoordinateOperationFactory.class.equals(type)) {
+            factory = new OperationFactory(null);
+        } else {
+            throw new IllegalArgumentException("Unknown factory type: " + type.getSimpleName());
+        }
+        return type.cast(factory);
     }
 
     /**

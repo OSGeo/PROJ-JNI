@@ -175,6 +175,7 @@ public final strictfp class AuthorityFactoryTest {
 
         final OperationMethod method = conv.getMethod();
         assertIdentifierEquals(EPSG, "9804", method.getIdentifiers());        // Mercator (variant A)
+        ParameterTest.verifyWorldMercator(conv);
     }
 
     /**

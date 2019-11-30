@@ -208,4 +208,26 @@ public final class Units {
     static double getFactor(final short code) {
         return FACTORS[code];
     }
+
+    /**
+     * Returns the {@link UnitOfMeasure} code for the given unit, or -1 if none.
+     *
+     * @todo we currently support only predefined units. If we want to support arbitrary units,
+     *       we could return an automatically generated code when no predefined units is found.
+     *       That generated code would identify an {@link UnitType} which would contain scale
+     *       factors in a {@code double[]} array.
+     *
+     * @param  unit  the unit of measure for which to get the code of a predefined unit.
+     * @return one of {@link UnitOfMeasure} constants, or -1 if none apply.
+     */
+    static int findUnitID(final Unit<?> unit) {
+        if (unit != null) {
+            for (int i=0; i<PREDEFINED.length; i++) {
+                if (unit.equals(PREDEFINED[i])) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
 }
