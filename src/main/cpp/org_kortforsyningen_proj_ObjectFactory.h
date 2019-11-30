@@ -9,18 +9,20 @@ extern "C" {
 #endif
 #undef org_kortforsyningen_proj_ObjectFactory_NAME
 #define org_kortforsyningen_proj_ObjectFactory_NAME 0L
-#undef org_kortforsyningen_proj_ObjectFactory_ALIAS
-#define org_kortforsyningen_proj_ObjectFactory_ALIAS 1L
 #undef org_kortforsyningen_proj_ObjectFactory_IDENTIFIER
-#define org_kortforsyningen_proj_ObjectFactory_IDENTIFIER 2L
+#define org_kortforsyningen_proj_ObjectFactory_IDENTIFIER 1L
 #undef org_kortforsyningen_proj_ObjectFactory_CODESPACE
-#define org_kortforsyningen_proj_ObjectFactory_CODESPACE 3L
+#define org_kortforsyningen_proj_ObjectFactory_CODESPACE 2L
+#undef org_kortforsyningen_proj_ObjectFactory_ALIAS
+#define org_kortforsyningen_proj_ObjectFactory_ALIAS 3L
 #undef org_kortforsyningen_proj_ObjectFactory_REMARKS
 #define org_kortforsyningen_proj_ObjectFactory_REMARKS 4L
 #undef org_kortforsyningen_proj_ObjectFactory_DEPRECATED
 #define org_kortforsyningen_proj_ObjectFactory_DEPRECATED 5L
-#undef org_kortforsyningen_proj_ObjectFactory_BASIC_PROPERTIES
-#define org_kortforsyningen_proj_ObjectFactory_BASIC_PROPERTIES 6L
+#undef org_kortforsyningen_proj_ObjectFactory_ANCHOR_POINT
+#define org_kortforsyningen_proj_ObjectFactory_ANCHOR_POINT 6L
+#undef org_kortforsyningen_proj_ObjectFactory_SCOPE
+#define org_kortforsyningen_proj_ObjectFactory_SCOPE 7L
 /*
  * Class:     org_kortforsyningen_proj_ObjectFactory
  * Method:    create

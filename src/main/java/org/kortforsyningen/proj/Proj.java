@@ -193,7 +193,10 @@ public final class Proj {
      */
     public static <F extends Factory> F getFactory(final Class<F> type) {
         final Factory factory;
-        if (org.opengis.referencing.cs.CSFactory.class.equals(type)) {
+        if (org.opengis.referencing.crs.CRSFactory.class.equals(type) ||
+            org.opengis.referencing.cs.CSFactory.class.equals(type) ||
+            org.opengis.referencing.datum.DatumFactory.class.equals(type))
+        {
             factory = ObjectFactory.INSTANCE;
         } else if (org.opengis.referencing.crs.CRSAuthorityFactory.class.equals(type) ||
                    org.opengis.referencing.cs.CSAuthorityFactory.class.equals(type) ||

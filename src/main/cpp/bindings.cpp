@@ -67,6 +67,9 @@ using osgeo::proj::common::IdentifiedObjectNNPtr;
 using osgeo::proj::common::ObjectUsage;
 using osgeo::proj::common::UnitOfMeasure;
 using osgeo::proj::common::Measure;
+using osgeo::proj::common::Length;
+using osgeo::proj::common::Scale;
+using osgeo::proj::common::Angle;
 using osgeo::proj::datum::Datum;
 using osgeo::proj::datum::Ellipsoid;
 using osgeo::proj::datum::PrimeMeridian;
@@ -1716,6 +1719,27 @@ template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_componen
 
 
 /**
+ * A key used for a temporary entry in `PropertyMap`.
+ */
+static const std::string ANCHOR_POINT_KEY = "anchorPoint";
+
+/**
+ * Returns the value associated to `ANCHOR_POINT_KEY` in the given property map.
+ *
+ * @todo As of PROJ 6.2, call to getStringValue causes a JVM crash with the following message:
+ *       "undefined symbol: (snip)PropertyMap14getStringValue(snip)"
+ *
+ * @param  the map from which to get the anchor point.
+ * @return the anchor point.
+ */
+inline osgeo::proj::util::optional<std::string> get_anchor(const PropertyMap& propertyMap) {
+    osgeo::proj::util::optional<std::string> anchor = osgeo::proj::util::optional<std::string>();
+//  propertyMap.getStringValue(ANCHOR_POINT_KEY, anchor);
+    return anchor;
+}
+
+
+/**
  * Creates a geodetic object of the given type.
  *
  * @param  env           The JNI environment.
@@ -1769,7 +1793,16 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
                             break;
                         }
                         case org_kortforsyningen_proj_ObjectFactory_DEPRECATED: {
+                            // Boolean.toString() value can be only "true" or "false".
                             propertyMap.set(IdentifiedObject::DEPRECATED_KEY, *utf == 't');
+                            break;
+                        }
+                        case org_kortforsyningen_proj_ObjectFactory_ANCHOR_POINT: {
+                            propertyMap.set(ANCHOR_POINT_KEY, utf);
+                            break;
+                        }
+                        case org_kortforsyningen_proj_ObjectFactory_SCOPE: {
+                            propertyMap.set(ObjectUsage::SCOPE_KEY, utf);
                             break;
                         }
                     }
@@ -1787,6 +1820,34 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
     BaseObjectPtr object = nullptr;
     try {
         switch (type) {
+            case org_kortforsyningen_proj_Type_PRIME_MERIDIAN: {
+                jdouble* values = env->GetDoubleArrayElements(doubleValues, nullptr);
+                if (values) {
+                    Angle measure = Angle(values[0], unit_from_id(unit));
+                    env->ReleaseDoubleArrayElements(doubleValues, values, JNI_ABORT);
+                    object = PrimeMeridian::create(propertyMap, measure).as_nullable();
+                }
+                break;
+            }
+            case org_kortforsyningen_proj_Type_ELLIPSOID: {
+                UnitOfMeasure axisUnit = unit_from_id(unit);
+                bool isIvfDefinitive = env->GetArrayLength(doubleValues) >= 3;
+                jdouble* values = env->GetDoubleArrayElements(doubleValues, nullptr);
+                if (values) {
+                    Length semiMajorAxis = Length(values[0], axisUnit);
+                    double secondDefiningParameter = values[isIvfDefinitive ? 2 : 1];
+                    env->ReleaseDoubleArrayElements(doubleValues, values, JNI_ABORT);
+                    if (isIvfDefinitive) {
+                        // Inverse flattening factor is not exactly a scale factor, but PROJ API is that way.
+                        Scale inverseFlattening = Scale(secondDefiningParameter, UnitOfMeasure::SCALE_UNITY);
+                        object = Ellipsoid::createFlattenedSphere(propertyMap, semiMajorAxis, inverseFlattening).as_nullable();
+                    } else {
+                        Length semiMinorAxis = Length(secondDefiningParameter, axisUnit);
+                        object = Ellipsoid::createTwoAxis(propertyMap, semiMajorAxis, semiMinorAxis).as_nullable();
+                    }
+                }
+                break;
+            }
             case org_kortforsyningen_proj_Type_AXIS: {
                 std::string abbreviation = string_array_element(env, stringValues, 0);
                 std::string directionStr = string_array_element(env, stringValues, 1);
@@ -1825,6 +1886,30 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
                         case org_kortforsyningen_proj_Type_ELLIPSOIDAL_CS: object = osgeo::proj::cs::EllipsoidalCS::create(propertyMap, axis0, axis1).as_nullable(); break;
                     }
                 }
+                break;
+            }
+            case org_kortforsyningen_proj_Type_GEODETIC_REFERENCE_FRAME: {
+                osgeo::proj::datum::EllipsoidNNPtr     ellipsoid     = get_component<Ellipsoid>    (env, components, 0);
+                osgeo::proj::datum::PrimeMeridianNNPtr primeMeridian = get_component<PrimeMeridian>(env, components, 1);
+                osgeo::proj::util::optional<std::string> anchor = get_anchor(propertyMap);
+                object = osgeo::proj::datum::GeodeticReferenceFrame::create(propertyMap, ellipsoid, anchor, primeMeridian).as_nullable();
+                break;
+            }
+            case org_kortforsyningen_proj_Type_VERTICAL_REFERENCE_FRAME: {
+                osgeo::proj::util::optional<std::string> anchor = get_anchor(propertyMap);
+                object = osgeo::proj::datum::VerticalReferenceFrame::create(propertyMap, anchor).as_nullable();
+                break;
+            }
+            case org_kortforsyningen_proj_Type_TEMPORAL_DATUM: {
+                std::string iso8601 = string_array_element(env, stringValues, 0);
+                osgeo::proj::common::DateTime origin = osgeo::proj::common::DateTime::create(iso8601);
+                object = osgeo::proj::datum::TemporalDatum::create(propertyMap, origin,
+                         osgeo::proj::datum::TemporalDatum::CALENDAR_PROLEPTIC_GREGORIAN).as_nullable();
+                break;
+            }
+            case org_kortforsyningen_proj_Type_ENGINEERING_DATUM: {
+                osgeo::proj::util::optional<std::string> anchor = get_anchor(propertyMap);
+                object = osgeo::proj::datum::EngineeringDatum::create(propertyMap, anchor).as_nullable();
                 break;
             }
         }

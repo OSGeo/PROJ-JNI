@@ -22,7 +22,10 @@
 package org.kortforsyningen.proj;
 
 import java.util.Map;
+import java.util.Date;
 import javax.measure.Unit;
+import javax.measure.quantity.Angle;
+import javax.measure.quantity.Length;
 import java.lang.annotation.Native;
 import org.opengis.util.CodeList;
 import org.opengis.util.FactoryException;
@@ -30,6 +33,7 @@ import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.referencing.datum.*;
 import org.opengis.referencing.cs.*;
 
 
@@ -41,7 +45,7 @@ import org.opengis.referencing.cs.*;
  * @since   1.0
  * @module
  */
-final class ObjectFactory extends NativeResource implements CSFactory {
+final class ObjectFactory extends NativeResource implements DatumFactory, CSFactory {
     /**
      * The error message when a given component is not a PROJ implementation.
      */
@@ -146,64 +150,76 @@ final class ObjectFactory extends NativeResource implements CSFactory {
     /**
      * Index in properties array where to store property value. This is used for
      * converting {@code Map<String,?>} into something easier to use from C++ code.
+     * Properties most likely to be used should be first.
      */
     @Native
-    private static final int NAME       = 0,
-                             ALIAS      = 1,
-                             IDENTIFIER = 2,
-                             CODESPACE  = 3,
-                             REMARKS    = 4,
-                             DEPRECATED = 5;
+    static final int NAME               = 0,    // InternationalString
+                     IDENTIFIER         = 1,    // Identifier
+                     CODESPACE          = 2,    // String (to be injected in Identifier)
+                     ALIAS              = 3,    // GenericName
+                     REMARKS            = 4,    // InternationalString
+                     DEPRECATED         = 5,    // Boolean
+                     ANCHOR_POINT       = 6,    // InternationalString
+                  // REALIZATION_EPOCH  = 7,    // Date (skipped, pending dynamic CRS).
+                  // DOMAIN_OF_VALIDITY = 7,    // Extent (skipped because uneasy to format)
+                     SCOPE              = 7;    // InternationalString
 
     /**
-     * Argument for {@link #flat(Map, int)} when only the name, alias, identifier and remarks are desired.
+     * Property keys in the order of {@link #NAME}, {@link #IDENTIFIER}, <i>etc.</i> constants.
+     * For example {@code PROPERTY_KEYS[REMARKS]} must be {@value IdentifiedObject#REMARKS_KEY}.
      */
-    private static final int BASIC_PROPERTIES = DEPRECATED + 1;
+    private static final String[] PROPERTY_KEYS = {
+            IdentifiedObject.NAME_KEY,
+            IdentifiedObject.IDENTIFIERS_KEY,
+                            "codespace",
+            IdentifiedObject.ALIAS_KEY,
+            IdentifiedObject.REMARKS_KEY,
+                            "deprecated",
+                       Datum.ANCHOR_POINT_KEY,
+                       Datum.SCOPE_KEY};
+
+    /**
+     * For JUnit test purpose only.
+     *
+     * @param  index  one of {@link #NAME}, {@link #IDENTIFIER}, <i>etc.</i> indices.
+     * @return property key for the given indices.
+     */
+    static final String propertyKey(final int index) {
+        return PROPERTY_KEYS[index];
+    }
 
     /**
      * Returns properties as a flat array with determinist order.
      *
      * @param  properties  the properties to extract as a flat array.
-     * @param  n           one of {@link #BASIC_PROPERTIES} values.
-     * @return the properties as a flat array.
+     * @return the properties as a flat array, or {@code null} if empty.
      */
     @SuppressWarnings("fallthrough")
-    private static String[] flat(final Map<String,?> properties, final int n) {
-        final String[] array = new String[n];
-        switch (n) {
-            default: // Fallthrough everywhere.
-            case 1 + DEPRECATED: store(properties, array,                 "deprecated",     DEPRECATED);
-            case 1 + REMARKS:    store(properties, array, IdentifiedObject.REMARKS_KEY,     REMARKS);
-            case 1 + IDENTIFIER: store(properties, array, IdentifiedObject.IDENTIFIERS_KEY, IDENTIFIER);
-            case 1 + ALIAS:      store(properties, array, IdentifiedObject.ALIAS_KEY,       ALIAS);
-            case 1 + NAME:       store(properties, array, IdentifiedObject.NAME_KEY,        NAME);
-            case 0: break;
-        }
-        return array;
-    }
-
-    /**
-     * Stores a value from the property map to the given flat array.
-     *
-     * @param properties  the map to read.
-     * @param array       the array to write.
-     * @param key         key of the map entry to read.
-     * @param index       index where to write in the array.
-     */
-    private static void store(final Map<String,?> properties, final String[] array, final String key, final int index) {
-        Object value = properties.get(key);
-        if (value != null) {
-            if (value instanceof Identifier) {
-                final Identifier id = (Identifier) value;
-                if ((array[index] = id.getCode()) != null) {
-                    if (id instanceof ReferenceIdentifier) {
+    private static String[] flat(final Map<String,?> properties) {
+        String[] array = null;
+        for (int i=PROPERTY_KEYS.length; --i >= 0;) {
+            Object value = properties.get(PROPERTY_KEYS[i]);
+            if (value != null) {
+                if (value instanceof Identifier) {
+                    final Identifier id = (Identifier) value;
+                    value = id.getCode();
+                    if (value == null) {
+                        continue;
+                    }
+                    if (i == IDENTIFIER && id instanceof ReferenceIdentifier) {
+                        if (array == null) array = new String[CODESPACE + 1];
                         array[CODESPACE] = ((ReferenceIdentifier) id).getCodeSpace();
                     }
-                    return;
+                } else if (value instanceof Date) {
+                    value = ((Date) value).toInstant();         // ISO 8601 representation.
                 }
+                if (array == null) {
+                    array = new String[i + 1];
+                }
+                array[i] = value.toString();
             }
-            array[index] = value.toString();
         }
+        return array;
     }
 
     /**
@@ -225,6 +241,71 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             throws FactoryException;
 
     /**
+     * Creates a prime meridian, relative to Greenwich.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  longitude   longitude of prime meridian in supplied angular units East of Greenwich.
+     * @param  unit        angular units of longitude.
+     * @return the prime meridian for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public PrimeMeridian createPrimeMeridian(
+            final Map<String,?> properties,
+            final double        longitude,
+            final Unit<Angle>   unit) throws FactoryException
+    {
+        return (PrimeMeridian) create(flat(properties),
+                null, null, new double[] {longitude},
+                Units.findUnitID(unit), Type.PRIME_MERIDIAN);
+    }
+
+    /**
+     * Creates an ellipsoid from radius values.
+     *
+     * @param  properties     name and other properties to give to the new object.
+     * @param  semiMajorAxis  equatorial radius in supplied linear units.
+     * @param  semiMinorAxis  polar radius in supplied linear units.
+     * @param  unit           linear units of ellipsoid axes.
+     * @return the ellipsoid for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public Ellipsoid createEllipsoid(
+            final Map<String,?> properties,
+            final double        semiMajorAxis,
+            final double        semiMinorAxis,
+            final Unit<Length>  unit) throws FactoryException
+    {
+        return (Ellipsoid) create(flat(properties),
+                null, null, new double[] {semiMajorAxis, semiMinorAxis},
+                Units.findUnitID(unit), Type.ELLIPSOID);
+    }
+
+    /**
+     * Creates an ellipsoid from an major radius, and inverse flattening.
+     *
+     * @param  properties         name and other properties to give to the new object.
+     * @param  semiMajorAxis      equatorial radius in supplied linear units.
+     * @param  inverseFlattening  eccentricity of ellipsoid.
+     * @param  unit               linear units of major axis.
+     * @return the ellipsoid for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public Ellipsoid createFlattenedSphere(
+            final Map<String, ?> properties,
+            final double         semiMajorAxis,
+            final double         inverseFlattening,
+            final Unit<Length>   unit) throws FactoryException
+    {
+        return (Ellipsoid) create(flat(properties),
+                null, null, new double[] {semiMajorAxis, 0, inverseFlattening},
+                Units.findUnitID(unit), Type.ELLIPSOID);
+
+    }
+
+    /**
      * Creates a coordinate system axis from an abbreviation and a unit.
      *
      * @param  properties    name and other properties to give to the new object.
@@ -241,7 +322,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final AxisDirection direction,
             final Unit<?>       unit) throws FactoryException
     {
-        return (CoordinateSystemAxis) create(flat(properties, BASIC_PROPERTIES),
+        return (CoordinateSystemAxis) create(flat(properties),
                 null, new String[] {abbreviation, identifier(direction)},
                 null, Units.findUnitID(unit), Type.AXIS);
     }
@@ -261,7 +342,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final CoordinateSystemAxis axis0,
             final CoordinateSystemAxis axis1) throws FactoryException
     {
-        return (CartesianCS) create(flat(properties, BASIC_PROPERTIES),
+        return (CartesianCS) create(flat(properties),
                 components(axis0, axis1), null, null, 0, Type.CARTESIAN_CS);
     }
 
@@ -282,7 +363,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final CoordinateSystemAxis axis1,
             final CoordinateSystemAxis axis2) throws FactoryException
     {
-        return (CartesianCS) create(flat(properties, BASIC_PROPERTIES),
+        return (CartesianCS) create(flat(properties),
                 components(axis0, axis1, axis2), null, null, 0, Type.CARTESIAN_CS);
     }
 
@@ -379,7 +460,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final CoordinateSystemAxis axis1,
             final CoordinateSystemAxis axis2) throws FactoryException
     {
-        return (SphericalCS) create(flat(properties, BASIC_PROPERTIES),
+        return (SphericalCS) create(flat(properties),
                 components(axis0, axis1, axis2), null, null, 0, Type.SPHERICAL_CS);
     }
 
@@ -398,7 +479,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final CoordinateSystemAxis axis0,
             final CoordinateSystemAxis axis1) throws FactoryException
     {
-        return (EllipsoidalCS) create(flat(properties, BASIC_PROPERTIES),
+        return (EllipsoidalCS) create(flat(properties),
                 components(axis0, axis1), null, null, 0, Type.ELLIPSOIDAL_CS);
     }
 
@@ -419,7 +500,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final CoordinateSystemAxis axis1,
             final CoordinateSystemAxis axis2) throws FactoryException
     {
-        return (EllipsoidalCS) create(flat(properties, BASIC_PROPERTIES),
+        return (EllipsoidalCS) create(flat(properties),
                 components(axis0, axis1, axis2), null, null, 0, Type.ELLIPSOIDAL_CS);
     }
 
@@ -436,7 +517,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final Map<String,?> properties,
             final CoordinateSystemAxis axis) throws FactoryException
     {
-        return (VerticalCS) create(flat(properties, BASIC_PROPERTIES),
+        return (VerticalCS) create(flat(properties),
                 components(axis), null, null, 0, Type.VERTICAL_CS);
     }
 
@@ -453,7 +534,7 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final Map<String,?> properties,
             final CoordinateSystemAxis axis) throws FactoryException
     {
-        return (TimeCS) create(flat(properties, BASIC_PROPERTIES),
+        return (TimeCS) create(flat(properties),
                 components(axis), null, null, 0, Type.TEMPORAL_CS);
     }
 
@@ -507,6 +588,88 @@ final class ObjectFactory extends NativeResource implements CSFactory {
             final CoordinateSystemAxis axis0,
             final CoordinateSystemAxis axis1,
             final CoordinateSystemAxis axis2) throws FactoryException
+    {
+        throw new FactoryException(UNSUPPORTED);
+    }
+
+    /**
+     * Creates geodetic datum from ellipsoid and prime meridian.
+     *
+     * @param  properties     name and other properties to give to the new object.
+     * @param  ellipsoid      ellipsoid to use in new geodetic datum.
+     * @param  primeMeridian  prime meridian to use in new geodetic datum.
+     * @return the datum for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public GeodeticDatum createGeodeticDatum(
+            final Map<String,?> properties,
+            final Ellipsoid     ellipsoid,
+            final PrimeMeridian primeMeridian) throws FactoryException
+    {
+        return (GeodeticDatum) create(flat(properties),
+                components(ellipsoid, primeMeridian), null, null, 0, Type.GEODETIC_REFERENCE_FRAME);
+    }
+
+    /**
+     * Creates a vertical datum from an enumerated type value.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  type        the type of this vertical datum (often "geoidal").
+     * @return the datum for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public VerticalDatum createVerticalDatum(
+            final Map<String,?> properties,
+            final VerticalDatumType type) throws FactoryException
+    {
+        return (VerticalDatum) create(flat(properties),
+                null, null, null, 0, Type.VERTICAL_REFERENCE_FRAME);
+    }
+
+    /**
+     * Creates a temporal datum from an enumerated type value.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  origin      the date and time origin of this temporal datum.
+     * @return the datum for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public TemporalDatum createTemporalDatum(
+            final Map<String,?> properties,
+            final Date          origin) throws FactoryException
+    {
+        return (TemporalDatum) create(flat(properties),
+                null, new String[] {origin.toInstant().toString()}, null, 0, Type.TEMPORAL_DATUM);
+    }
+
+    /**
+     * Creates an engineering datum.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @return the datum for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public EngineeringDatum createEngineeringDatum(final Map<String,?> properties) throws FactoryException {
+        return (EngineeringDatum) create(flat(properties),
+                null, null, null, 0, Type.ENGINEERING_DATUM);
+    }
+
+    /**
+     * Creates an image datum.
+     *
+     * @param  properties   name and other properties to give to the new object.
+     * @param  pixelInCell  specification of the way the image grid is associated with the image data attributes.
+     * @return the datum for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public ImageDatum createImageDatum(
+            final Map<String,?> properties,
+            final PixelInCell pixelInCell) throws FactoryException
     {
         throw new FactoryException(UNSUPPORTED);
     }

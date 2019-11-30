@@ -22,7 +22,13 @@
 package org.kortforsyningen.proj;
 
 import java.util.Map;
+import java.util.Date;
 import org.opengis.util.FactoryException;
+import org.opengis.referencing.datum.Ellipsoid;
+import org.opengis.referencing.datum.PrimeMeridian;
+import org.opengis.referencing.datum.GeodeticDatum;
+import org.opengis.referencing.datum.TemporalDatum;
+import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
@@ -52,6 +58,21 @@ public final strictfp class ObjectFactoryTest {
     }
 
     /**
+     * Verify consistency of {@link ObjectFactory#NAME}, {@link ObjectFactory#IDENTIFIER}, <i>etc.</i> indices.
+     */
+    @Test
+    public void verifyPropertyIndices() {
+        assertEquals(IdentifiedObject.NAME_KEY,         ObjectFactory.propertyKey(ObjectFactory.NAME));
+        assertEquals(IdentifiedObject.IDENTIFIERS_KEY,  ObjectFactory.propertyKey(ObjectFactory.IDENTIFIER));
+        assertEquals(                "codespace",       ObjectFactory.propertyKey(ObjectFactory.CODESPACE));
+        assertEquals(IdentifiedObject.ALIAS_KEY,        ObjectFactory.propertyKey(ObjectFactory.ALIAS));
+        assertEquals(IdentifiedObject.REMARKS_KEY,      ObjectFactory.propertyKey(ObjectFactory.REMARKS));
+        assertEquals(                "deprecated",      ObjectFactory.propertyKey(ObjectFactory.DEPRECATED));
+        assertEquals(           Datum.ANCHOR_POINT_KEY, ObjectFactory.propertyKey(ObjectFactory.ANCHOR_POINT));
+        assertEquals(           Datum.SCOPE_KEY,        ObjectFactory.propertyKey(ObjectFactory.SCOPE));
+    }
+
+    /**
      * Tests {@link ObjectFactory#createCoordinateSystemAxis(Map, String, AxisDirection, Unit)}.
      *
      * @throws FactoryException if creation of the coordinate system axis failed.
@@ -70,7 +91,7 @@ public final strictfp class ObjectFactoryTest {
     /**
      * Tests {@link ObjectFactory#createCartesianCS(Map, CoordinateSystemAxis, CoordinateSystemAxis)}.
      *
-     * @throws FactoryException if creation of the coordinate system axis failed.
+     * @throws FactoryException if creation of the coordinate system failed.
      */
     @Test
     public void testCartesianCS() throws FactoryException {
@@ -90,5 +111,98 @@ public final strictfp class ObjectFactoryTest {
         assertEquals("dimension", 2, cs.getDimension());
         assertSame(axis0, cs.getAxis(0));
         assertSame(axis1, cs.getAxis(1));
+    }
+
+    /**
+     * Tests {@link ObjectFactory#createEllipsoid(Map, double, double, Unit)}.
+     *
+     * @throws FactoryException if creation of the ellipsoid failed.
+     */
+    @Test
+    public void testEllipsoid() throws FactoryException {
+        Ellipsoid ellipsoid = factory.createEllipsoid(
+                Map.of(Ellipsoid.NAME_KEY, "My ellipsoid"),
+                14, 12, Units.METRE);
+
+        assertEquals("My ellipsoid", ellipsoid.getName().getCode());
+        assertEquals(14, ellipsoid.getSemiMajorAxis(), 1E-12);
+        assertEquals(12, ellipsoid.getSemiMinorAxis(), 1E-12);
+        assertSame  (Units.METRE, ellipsoid.getAxisUnit());
+        assertFalse (ellipsoid.isIvfDefinitive());
+    }
+
+    /**
+     * Tests {@link ObjectFactory#createFlattenedSphere(Map, double, double, Unit)}.
+     *
+     * @throws FactoryException if creation of the ellipsoid failed.
+     */
+    @Test
+    public void testFlattenedSphere() throws FactoryException {
+        Ellipsoid ellipsoid = factory.createFlattenedSphere(
+                Map.of(Ellipsoid.NAME_KEY, "My ellipsoid"),
+                14, 300, Units.METRE);
+
+        assertEquals("My ellipsoid", ellipsoid.getName().getCode());
+        assertEquals( 14, ellipsoid.getSemiMajorAxis(), 1E-12);
+        assertEquals(300, ellipsoid.getInverseFlattening(), 1E-12);
+        assertSame  (Units.METRE, ellipsoid.getAxisUnit());
+        assertTrue  (ellipsoid.isIvfDefinitive());
+    }
+
+    /**
+     * Tests {@link ObjectFactory#createPrimeMeridian(Map, double, Unit)}.
+     *
+     * @throws FactoryException if creation of the prime meridian failed.
+     */
+    @Test
+    public void testPrimeMeridian() throws FactoryException {
+        PrimeMeridian meridian = factory.createPrimeMeridian(
+                Map.of(PrimeMeridian.NAME_KEY, "My meridian"),
+                1.1, Units.DEGREE);
+
+        assertEquals("My meridian", meridian.getName().getCode());
+        assertEquals(1.1, meridian.getGreenwichLongitude(), 1E-12);
+        assertSame  (Units.DEGREE, meridian.getAngularUnit());
+    }
+
+    /**
+     * Tests {@link ObjectFactory#createGeodeticDatum(Map, Ellipsoid, PrimeMeridian)}.
+     *
+     * @throws FactoryException if creation of the datum failed.
+     */
+    @Test
+    public void testGeodeticReferenceFrame() throws FactoryException {
+        GeodeticDatum datum = factory.createGeodeticDatum(Map.of(GeodeticDatum.NAME_KEY, "My datum"),
+                factory.createFlattenedSphere(Map.of(Ellipsoid.NAME_KEY, "My ellipsoid"), 14, 300, Units.METRE),
+                factory.createPrimeMeridian  (Map.of(Ellipsoid.NAME_KEY, "My meridian"),  1.1, Units.DEGREE));
+
+        assertEquals("My datum", datum.getName().getCode());
+
+        Ellipsoid ellipsoid = datum.getEllipsoid();
+        assertEquals("My ellipsoid", ellipsoid.getName().getCode());
+        assertEquals( 14, ellipsoid.getSemiMajorAxis(), 1E-12);
+        assertEquals(300, ellipsoid.getInverseFlattening(), 1E-12);
+        assertSame  (Units.METRE, ellipsoid.getAxisUnit());
+        assertTrue  (ellipsoid.isIvfDefinitive());
+
+        PrimeMeridian meridian = datum.getPrimeMeridian();
+        assertEquals("My meridian", meridian.getName().getCode());
+        assertEquals(1.1, meridian.getGreenwichLongitude(), 1E-12);
+        assertSame  (Units.DEGREE, meridian.getAngularUnit());
+    }
+
+    /**
+     * Tests {@link ObjectFactory#createTemporalDatum(Map, Date)}.
+     *
+     * @throws FactoryException if creation of the datum failed.
+     */
+    @Test
+    public void testTemporalDatum() throws FactoryException {
+        final Date origin = new Date();
+        TemporalDatum datum = factory.createTemporalDatum(
+                Map.of(TemporalDatum.NAME_KEY, "My datum"), origin);
+
+        assertEquals("My datum", datum.getName().getCode());
+//      assertEquals(origin, datum.getOrigin());    // TODO
     }
 }
