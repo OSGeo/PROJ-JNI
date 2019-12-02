@@ -290,9 +290,11 @@ abstract class NativeResource {
      * @param  ordinal  ordinal value of the {@link UnitType}.
      * @param  scale    scale factor from the desired unit to its system unit.
      * @return the unit, or {@code null} if caller should instantiate {@link UnitOfMeasure} itself.
+     *
+     * @see UnitType#getUserDefinedTypeAndScale(int)
      */
-    private static Unit<?> getDefinedUnit(final int ordinal, final double scale) {
-        return UnitType.get(ordinal).getDefinedUnit(scale);
+    private static Unit<?> getPredefinedUnit(final int ordinal, final double scale) {
+        return UnitType.forOrdinal(ordinal).getPredefinedUnit(scale);
     }
 
     /**

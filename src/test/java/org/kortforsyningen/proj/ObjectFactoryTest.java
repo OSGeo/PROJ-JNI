@@ -24,6 +24,9 @@ package org.kortforsyningen.proj;
 import java.util.Map;
 import java.util.Date;
 import java.util.List;
+import javax.measure.Unit;
+import javax.measure.quantity.Length;
+import javax.measure.IncommensurableException;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.PrimeMeridian;
@@ -117,18 +120,21 @@ public final strictfp class ObjectFactoryTest {
 
     /**
      * Tests {@link ObjectFactory#createCartesianCS(Map, CoordinateSystemAxis, CoordinateSystemAxis)}.
+     * This method opportunistically tests the use of a custom unit.
      *
      * @throws FactoryException if creation of the coordinate system failed.
+     * @throws IncommensurableException if an error occurred while checking unit factor.
      */
     @Test
-    public void testCartesianCS() throws FactoryException {
+    public void testCartesianCS() throws FactoryException, IncommensurableException {
+        final Unit<Length> foot = Units.METRE.multiply(0.3048);
         CoordinateSystemAxis axis0 = factory.createCoordinateSystemAxis(
                 Map.of(CoordinateSystemAxis.NAME_KEY, "My axis"),
-                "x", AxisDirection.WEST, Units.METRE);
+                "x", AxisDirection.WEST, foot);
 
         CoordinateSystemAxis axis1 = factory.createCoordinateSystemAxis(
                 Map.of(CoordinateSystemAxis.NAME_KEY, "My other axis"),
-                "y", AxisDirection.SOUTH, Units.METRE);
+                "y", AxisDirection.SOUTH, foot);
 
         CartesianCS cs = factory.createCartesianCS(
                 Map.of(CartesianCS.NAME_KEY, "My CS"),
@@ -138,6 +144,8 @@ public final strictfp class ObjectFactoryTest {
         assertEquals("dimension", 2, cs.getDimension());
         assertSame(axis0, cs.getAxis(0));
         assertSame(axis1, cs.getAxis(1));
+        assertEquals(0.3048, axis0.getUnit().getConverterToAny(Units.METRE).convert(1), TOLERANCE);
+        assertEquals(0.3048, axis1.getUnit().getConverterToAny(Units.METRE).convert(1), TOLERANCE);
     }
 
     /**

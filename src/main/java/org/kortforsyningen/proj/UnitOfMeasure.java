@@ -90,7 +90,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
      */
     @SuppressWarnings("unchecked")
     private UnitOfMeasure(final int type, final String name, final double toSI) {
-        this.type = (Class<Q>) UnitType.get(type).type;
+        this.type = (Class<Q>) UnitType.forOrdinal(type).type;
         this.name = name;
         this.toSI = toSI;
     }

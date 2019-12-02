@@ -205,7 +205,7 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize(J
         if (java_method_wrapGeodeticObject) {
             java_method_findWrapper = env->GetMethodID(caller, "findWrapper", "(J)Lorg/kortforsyningen/proj/IdentifiableObject;");
             if (java_method_findWrapper) {
-                java_method_getDefinedUnit = env->GetStaticMethodID(caller, "getDefinedUnit", "(ID)Ljavax/measure/Unit;");
+                java_method_getDefinedUnit = env->GetStaticMethodID(caller, "getPredefinedUnit", "(ID)Ljavax/measure/Unit;");
             }
         }
     }
@@ -630,7 +630,8 @@ again:  switch (type) {
 
 /**
  * Returns a predefined PROJ unit of measurement from given code. This function does
- * not create new unit. See `unit_from_id(…)` for a function that may create new units.
+ * not create new unit. See `unit_from_identifier(…)` for a function that may create
+ * new units.
  *
  * @param  code  one of the constants enumerated in the Java `UnitOfMeasure` class.
  * @return the PROJ unit of measure, or null if none.
@@ -1709,12 +1710,35 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_CompoundCS_getAxis
  * @return the PROJ unit of measure, or null if none.
  * @throws std::invalid_argument if the given unit is unsupported.
  */
-const UnitOfMeasure& unit_from_id(int code) {
+UnitOfMeasure unit_from_identifier(JNIEnv *env, int code) {
     const UnitOfMeasure* unit = get_predefined_unit(code);
     if (unit) {
         return *unit;
     }
-    // TODO: implement here the support of customized units.
+    /*
+     * Following code is inefficient but should not be invoked often.
+     * It happens only if the specified unit is not a predefined unit,
+     * but instead has been created with customized factor.
+     *
+     * `UnitType.getUserDefinedTypeAndScale(int)` returns an array of length 2
+     * with unit type in the first element and scale factor in the second element.
+     */
+    jclass c = env->FindClass("org/kortforsyningen/proj/UnitType");
+    if (c) {
+        jmethodID method = env->GetStaticMethodID(c, "getUserDefinedTypeAndScale", "(I)[D");
+        if (method) {
+            jdoubleArray array = (jdoubleArray) env->CallStaticObjectMethod(c, method, (jint) code);
+            if (!env->ExceptionCheck() && array) {        // Unconditional call to ExceptionCheck().
+                jdouble* values = env->GetDoubleArrayElements(array, nullptr);
+                if (values) {
+                    UnitOfMeasure::Type type = static_cast<UnitOfMeasure::Type>((int) values[0]);
+                    double scale = values[1];
+                    env->ReleaseDoubleArrayElements(array, values, JNI_ABORT);
+                    return UnitOfMeasure(std::string(), scale, type);
+                }
+            }
+        }
+    }
     throw std::invalid_argument("Unsupported unit of measurement.");
 }
 
@@ -1787,7 +1811,7 @@ inline optional<std::string> get_anchor(const PropertyMap& propertyMap) {
  * @param  components    the components of the geodetic object to create.
  * @param  stringValues  any arguments that need to be passed as character string.
  * @param  doubleValues  any arguments that need to be passed as floating point value.
- * @param  unit          unit of measurement as given by {@link Units#findUnitID(Unit)}.
+ * @param  unit          unit of measurement as given by `Units.getUnitIdentifier(Unit)` method.
  * @param  type          one of the {@link Type} constants.
  * @return the geodetic object.
  */
@@ -1846,14 +1870,14 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
             case org_kortforsyningen_proj_Type_PRIME_MERIDIAN: {
                 jdouble* values = env->GetDoubleArrayElements(doubleValues, nullptr);
                 if (values) {
-                    Angle measure = Angle(values[0], unit_from_id(unit));
+                    Angle measure = Angle(values[0], unit_from_identifier(env, unit));
                     env->ReleaseDoubleArrayElements(doubleValues, values, JNI_ABORT);
                     object = PrimeMeridian::create(propertyMap, measure).as_nullable();
                 }
                 break;
             }
             case org_kortforsyningen_proj_Type_ELLIPSOID: {
-                UnitOfMeasure axisUnit = unit_from_id(unit);
+                UnitOfMeasure axisUnit = unit_from_identifier(env, unit);
                 bool isIvfDefinitive = env->GetArrayLength(doubleValues) >= 3;
                 jdouble* values = env->GetDoubleArrayElements(doubleValues, nullptr);
                 if (values) {
@@ -1878,7 +1902,8 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
                 if (!direction) {
                     throw std::invalid_argument("Unsupported axis direction: " + directionStr);
                 }
-                object = CoordinateSystemAxis::create(propertyMap, abbreviation, *direction, unit_from_id(unit)).as_nullable();
+                UnitOfMeasure axisUnit = unit_from_identifier(env, unit);
+                object = CoordinateSystemAxis::create(propertyMap, abbreviation, *direction, axisUnit).as_nullable();
                 break;
             }
             case org_kortforsyningen_proj_Type_VERTICAL_CS: {

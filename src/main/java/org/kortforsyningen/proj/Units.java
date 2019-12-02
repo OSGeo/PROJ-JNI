@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Objects;
 import javax.measure.Unit;
 import javax.measure.Quantity;
 import javax.measure.quantity.Angle;
@@ -30,6 +31,7 @@ import javax.measure.quantity.Dimensionless;
 import javax.measure.spi.ServiceProvider;
 import javax.measure.spi.SystemOfUnits;
 import javax.measure.spi.SystemOfUnitsService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -81,6 +83,7 @@ public final class Units {
     /**
      * All predefined units. Indices are {@link UnitOfMeasure} constant values
      * and elements are {@link #SCALE_UNITY}, {@link #PARTS_PER_MILLION}, etc.
+     * This array shall be unmodifiable.
      *
      * @see #getUnit(short)
      */
@@ -88,8 +91,15 @@ public final class Units {
 
     /**
      * The scale factors from {@code PREDEFINED[i]} unit to its system unit.
+     * This array shall be unmodifiable.
      */
     private static final double[] FACTORS = new double[PREDEFINED.length];
+
+    /**
+     * The next identifier to use when a new unit needs to be created.
+     * This is used only for units not in {@link #PREDEFINED} list.
+     */
+    static final AtomicInteger NEXT_IDENTIFIER = new AtomicInteger(PREDEFINED.length);
 
     /**
      * Creates a unit of measurement for the given quantity type. If a JSR-363 implementation
@@ -191,6 +201,8 @@ public final class Units {
 
     /**
      * Returns a unit of measurement for this given {@link UnitOfMeasure} constant.
+     * This method is invoked by {@link UnitType#getPredefinedUnit(double)} for
+     * testing if a predefined unit matches a given scale factor.
      *
      * @param  code  one of {@link UnitOfMeasure} constants.
      * @return unit of measurement, either form JSR-363 implementation or as {@link UnitOfMeasure} instance.
@@ -201,6 +213,8 @@ public final class Units {
 
     /**
      * Returns the scale factors from {@code getUnit(i)} unit to its system unit.
+     * This method is invoked by {@link UnitType#getPredefinedUnit(double)} for
+     * testing if a predefined unit matches a given scale factor.
      *
      * @param  code  one of {@link UnitOfMeasure} constants.
      * @return scale factor from specified unit to its base unit.
@@ -210,24 +224,20 @@ public final class Units {
     }
 
     /**
-     * Returns the {@link UnitOfMeasure} code for the given unit, or -1 if none.
-     *
-     * @todo we currently support only predefined units. If we want to support arbitrary units,
-     *       we could return an automatically generated code when no predefined units is found.
-     *       That generated code would identify an {@link UnitType} which would contain scale
-     *       factors in a {@code double[]} array.
+     * Returns the {@link UnitOfMeasure} code for the given unit.
+     * The native C/C++ code maps this identifier to the predefined units defined by PROJ.
      *
      * @param  unit  the unit of measure for which to get the code of a predefined unit.
-     * @return one of {@link UnitOfMeasure} constants, or -1 if none apply.
+     * @return one of {@link UnitOfMeasure} constants.
+     * @throws IllegalArgumentException if no identifier can be found or generated for the given unit.
      */
-    static int findUnitID(final Unit<?> unit) {
-        if (unit != null) {
-            for (int i=0; i<PREDEFINED.length; i++) {
-                if (unit.equals(PREDEFINED[i])) {
-                    return i;
-                }
+    static int getUnitIdentifier(final Unit<?> unit) {
+        Objects.requireNonNull(unit, "Unit shall not be null.");
+        for (int i=0; i<PREDEFINED.length; i++) {
+            if (unit.equals(PREDEFINED[i])) {
+                return i;
             }
         }
-        return -1;
+        return UnitType.getUserDefinedUnitIdentifier(unit);
     }
 }

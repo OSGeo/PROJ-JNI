@@ -192,7 +192,7 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
      * @param  components    the components of the geodetic object to create, or null.
      * @param  stringValues  any arguments that need to be passed as character string, or null.
      * @param  doubleValues  any arguments that need to be passed as floating point value, or null.
-     * @param  unit          unit of measurement as given by {@link Units#findUnitID(Unit)}.
+     * @param  unit          unit of measurement as given by {@link Units#getUnitIdentifier(Unit)}.
      * @param  type          one of the {@link Type} constants.
      * @return the geodetic object.
      * @throws FactoryException if object creation failed.
@@ -218,7 +218,7 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     {
         return (PrimeMeridian) create(flat(properties),
                 null, null, new double[] {longitude},
-                Units.findUnitID(unit), Type.PRIME_MERIDIAN);
+                Units.getUnitIdentifier(unit), Type.PRIME_MERIDIAN);
     }
 
     /**
@@ -240,7 +240,7 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     {
         return (Ellipsoid) create(flat(properties),
                 null, null, new double[] {semiMajorAxis, semiMinorAxis},
-                Units.findUnitID(unit), Type.ELLIPSOID);
+                Units.getUnitIdentifier(unit), Type.ELLIPSOID);
     }
 
     /**
@@ -262,7 +262,7 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     {
         return (Ellipsoid) create(flat(properties),
                 null, null, new double[] {semiMajorAxis, 0, inverseFlattening},
-                Units.findUnitID(unit), Type.ELLIPSOID);
+                Units.getUnitIdentifier(unit), Type.ELLIPSOID);
 
     }
 
@@ -285,7 +285,7 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     {
         return (CoordinateSystemAxis) create(flat(properties),
                 null, new String[] {abbreviation, identifier(direction)},
-                null, Units.findUnitID(unit), Type.AXIS);
+                null, Units.getUnitIdentifier(unit), Type.AXIS);
     }
 
     /**
