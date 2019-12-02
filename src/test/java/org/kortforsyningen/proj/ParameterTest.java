@@ -55,7 +55,7 @@ public final strictfp class ParameterTest {
     static void assertStartsWith(final String prefix, final String actual) {
         if (!actual.startsWith(prefix)) {
             // Let JUnit formats an error message with an emphasis on the difference.
-            assertEquals(prefix, actual.substring(Math.min(prefix.length(), actual.length())));
+            assertEquals(prefix, actual.substring(StrictMath.min(prefix.length(), actual.length())));
         }
     }
 

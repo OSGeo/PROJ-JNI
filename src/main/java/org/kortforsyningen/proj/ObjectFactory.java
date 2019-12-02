@@ -33,7 +33,10 @@ import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.referencing.operation.Conversion;
+import org.opengis.referencing.operation.CoordinateOperationFactory;
 import org.opengis.referencing.datum.*;
+import org.opengis.referencing.crs.*;
 import org.opengis.referencing.cs.*;
 
 
@@ -45,12 +48,7 @@ import org.opengis.referencing.cs.*;
  * @since   1.0
  * @module
  */
-final class ObjectFactory extends NativeResource implements DatumFactory, CSFactory {
-    /**
-     * The error message when a given component is not a PROJ implementation.
-     */
-    private static final String UNSUPPORTED_IMPLEMENTATION = "This factory accepts only components that are PROJ implementations.";
-
+final class ObjectFactory extends NativeResource implements DatumFactory, CSFactory, CRSFactory {
     /**
      * The singleton instance.
      */
@@ -93,58 +91,21 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     /**
      * Wraps the given components in an array suitable for native method call.
      *
-     * @param  c1  the single component.
-     * @return the array of components.
+     * @param  components  the components.
+     * @return PROJ implementations of components.
      * @throws UnsupportedImplementationException is a component is not a PROJ implementation.
      */
-    private static SharedPointer[] components(final IdentifiedObject c1) {
+    private static SharedPointer[] components(final IdentifiedObject... components) {
+        final SharedPointer[] ptr = new SharedPointer[components.length];
         try {
-            return new SharedPointer[] {
-                ((IdentifiableObject) c1).impl
-            };
+            for (int i=0; i<components.length; i++) {
+                ptr[i] = ((IdentifiableObject) components[i]).impl;
+            }
         } catch (ClassCastException e) {
-            throw new UnsupportedImplementationException(UNSUPPORTED_IMPLEMENTATION);
+            throw new UnsupportedImplementationException(
+                    "This factory accepts only components that are PROJ implementations.");
         }
-    }
-
-    /**
-     * Wraps the given components in an array suitable for native method call.
-     *
-     * @param  c1  the first  component.
-     * @param  c2  the second component.
-     * @return the array of components.
-     * @throws UnsupportedImplementationException is a component is not a PROJ implementation.
-     */
-    private static SharedPointer[] components(final IdentifiedObject c1, final IdentifiedObject c2) {
-        try {
-            return new SharedPointer[] {
-                ((IdentifiableObject) c1).impl,
-                ((IdentifiableObject) c2).impl
-            };
-        } catch (ClassCastException e) {
-            throw new UnsupportedImplementationException(UNSUPPORTED_IMPLEMENTATION);
-        }
-    }
-
-    /**
-     * Wraps the given components in an array suitable for native method call.
-     *
-     * @param  c1  the first  component.
-     * @param  c2  the second component.
-     * @param  c3  the third  component.
-     * @return the array of components.
-     * @throws UnsupportedImplementationException is a component is not a PROJ implementation.
-     */
-    private static SharedPointer[] components(final IdentifiedObject c1, final IdentifiedObject c2, final IdentifiedObject c3) {
-        try {
-            return new SharedPointer[] {
-                ((IdentifiableObject) c1).impl,
-                ((IdentifiableObject) c2).impl,
-                ((IdentifiableObject) c3).impl
-            };
-        } catch (ClassCastException e) {
-            throw new UnsupportedImplementationException(UNSUPPORTED_IMPLEMENTATION);
-        }
+        return ptr;
     }
 
     /**
@@ -671,6 +632,225 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
             final Map<String,?> properties,
             final PixelInCell pixelInCell) throws FactoryException
     {
+        throw new FactoryException(UNSUPPORTED);
+    }
+
+    /**
+     * Creates a geographic coordinate reference system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       geodetic datum to use in created CRS.
+     * @param  cs          the ellipsoidal coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public GeographicCRS createGeographicCRS(
+            final Map<String,?> properties,
+            final GeodeticDatum datum,
+            final EllipsoidalCS cs) throws FactoryException
+    {
+        return (GeographicCRS) create(flat(properties),
+                components(datum, cs), null, null, 0, Type.GEOGRAPHIC_CRS);
+    }
+
+    /**
+     * Creates a geocentric coordinate reference system from a Cartesian coordinate system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       geodetic datum to use in created CRS.
+     * @param  cs          the Cartesian coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public GeocentricCRS createGeocentricCRS(
+            final Map<String,?> properties,
+            final GeodeticDatum datum,
+            final CartesianCS   cs) throws FactoryException
+    {
+        return (GeocentricCRS) create(flat(properties),
+                components(datum, cs), null, null, 0, Type.GEOCENTRIC_CRS);
+    }
+
+    /**
+     * Creates a geocentric coordinate reference system from a spherical coordinate system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       geodetic datum to use in created CRS.
+     * @param  cs          the spherical coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public GeocentricCRS createGeocentricCRS(
+            final Map<String,?> properties,
+            final GeodeticDatum datum,
+            final SphericalCS   cs) throws FactoryException
+    {
+        return (GeocentricCRS) create(flat(properties),
+                components(datum, cs), null, null, 0, Type.GEOCENTRIC_CRS);
+    }
+
+    /**
+     * Creates a vertical coordinate reference system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       vertical datum to use in created CRS.
+     * @param  cs          the Vertical coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public VerticalCRS createVerticalCRS(
+            final Map<String,?> properties,
+            final VerticalDatum datum,
+            final VerticalCS    cs) throws FactoryException
+    {
+        return (VerticalCRS) create(flat(properties),
+                components(datum, cs), null, null, 0, Type.VERTICAL_CRS);
+    }
+
+    /**
+     * Creates a temporal coordinate reference system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       temporal datum to use in created CRS.
+     * @param  cs          the Temporal coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public TemporalCRS createTemporalCRS(
+            final Map<String,?> properties,
+            final TemporalDatum datum,
+            final TimeCS        cs) throws FactoryException
+    {
+        return (TemporalCRS) create(flat(properties),
+                components(datum, cs), null, null, 0, Type.TEMPORAL_CRS);
+    }
+
+    /**
+     * Creates a engineering coordinate reference system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       engineering datum to use in created CRS.
+     * @param  cs          the coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public EngineeringCRS createEngineeringCRS(
+            final Map<String,?> properties,
+            final EngineeringDatum datum,
+            final CoordinateSystem cs) throws FactoryException
+    {
+        return (EngineeringCRS) create(flat(properties),
+                components(datum, cs), null, null, 0, Type.ENGINEERING_CRS);
+    }
+
+    /**
+     * Creates an image coordinate reference system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       image datum to use in created CRS.
+     * @param  cs          the Cartesian or Oblique Cartesian coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public ImageCRS createImageCRS(
+            final Map<String,?> properties,
+            final ImageDatum    datum,
+            final AffineCS      cs) throws FactoryException
+    {
+        throw new FactoryException(UNSUPPORTED);
+    }
+
+    /**
+     * Creates a projected coordinate reference system from a defining conversion. The {@code conversionFromBase}
+     * argument shall contain the {@linkplain Conversion#getParameterValues() parameter values} required for the
+     * projection.
+     *
+     * @param  properties          name and other properties to give to the new object.
+     * @param  baseCRS             geographic coordinate reference system to base the projection on.
+     * @param  conversionFromBase  the {@linkplain CoordinateOperationFactory#createDefiningConversion defining conversion}.
+     * @param  derivedCS           the coordinate system for the projected CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public ProjectedCRS createProjectedCRS(
+            final Map<String,?> properties,
+            final GeographicCRS baseCRS,
+            final Conversion    conversionFromBase,
+            final CartesianCS   derivedCS) throws FactoryException
+    {
+        return (ProjectedCRS) create(flat(properties),
+                components(baseCRS, conversionFromBase, derivedCS), null, null, 0, Type.PROJECTED_CRS);
+    }
+
+    /**
+     * Creates a derived coordinate reference system. The {@code conversionFromBase} argument shall contain
+     * the {@linkplain Conversion#getParameterValues() parameter values} required for the conversion.
+     *
+     * @todo Same remark than in {@code createProjectedCRS}.
+     *
+     * @param  properties          name and other properties to give to the new object.
+     * @param  baseCRS             coordinate reference system to base the projection on.
+     * @param  conversionFromBase  the {@linkplain CoordinateOperationFactory#createDefiningConversion defining conversion}.
+     * @param  derivedCS           the coordinate system for the derived CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public DerivedCRS createDerivedCRS(
+            final Map<String,?> properties,
+            final CoordinateReferenceSystem baseCRS,
+            final Conversion conversionFromBase,
+            final CoordinateSystem derivedCS) throws FactoryException
+    {
+        throw new FactoryException(UNSUPPORTED);
+    }
+
+    /**
+     * Creates a compound coordinate reference system from an ordered
+     * list of {@code CoordinateReferenceSystem} instances.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  components  the sequence of coordinate reference systems making the compound CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public CompoundCRS createCompoundCRS(
+            final Map<String, ?> properties,
+            final CoordinateReferenceSystem... components) throws FactoryException
+    {
+        return (CompoundCRS) create(flat(properties), components(components), null, null, 0, Type.COMPOUND_CRS);
+    }
+
+    /**
+     * Creates a coordinate reference system object from a GML string.
+     *
+     * @param  xml  coordinate reference system encoded in GML format.
+     * @return the coordinate reference system for the given GML.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public CoordinateReferenceSystem createFromXML(final String xml) throws FactoryException {
+        throw new FactoryException(UNSUPPORTED);
+    }
+
+    /**
+     * Creates a coordinate reference system object from a <cite>Well-Known Text</cite>.
+     *
+     * @param  wkt  coordinate system encoded in Well-Known Text format.
+     * @return the coordinate reference system for the given WKT.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public CoordinateReferenceSystem createFromWKT(final String wkt) throws FactoryException {
         throw new FactoryException(UNSUPPORTED);
     }
 }
