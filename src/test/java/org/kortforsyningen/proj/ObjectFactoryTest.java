@@ -28,11 +28,11 @@ import javax.measure.Unit;
 import javax.measure.quantity.Length;
 import javax.measure.IncommensurableException;
 import org.opengis.util.FactoryException;
+import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.PrimeMeridian;
 import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.datum.TemporalDatum;
-import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.cs.TimeCS;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.EllipsoidalCS;
@@ -42,6 +42,8 @@ import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.TemporalCRS;
 import org.opengis.referencing.crs.CompoundCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.metadata.citation.Citation;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -155,9 +157,16 @@ public final strictfp class ObjectFactoryTest {
      */
     @Test
     public void testEllipsoid() throws FactoryException {
+        final ReferenceIdentifier id = new ReferenceIdentifier() {
+            @Override public String   getCode()      {return "My code";}
+            @Override public String   getCodeSpace() {return "My codespace";}
+            @Override public Citation getAuthority() {return null;}
+            @Override public String   getVersion()   {return null;}
+        };
         semiMajorAxis = 12.1 + 4*StrictMath.random();
         Ellipsoid ellipsoid = factory.createEllipsoid(
-                Map.of(Ellipsoid.NAME_KEY, "My ellipsoid"),
+                Map.of(Ellipsoid.NAME_KEY, "My ellipsoid",
+                       Ellipsoid.IDENTIFIERS_KEY, id),
                 semiMajorAxis, 12, Units.METRE);
 
         assertEquals("My ellipsoid", ellipsoid.getName().getCode());
@@ -165,6 +174,10 @@ public final strictfp class ObjectFactoryTest {
         assertEquals(            12, ellipsoid.getSemiMinorAxis(), TOLERANCE);
         assertSame  (   Units.METRE, ellipsoid.getAxisUnit());
         assertFalse (ellipsoid.isIvfDefinitive());
+
+        final ReferenceIdentifier firstID = ellipsoid.getIdentifiers().iterator().next();
+        assertEquals("My code",      firstID.getCode());
+        assertEquals("My codespace", firstID.getCodeSpace());
     }
 
     /**
