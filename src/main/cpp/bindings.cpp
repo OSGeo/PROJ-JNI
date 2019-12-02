@@ -19,6 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+// <editor-fold desc="Includes and usings">
 #include <assert.h>
 #include <cstring>
 #include <string>
@@ -33,6 +35,7 @@
 #include "org_kortforsyningen_proj_CompoundCS.h"
 #include "org_kortforsyningen_proj_ObjectFactory.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
+#include "org_kortforsyningen_proj_ReferencingFormat.h"
 #include "org_kortforsyningen_proj_ReferencingFormat$Convention.h"
 #include "org_kortforsyningen_proj_Transform.h"
 #include "org_kortforsyningen_proj_UnitOfMeasure.h"
@@ -115,8 +118,10 @@ using osgeo::proj::io::JSONFormatterNNPtr;
 using osgeo::proj::io::NoSuchAuthorityCodeException;
 using osgeo::proj::io::PROJStringFormatter;
 using osgeo::proj::io::PROJStringFormatterNNPtr;
+using osgeo::proj::io::PROJStringParser;
 using osgeo::proj::io::WKTFormatter;
 using osgeo::proj::io::WKTFormatterNNPtr;
+using osgeo::proj::io::WKTParser;
 using osgeo::proj::metadata::Citation;
 using osgeo::proj::metadata::Extent;
 using osgeo::proj::metadata::Identifier;
@@ -144,6 +149,7 @@ using osgeo::proj::util::BaseObjectPtr;
 using osgeo::proj::util::IComparable;
 using osgeo::proj::util::optional;
 using osgeo::proj::util::PropertyMap;
+// </editor-fold>
 
 
 /*
@@ -160,6 +166,7 @@ using osgeo::proj::util::PropertyMap;
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                           INITIALIZATION  (CLASS NativeResource)                           │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Initialization">
 
 /**
  * Identifier of the Java field which will contain the pointer to PROJ structure in Java class.
@@ -263,16 +270,19 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                          HELPER FUNCTIONS (not invoked from Java)                          │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Helper functions">
 
 #define JPJ_FACTORY_EXCEPTION          "org/opengis/util/FactoryException"
 #define JPJ_NO_SUCH_AUTHORITY_CODE     "org/opengis/referencing/NoSuchAuthorityCodeException"
 #define JPJ_TRANSFORM_EXCEPTION        "org/opengis/referencing/operation/TransformException"
 #define JPJ_NON_INVERTIBLE_EXCEPTION   "org/opengis/referencing/operation/NoninvertibleTransformException"
 #define JPJ_INVALID_PARAMETER_TYPE     "org/opengis/parameter/InvalidParameterTypeException"
-#define JPJ_FORMATTING_EXCEPTION       "org/kortforsyningen/proj/FormattingException"
+#define JPJ_UNFORMATTABLE_EXCEPTION    "org/kortforsyningen/proj/UnformattableObjectException"
+#define JPJ_UNPARSABLE_EXCEPTION       "org/kortforsyningen/proj/UnparsableObjectException"
 #define JPJ_OUT_OF_BOUNDS_EXCEPTION    "java/lang/IndexOutOfBoundsException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
 #define JPJ_RUNTIME_EXCEPTION          "java/lang/RuntimeException"
@@ -623,9 +633,11 @@ again:  switch (type) {
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                                    CLASS UnitOfMeasure                                     │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Units of measures">
 
 
 /**
@@ -731,9 +743,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_UnitOfMeasure_create
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                              CLASS Context (except createPJ)                               │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Context">
 
 
 /**
@@ -845,9 +859,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
-// │                                    CLASS SharedPointer                                     │
+// │                      CLASS SharedPointer (except format and inverse)                       │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Shared pointer">
 
 
 /**
@@ -1375,23 +1391,77 @@ JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_getBoolea
 
 
 /**
- * Creates the inverse of the wrapped operation.
+ * Compares this object with the given object for equality.
  *
- * @param  env         The JNI environment.
- * @param  operation   The Java object wrapping the PROJ operation to inverse.
- * @return inverse operation, or null if out of memory.
+ * @param  env        The JNI environment.
+ * @param  object     The Java object wrapping the PROJ object.
+ * @param  other      The other object to compare with this object.
+ * @param  criterion  A IComparable.Criterion ordinal value.
+ * @return Whether the two objects are equal.
  */
-JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse(JNIEnv *env, jobject operation) {
+JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_isEquivalentTo
+    (JNIEnv *env, jobject object, jobject other, jint criterion)
+{
     try {
-        CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, operation);
-        cop = cop->inverse();
-        BaseObjectPtr ptr = cop.as_nullable();
-        return specific_subclass(env, operation, ptr, org_kortforsyningen_proj_Type_COORDINATE_OPERATION);
+        BaseObjectPtr ptr1, ptr2;
+        if ((ptr1 = get_and_unwrap_ptr<BaseObject>(env, object)) &&
+            (ptr2 = get_and_unwrap_ptr<BaseObject>(env, other)))
+        {
+            if (ptr1 == ptr2) {
+                return JNI_TRUE;
+            }
+            std::shared_ptr<IComparable> obj1, obj2;
+            if ((obj1 = std::dynamic_pointer_cast<IComparable>(ptr1)) &&
+                (obj2 = std::dynamic_pointer_cast<IComparable>(ptr2)))
+            {
+                return obj1->isEquivalentTo(obj2.get(), static_cast<IComparable::Criterion>(criterion));
+            }
+        }
     } catch (const std::exception &e) {
-        rethrow_as_java_exception(env, JPJ_NON_INVERTIBLE_EXCEPTION, e);
+        rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
     }
-    return nullptr;
+    return JNI_FALSE;
 }
+
+
+/**
+ * Returns the memory address of the PROJ object wrapped by the NativeResource.
+ * This is used for computing hash codes and object comparisons only.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the PROJ object.
+ * @return Memory address of the wrapper PROJ object.
+ */
+JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer(JNIEnv *env, jobject object) {
+    jlong ptr = env->GetLongField(object, java_field_for_pointer);
+    if (ptr) {
+        BaseObjectPtr sp = unwrap_shared_ptr<BaseObject>(ptr);
+        if (sp) return reinterpret_cast<jlong>(sp.get());
+    }
+    return 0;
+}
+
+
+/**
+ * Decrements the references count of the shared pointer. This method is invoked automatically
+ * when an instance of IdentifiableObject class is garbage collected.
+ *
+ * @param  env     The JNI environment.
+ * @param  object  The Java object wrapping the shared object to release.
+ */
+JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_SharedPointer_release(JNIEnv *env, jobject object) {
+    jlong ptr = get_and_clear_ptr(env, object);
+    release_shared_ptr<BaseObject>(ptr);
+}
+
+
+
+
+// </editor-fold>
+// ┌────────────────────────────────────────────────────────────────────────────────────────────┐
+// │                       CLASS ReferencingFormat + SharedPointer.format                       │
+// └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Parsing and formatting">
 
 
 /**
@@ -1470,82 +1540,108 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_format
             }
         }
     } catch (const std::exception &e) {
-        rethrow_as_java_exception(env, JPJ_FORMATTING_EXCEPTION, e);
+        rethrow_as_java_exception(env, JPJ_UNFORMATTABLE_EXCEPTION, e);
     }
     return nullptr;
 }
 
 
 /**
- * Compares this object with the given object for equality.
+ * Sends warnings to the `ReferencingFormat` instance used for parsing a text.
+ * This method should be invoked only after successful parsing.
  *
- * @param  env        The JNI environment.
- * @param  object     The Java object wrapping the PROJ object.
- * @param  other      The other object to compare with this object.
- * @param  criterion  A IComparable.Criterion ordinal value.
- * @return Whether the two objects are equal.
+ * @param  env       The JNI environment.
+ * @param  format    The `ReferencingFormat` instance used for formatting.
+ * @param  warnings  The warnings, or an empty list if none.
  */
-JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_isEquivalentTo
-    (JNIEnv *env, jobject object, jobject other, jint criterion)
-{
-    try {
-        BaseObjectPtr ptr1, ptr2;
-        if ((ptr1 = get_and_unwrap_ptr<BaseObject>(env, object)) &&
-            (ptr2 = get_and_unwrap_ptr<BaseObject>(env, other)))
-        {
-            if (ptr1 == ptr2) {
-                return JNI_TRUE;
-            }
-            std::shared_ptr<IComparable> obj1, obj2;
-            if ((obj1 = std::dynamic_pointer_cast<IComparable>(ptr1)) &&
-                (obj2 = std::dynamic_pointer_cast<IComparable>(ptr2)))
-            {
-                return obj1->isEquivalentTo(obj2.get(), static_cast<IComparable::Criterion>(criterion));
+void send_warnings(JNIEnv *env, jobject format, const std::vector<std::string>& warnings) {
+    int n = warnings.size();
+    if (n) {
+        jmethodID addWarning = env->GetMethodID(env->GetObjectClass(format), "addWarning", "(Ljava/lang/String;)V");
+        if (addWarning) {
+            for (int i=0; i<n; i++) {
+                jstring message = env->NewStringUTF(warnings[i].c_str());
+                if (!message) break;
+                env->CallVoidMethod(format, addWarning, message);
+                if (env->ExceptionCheck()) break;                       // Exception will be thrown in Java code.
             }
         }
+    }
+}
+
+
+/**
+ * Parses a Well-Known Text (WKT), JSON or PROJ string.
+ * Warnings, if any, will be sent to the `format` instance.
+ *
+ * @param  env         The JNI environment.
+ * @param  format      The `ReferencingFormat` instance used for formatting.
+ * @param  text        The WKT, JSON or PROJ string to parse.
+ * @param  context     The PJ_CONTEXT wrapper.
+ * @param  convention  One of ReferencingFormat constants.
+ * @param  strict      Whether to enforce strictly standard format.
+ * @return The object parsed from given text, or null on failure.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ReferencingFormat_parse
+    (JNIEnv *env, jobject format, jstring text, jobject context, jint convention, jboolean strict)
+{
+    const char* text_utf = nullptr;
+    try {
+        BaseObjectPtr object = nullptr;
+        switch (convention) {
+            case Format_WKT2_2019_SIMPLIFIED:
+            case Format_WKT2_2015_SIMPLIFIED:
+            case Format_WKT2_2019:
+            case Format_WKT2_2015:
+            case Format_WKT1_ESRI:
+            case Format_WKT1_GDAL: {
+                WKTParser parser;
+                parser.setStrict(strict);
+                parser.attachDatabaseContext(get_database_context(env, context));
+                text_utf = env->GetStringUTFChars(text, nullptr);
+                if (text_utf) {
+                    object = parser.createFromWKT(text_utf).as_nullable();
+                    env->ReleaseStringUTFChars(text, text_utf);
+                    text_utf = nullptr;
+                    const std::list<std::string>& warnings = parser.warningList();
+                    send_warnings(env, format, std::vector<std::string>(warnings.begin(), warnings.end()));
+                }
+                break;
+            }
+            case Format_PROJ_5:
+            case Format_PROJ_4: {
+                PROJStringParser parser;
+                parser.attachDatabaseContext(get_database_context(env, context));
+                text_utf = env->GetStringUTFChars(text, nullptr);
+                if (text_utf) {
+                    object = parser.createFromPROJString(text_utf).as_nullable();
+                    env->ReleaseStringUTFChars(text, text_utf);
+                    text_utf = nullptr;
+                    send_warnings(env, format, parser.warningList());
+                }
+                break;
+            }
+        }
+        if (object) {
+            return specific_subclass(env, context, object, org_kortforsyningen_proj_Type_ANY);
+        }
     } catch (const std::exception &e) {
-        rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
+        if (text_utf) {
+            env->ReleaseStringUTFChars(text, text_utf);
+        }
+        rethrow_as_java_exception(env, JPJ_UNPARSABLE_EXCEPTION, e);
     }
-    return JNI_FALSE;
-}
-
-
-/**
- * Returns the memory address of the PROJ object wrapped by the NativeResource.
- * This is used for computing hash codes and object comparisons only.
- *
- * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the PROJ object.
- * @return Memory address of the wrapper PROJ object.
- */
-JNIEXPORT jlong JNICALL Java_org_kortforsyningen_proj_SharedPointer_rawPointer(JNIEnv *env, jobject object) {
-    jlong ptr = env->GetLongField(object, java_field_for_pointer);
-    if (ptr) {
-        BaseObjectPtr sp = unwrap_shared_ptr<BaseObject>(ptr);
-        if (sp) return reinterpret_cast<jlong>(sp.get());
-    }
-    return 0;
-}
-
-
-/**
- * Decrements the references count of the shared pointer. This method is invoked automatically
- * when an instance of IdentifiableObject class is garbage collected.
- *
- * @param  env     The JNI environment.
- * @param  object  The Java object wrapping the shared object to release.
- */
-JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_SharedPointer_release(JNIEnv *env, jobject object) {
-    jlong ptr = get_and_clear_ptr(env, object);
-    release_shared_ptr<BaseObject>(ptr);
+    return nullptr;
 }
 
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                                      CLASS CompoundCS                                      │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Compound CS">
 
 
 /**
@@ -1714,9 +1810,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_CompoundCS_getAxis
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                                    CLASS ObjectFactory                                     │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Object factory">
 
 
 /**
@@ -2039,9 +2137,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
 // │                                   CLASS AuthorityFactory                                   │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Authority factory">
 
 
 /**
@@ -2291,9 +2391,11 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_AuthorityFactory_createO
 
 
 
+// </editor-fold>
 // ┌────────────────────────────────────────────────────────────────────────────────────────────┐
-// │                                      CLASS Transform                                       │
+// │                 CLASS Transform + Context.createPJ + SharedPointer.inverse                 │
 // └────────────────────────────────────────────────────────────────────────────────────────────┘
+// <editor-fold desc="Transform">
 
 
 /**
@@ -2405,6 +2507,26 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_transform
 
 
 /**
+ * Creates the inverse of the wrapped operation.
+ *
+ * @param  env         The JNI environment.
+ * @param  operation   The Java object wrapping the PROJ operation to inverse.
+ * @return inverse operation, or null if out of memory.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse(JNIEnv *env, jobject operation) {
+    try {
+        CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, operation);
+        cop = cop->inverse();
+        BaseObjectPtr ptr = cop.as_nullable();
+        return specific_subclass(env, operation, ptr, org_kortforsyningen_proj_Type_COORDINATE_OPERATION);
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_NON_INVERTIBLE_EXCEPTION, e);
+    }
+    return nullptr;
+}
+
+
+/**
  * Destroys the PJ object.
  *
  * @param  env        The JNI environment.
@@ -2414,3 +2536,4 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_destroy(JNIEnv *e
     jlong pjPtr = get_and_clear_ptr(env, transform);
     proj_destroy(reinterpret_cast<PJ*>(pjPtr));         // Does nothing if pjPtr is null.
 }
+// </editor-fold>

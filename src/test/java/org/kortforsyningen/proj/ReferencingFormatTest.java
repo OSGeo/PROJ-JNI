@@ -27,6 +27,8 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import org.junit.Test;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.util.FactoryException;
 
 import static org.junit.Assert.*;
@@ -80,7 +82,7 @@ public final strictfp class ReferencingFormatTest {
      * @throws FactoryException if an error occurred while creating the test CRS.
      */
     @Test
-    public void testToString() throws FactoryException {
+    public void testToWKT() throws FactoryException {
         final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
         final String wkt = crs.toWKT();
@@ -141,5 +143,40 @@ public final strictfp class ReferencingFormatTest {
         formatter.setConvention(ReferencingFormat.Convention.PROJ_5);
         final String wkt = formatter.format(crs);
         assertEquals("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs +type=crs", wkt);
+    }
+
+    /**
+     * Tests {@link ReferencingFormat#parse(String)}.
+     */
+    @Test
+    public void testParse() {
+        final ReferencingFormat parser = new ReferencingFormat();
+        final GeographicCRS crs = (GeographicCRS) parser.parse(
+                "GEOGCRS[\"WGS 84\",\n" +
+                "    DATUM[\"World Geodetic System 1984\",\n" +
+                "        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n" +
+                "            ANGLEUNIT[\"metre\",1]]],\n" +                 // Intentional error for testing warnings.
+                "    CS[ellipsoidal,2],\n" +
+                "        AXIS[\"geodetic latitude (Lat)\",north,\n" +
+                "            ANGLEUNIT[\"degree\",0.0174532925199433]],\n" +
+                "        AXIS[\"geodetic longitude (Lon)\",east,\n" +
+                "            ANGLEUNIT[\"degree\",0.0174532925199433]]]");
+
+        assertEquals("WGS 84", crs.getName().getCode());
+        assertEquals("World Geodetic System 1984", crs.getDatum().getName().getCode());
+        assertEquals(AxisDirection.NORTH, crs.getCoordinateSystem().getAxis(0).getDirection());
+        assertEquals(Units.DEGREE, crs.getCoordinateSystem().getAxis(1).getUnit());
+        /*
+         * Expected warning message:
+         *
+         * Parsing error : syntax error, unexpected ANGLEUNIT, expecting UNIT or LENGTHUNIT or ID. Error occurred around:
+         *             ANGLEUNIT["metre",1]]],
+         *             ^
+         */
+        boolean foundWarning = false;
+        for (String warning : parser.getWarnings()) {
+            foundWarning |= warning.contains("unexpected ANGLEUNIT");
+        }
+        assertTrue(foundWarning);
     }
 }

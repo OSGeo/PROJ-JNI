@@ -139,7 +139,7 @@ class SharedPointer extends NativeResource {
     final native IdentifiableObject inverse() throws NoninvertibleTransformException;
 
     /**
-     * Returns a <cite>Well-Known Text</cite> (WKT) for this object.
+     * Returns a <cite>Well-Known Text</cite> (WKT) or other format for this object.
      * This method can be used with the following types:
      *
      * <ul>
@@ -155,9 +155,10 @@ class SharedPointer extends NativeResource {
      * @param  strict      whether to enforce strictly standard format.
      * @return the Well-Known Text (WKT) for this object, or {@code null} if the PROJ object
      *         does not implement the {@code osgeo::proj::io::IWKTExportable} interface.
-     * @throws FormattingException if an error occurred during formatting.
+     * @throws UnformattableObjectException if an error occurred during formatting.
      */
-    final native String format(Context context, int convention, int indentation, boolean multiline, boolean strict);
+    final native String format(Context context, int convention, int indentation, boolean multiline, boolean strict)
+            throws UnformattableObjectException;
 
     /**
      * Compares this object with the given object for equality.

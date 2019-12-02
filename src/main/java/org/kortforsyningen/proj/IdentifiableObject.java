@@ -337,7 +337,7 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @return the Well-Known Text (WKT) for this object.
      * @throws UnsupportedOperationException if this object can not be formatted as WKT.
-     * @throws FormattingException if an error occurred during formatting.
+     * @throws UnformattableObjectException if an error occurred during formatting.
      */
     public String toWKT() {
         final String wkt = impl.format(null, ReferencingFormat.Convention.WKT.ordinal(), -1, true, true);
@@ -361,7 +361,7 @@ abstract class IdentifiableObject implements Formattable {
             if (wkt != null) {
                 return wkt;
             }
-        } catch (FormattingException e) {
+        } catch (UnformattableObjectException e) {
             return e.toString();
         }
         return super.toString();

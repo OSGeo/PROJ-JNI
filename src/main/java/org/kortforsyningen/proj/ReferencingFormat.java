@@ -21,6 +21,9 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -72,6 +75,11 @@ public class ReferencingFormat {
     private boolean strict;
 
     /**
+     * The warnings that occurred during parsing, or an empty list if none.
+     */
+    private final List<String> warnings;
+
+    /**
      * Creates a new formatter initialized to default configuration.
      * The default configuration uses {@link Convention#WKT} and
      * formats the WKT in a multi-lines layout.
@@ -80,6 +88,7 @@ public class ReferencingFormat {
         convention  = Convention.WKT;
         multiline   = true;
         indentation = 4;
+        warnings    = new ArrayList<>();
     }
 
     /**
@@ -174,9 +183,10 @@ public class ReferencingFormat {
      *
      * @param  object  the PROJ object to format.
      * @return the given object in WKT, JSON or PROJ format.
-     * @throws FormattingException if the given object can not be formatted.
+     * @throws UnformattableObjectException if the given object can not be formatted.
      */
-    public String format(final Object object) throws FormattingException {
+    public String format(final Object object) throws UnformattableObjectException {
+        warnings.clear();
         Objects.requireNonNull(object);
         if (object instanceof IdentifiableObject) {
             final String text;
@@ -188,9 +198,57 @@ public class ReferencingFormat {
                 return text;
             }
         }
-        throw new FormattingException("Can not format the given object.");
+        throw new UnformattableObjectException("Can not format the given object.");
     }
 
+    /**
+     * Parses the given characters string. The format (WKT, PROJ) must be the
+     * format specified by the last call to {@link #setConvention(Convention)}.
+     *
+     * @param  text  the object definition to parse.
+     * @return object parsed from the given characters string.
+     * @throws UnparsableObjectException if an error occurred during parsing.
+     *
+     * @see Proj#createFromUserInput(String)
+     */
+    public Object parse(final String text) throws UnparsableObjectException {
+        warnings.clear();
+        try (Context c = Context.acquire()) {
+            return parse(text, c, convention.ordinal(), strict);
+        }
+    }
+
+    /**
+     * Parses the given characters string.
+     *
+     * @param  text        the object definition to parse.
+     * @param  context     the thread context, or {@code null} if none.
+     * @param  convention  ordinal value of the {@link ReferencingFormat.Convention} to use.
+     * @param  strict      whether to enforce strictly standard format.
+     * @return object parsed from the given characters string.
+     * @throws UnparsableObjectException if an error occurred during parsing.
+     */
+    final native Object parse(String text, Context context, int convention, boolean strict) throws UnparsableObjectException;
+
+    /**
+     * Adds the given message to the warnings. This method is invoked from native code;
+     * method signature shall not be modified unless the native code is updated accordingly.
+     *
+     * @param  message  the warning message to add.
+     */
+    private void addWarning(final String message) {
+        warnings.add(message);
+    }
+
+    /**
+     * Returns the warnings emitted during the last parsing operation.
+     * If no warning occurred, then this method returns an empty list.
+     *
+     * @return the warnings that occurred during the last parsing operation.
+     */
+    public List<String> getWarnings() {
+        return Collections.unmodifiableList(warnings);
+    }
 
 
 
@@ -198,17 +256,29 @@ public class ReferencingFormat {
      * Controls some aspects in formatting referencing objects as <cite>Well Known Text</cite> (WKT),
      * JSON or PROJ strings.
      * The WKT format has two major versions (WKT 1 and WKT 2), with WKT 2 defined by ISO 19162.
-     * Those two WKT versions have different compatibility characteristics:
+     * Those WKT versions have different compatibility characteristics:
      *
      * <ul>
      *   <li>All WKT 2 flavors in this enumeration are consistent between them.</li>
-     *   <li>The legacy WKT 1 format had various interpretations with some incompatibilities
-     *       between them (e.g. regarding units of measurement). A CRS formatted with one WKT 1
-     *       flavor is not guaranteed to be read correctly with a different WKT 1 flavor.</li>
+     *   <li>The legacy WKT 1 format defined in <a href="https://www.opengeospatial.org/standards/sfs">OGC
+     *       99-049 — Simple Feature Implementation (1999)</a> had various interpretations with some
+     *       incompatibilities between them (e.g. regarding units of measurement). A CRS formatted with
+     *       one WKT 1 flavor is not guaranteed to be read correctly with a different WKT 1 flavor.</li>
+     *   <li>The WKT 1 format defined in <a href="http://www.opengeospatial.org/standards/ct">OGC
+     *       01-009 — Coordinate Transformation Service (2001)</a> fixed many OGC 99-049 ambiguities
+     *       but is not supported by PROJ.</li>
      * </ul>
      *
      * The {@link #WKT} and {@link #WKT_SIMPLIFIED} fields are aliases to the most recent WKT
      * versions supported by current implementation.
+     *
+     * <h2>Note about WKT in GeoPackage</h2>
+     * The <a href="http://www.geopackage.org/spec/#gpkg_spatial_ref_sys_cols_crs_wkt">GeoPackage standard</a>
+     * defines two columns for specifying Coordinate Reference System in Well Known Text format:
+     * the {@code "definition"} column shall contain a WKT 1 string as defined by OGC 01-009 while
+     * the {@code "definition_12_063"} column contains a WKT 2 string as defined by OGC 12-063.
+     * Since PROJ does not support OGC 01-009, we recommend to always provided a value in the
+     * {@code "definition_12_063"} column formatted by {@link #WKT2_2015}.
      *
      * @author  Martin Desruisseaux (Geomatys)
      * @version 1.0
@@ -225,10 +295,9 @@ public class ReferencingFormat {
          *       for {@link org.opengis.referencing.crs.GeographicCRS}.</li>
          * </ul>
          *
+         * @see #WKT
          * @see <a href="http://docs.opengeospatial.org/is/18-010r7/18-010r7.html">Well-known
          *      text representation of coordinate reference systems (2019)</a>
-         *
-         * @see #WKT
          */
         WKT2_2019,
 
@@ -268,19 +337,19 @@ public class ReferencingFormat {
         WKT2_2015_SIMPLIFIED,
 
         /**
-         * Well Known Text version 1 as traditionally written by ESRI software.
-         * This is derived from OGC 01-009.
-         *
-         * @see <a href="http://www.opengeospatial.org/standards/ct">Coordinate Transformation Service (2001)</a>
-         */
-        WKT1_ESRI,
-
-        /**
          * Well Known Text version 1 as traditionally written by GDAL.
          * A notable departure from {@code WKT1_GDAL} with respect to OGC 01-009 is that
          * in {@code WKT1_GDAL}, the unit of the {@code PRIMEM} value is always degrees.
          */
         WKT1_GDAL,
+
+        /**
+         * Well Known Text version 1 as traditionally written by ESRI software in Shapefiles.
+         * This format has the same departures than {@link #WKT1_GDAL} with respect to OGC 01-009,
+         * plus some more differences in map projection parameter names.
+         * The {@code AXIS} and {@code AUTHORITY} elements are omitted in this format.
+         */
+        WKT1_ESRI,
 
         /**
          * Implementation-specific string format for CRS and coordinate operations.

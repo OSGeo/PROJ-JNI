@@ -23,22 +23,22 @@ package org.kortforsyningen.proj;
 
 
 /**
- * Thrown when a PROJ object can not be parsed from or formatted to Well Known Text.
+ * Thrown when a PROJ object can not be parsed from a Well Known Text (WKT), JSON or PROJ string.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
  */
-public class FormattingException extends RuntimeException {
+public class UnparsableObjectException extends RuntimeException {
     /**
      * Serial number for inter-operability with different versions.
      */
-    private static final long serialVersionUID = -6675577521929643794L;
+    private static final long serialVersionUID = -2092270598439694323L;
 
     /**
      * Construct an exception with no detail message.
      */
-    public FormattingException() {
+    public UnparsableObjectException() {
     }
 
     /**
@@ -46,7 +46,7 @@ public class FormattingException extends RuntimeException {
      *
      * @param message  the detail message, saved for later retrieval by the {@link #getMessage()} method.
      */
-    public FormattingException(String message) {
+    public UnparsableObjectException(String message) {
         super(message);
     }
 }
