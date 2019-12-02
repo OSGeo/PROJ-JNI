@@ -79,13 +79,15 @@ final class Property {
                        ABBREVIATION      = 206,
                        DIRECTION         = 207,
                        ANCHOR_DEFINITION = 208,
-                       SCOPE             = 209,
-                       REMARKS           = 210,
-                       FORMULA           = 211,
-                       FORMULA_TITLE     = 212,
-                       OPERATION_VERSION = 213,
-                       PARAMETER_STRING  = 214,
-                       PARAMETER_FILE    = 215;
+                       TEMPORAL_ORIGIN   = 209,
+                       PUBLICATION_DATE  = 210,
+                       SCOPE             = 211,
+                       REMARKS           = 212,
+                       FORMULA           = 213,
+                       FORMULA_TITLE     = 214,
+                       OPERATION_VERSION = 215,
+                       PARAMETER_STRING  = 216,
+                       PARAMETER_FILE    = 217;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getNumericProperty(short)} method.

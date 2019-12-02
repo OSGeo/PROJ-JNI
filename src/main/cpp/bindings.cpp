@@ -1180,6 +1180,22 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 value = get_identified_object(env, object)->remarks().c_str();
                 break;
             }
+            case org_kortforsyningen_proj_Property_PUBLICATION_DATE: {
+                const optional<DateTime> &date = get_shared_object<Datum>(env, object)->publicationDate();
+                if (date.has_value() && date->isISO_8601()) {
+                    // NewStringUTF must be in the scope of this block.
+                    return env->NewStringUTF(date->toString().c_str());
+                }
+                return nullptr;
+            }
+            case org_kortforsyningen_proj_Property_TEMPORAL_ORIGIN: {
+                const DateTime &date = get_shared_object<TemporalDatum>(env, object)->temporalOrigin();
+                if (date.isISO_8601()) {
+                    // NewStringUTF must be in the scope of this block.
+                    return env->NewStringUTF(date.toString().c_str());
+                }
+                return nullptr;
+            }
             case org_kortforsyningen_proj_Property_SCOPE: {
                 ObjectUsageNNPtr usage = get_shared_object<ObjectUsage>(env, object);
                 for (const ObjectDomainNNPtr domain : usage->domains()) {

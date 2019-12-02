@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +32,7 @@ import java.util.FormattableFlags;
 import java.util.Formatter;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Date;
 import javax.measure.Unit;
 import javax.measure.Quantity;
 import org.opengis.util.GenericName;
@@ -187,6 +189,20 @@ abstract class IdentifiableObject implements Formattable {
     final InternationalString getProperty(final short property) {
         final String value = impl.getStringProperty(property);
         return (value != null) ? new SimpleCitation(value) : null;
+    }
+
+    /**
+     * Returns a property value as a date.
+     * The date property shall be a {@link String} value encoded in ISO 8601 format.
+     *
+     * @param  property  one of {@link Property#TEMPORAL_ORIGIN}, <i>etc.</i> values.
+     * @return value of the specified property, or {@code null} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     * @throws java.time.format.DateTimeParseException if the date can not be parsed.
+     */
+    final Date getDate(final short property) {
+        final String value = impl.getStringProperty(property);
+        return (value != null) ? Date.from(Instant.parse(value)) : null;
     }
 
     /**

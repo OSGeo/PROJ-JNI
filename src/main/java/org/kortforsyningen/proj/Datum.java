@@ -79,7 +79,7 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
      */
     @Override
     public Date getRealizationEpoch() {
-        return null;        // TODO
+        return getDate(Property.PUBLICATION_DATE);
     }
 
     /**
@@ -188,7 +188,7 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
          */
         @Override
         public Date getOrigin() {
-            return null;            // TODO
+            return getDate(Property.TEMPORAL_ORIGIN);
         }
     }
 

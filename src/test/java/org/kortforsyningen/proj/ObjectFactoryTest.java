@@ -310,9 +310,9 @@ public final strictfp class ObjectFactoryTest {
      *
      * @param  datum  the test datum to verify.
      */
-    private static void verify(final TemporalDatum datum) {
+    private void verify(final TemporalDatum datum) {
         assertEquals("My datum", datum.getName().getCode());
-//      assertEquals(origin, datum.getOrigin());    // TODO
+        assertEquals(origin, datum.getOrigin());
     }
 
     /**
@@ -404,7 +404,7 @@ public final strictfp class ObjectFactoryTest {
      *
      * @param  crs  the test CRS to verify.
      */
-    private static void verify(final TemporalCRS crs) {
+    private void verify(final TemporalCRS crs) {
         assertEquals("My temporal CRS", crs.getName().getCode());
         verify(crs.getDatum());
 
