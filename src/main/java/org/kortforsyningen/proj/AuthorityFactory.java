@@ -110,10 +110,10 @@ final class AuthorityFactory extends NativeResource {
      *
      * @param  sourceCRS                    input coordinate reference system.
      * @param  targetCRS                    output coordinate reference system.
-     * @param  westBoundLongitude           the minimal <var>x</var> value.
-     * @param  eastBoundLongitude           the maximal <var>x</var> value.
-     * @param  southBoundLatitude           the minimal <var>y</var> value.
-     * @param  northBoundLatitude           the maximal <var>y</var> value.
+     * @param  westBoundLongitude           the minimal <var>x</var> value (degrees).
+     * @param  eastBoundLongitude           the maximal <var>x</var> value (degrees).
+     * @param  southBoundLatitude           the minimal <var>y</var> value (degrees).
+     * @param  northBoundLatitude           the maximal <var>y</var> value (degrees).
      * @param  desiredAccuracy              desired accuracy (in metres), or 0 for the best accuracy available.
      * @param  sourceAndTargetCRSExtentUse  how CRS extents are used when considering if a transformation can be used.
      * @param  spatialCriterion             criterion when comparing the areas of validity.

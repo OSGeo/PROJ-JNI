@@ -204,6 +204,8 @@ public class ReferencingFormat {
     /**
      * Parses the given characters string. The format (WKT, PROJ) must be the
      * format specified by the last call to {@link #setConvention(Convention)}.
+     * If the given string contains some non-fatal errors, warnings can be obtained
+     * by {@link #getWarnings()}.
      *
      * @param  text  the object definition to parse.
      * @return object parsed from the given characters string.
