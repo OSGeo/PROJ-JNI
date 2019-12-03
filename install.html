@@ -52,7 +52,7 @@
       <p>
         Execute in a console:
       </p>
-      <pre>dnf install gcc-c++ make java-latest-openjdk maven
+      <pre>dnf install gcc-c++ make cmake java-latest-openjdk maven
 export JAVA_HOME=/etc/alternatives/java_sdk</pre>
     </details>
 
@@ -64,6 +64,7 @@ export JAVA_HOME=/etc/alternatives/java_sdk</pre>
       <ul>
         <li>g++</li>
         <li>make</li>
+        <li>cmake</li>
         <li><a href="https://adoptopenjdk.net/">OpenJDK 13</a> or more recent</li>
         <li><a href="https://maven.apache.org/download.cgi">Maven</a> (to install, unzip in any directory)</li>
       </ul>
@@ -142,9 +143,11 @@ chdir <var>PROJ_directory</var>
         Execute the following commands in the console:
       </p>
       <pre>cd <var>projects_directory</var>/PROJ-JNI
-cd src/main/cpp
-make
-cd ../../..
+mkdir target-native
+cd target-native
+cmake ../src/main/cpp
+cd ..
+cmake --build target-native
 ldd src/main/resources/org/kortforsyningen/proj/linux/libproj-binding.so</pre>
       <p>
         The last line in above commands is for checking purpose.
@@ -152,7 +155,7 @@ ldd src/main/resources/org/kortforsyningen/proj/linux/libproj-binding.so</pre>
       </p>
       <pre>libproj.so.15 => /lib64/libproj.so.15 (0x00007f19b6749000)</pre>
       <p>
-        If the line show "unknown" instead, the PROJ installation may be incomplete.
+        If the line shows "unknown" instead, the PROJ installation may be incomplete.
         How to fix the problem depends on the platform. On Fedora it can be fixed as below:
       </p>
       <pre>cd /lib64
