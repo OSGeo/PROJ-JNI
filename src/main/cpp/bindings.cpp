@@ -36,7 +36,7 @@
 #include "org_kortforsyningen_proj_ObjectFactory.h"
 #include "org_kortforsyningen_proj_AuthorityFactory.h"
 #include "org_kortforsyningen_proj_ReferencingFormat.h"
-#include "org_kortforsyningen_proj_ReferencingFormat$Convention.h"
+#include "org_kortforsyningen_proj_Convention.h"
 #include "org_kortforsyningen_proj_Transform.h"
 #include "org_kortforsyningen_proj_UnitOfMeasure.h"
 

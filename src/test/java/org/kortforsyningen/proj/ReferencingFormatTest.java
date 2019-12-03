@@ -57,7 +57,7 @@ public final strictfp class ReferencingFormatTest {
     @Test
     public void verifyOrdinalValues() throws IOException {
         final EnumSet<ReferencingFormat.Convention> remainings = EnumSet.allOf(ReferencingFormat.Convention.class);
-        for (final String line : Files.readAllLines(Paths.get("src/main/cpp/org_kortforsyningen_proj_ReferencingFormat$Convention.h"))) {
+        for (final String line : Files.readAllLines(Paths.get("src/main/cpp/org_kortforsyningen_proj_Convention.h"))) {
             if (line.startsWith(DEFINE)) {
                 final int s1 = line.indexOf(' ', DEFINE.length());
                 final int s2 = line.lastIndexOf(' ');

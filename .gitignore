@@ -2,6 +2,7 @@
 /target/
 
 # JNI compilation output
+/target-native/
 libproj-binding.*
 
 # Log file
