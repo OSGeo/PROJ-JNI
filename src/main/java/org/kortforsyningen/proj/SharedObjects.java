@@ -59,7 +59,7 @@ import java.util.concurrent.locks.StampedLock;
  * @since   1.0
  */
 @SuppressWarnings("serial")
-final class SharedObjects extends StampedLock {
+final class SharedObjects extends StampedLock implements Runnable {
     /**
      * Number of nanoseconds to wait before to rehash the table for reducing its size.
      * When the garbage collector collects a lot of elements, we will wait at least this amount of time
@@ -262,6 +262,7 @@ final class SharedObjects extends StampedLock {
     /**
      * Implementation of {@link #remove(Entry)} invoked when the caller already has a lock.
      * This variant is required because {@link StampedLock} is not re-entrant.
+     * This method does nothing if the given entry is not found.
      *
      * @param  toRemove  the entry to remove from this map.
      */
@@ -380,5 +381,40 @@ final class SharedObjects extends StampedLock {
             unlockWrite(stamp);
         }
         return null;
+    }
+
+    /**
+     * Invoked at JVM shutdown time for releasing all shared pointers,
+     * then destroying all {@code PJ_CONTEXT} instances.
+     */
+    @Override
+    public void run() {
+        boolean found;
+        do {
+            final Entry[] entries;
+            final long stamp = writeLock();
+            try {
+                entries = table;
+                table = new Entry[3];       // In case some write operation continue concurrently (but should not happen).
+            } finally {
+                unlockWrite(stamp);
+            }
+            found = false;
+            for (Entry e : entries) {
+                while (e != null) {
+                    e.cleaner.release();
+                    e = e.next;
+                    found = true;
+                }
+            }
+        } while (found);
+        Context.destroyAll();
+    }
+
+    /**
+     * Register a shutdown hook for releasing all PROJ objects on shutdown.
+     */
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(CACHE, "PROJ-JNI shutdown"));
     }
 }

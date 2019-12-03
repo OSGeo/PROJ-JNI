@@ -188,7 +188,7 @@ final class Context extends NativeResource implements AutoCloseable {
      * This method should be invoked when there is a chance that some contexts are no longer needed, for example when
      * some PROJ objects are garbage collected.
      */
-    static void destroyExpired() {
+    private static void destroyExpired() {
         Context c = CONTEXTS.peekFirst();
         if (c != null) {
             final long time = System.nanoTime();
@@ -206,6 +206,16 @@ final class Context extends NativeResource implements AutoCloseable {
                 c.destroy();
                 c = CONTEXTS.peekFirst();                   // Check if next context should also be disposed.
             }
+        }
+    }
+
+    /**
+     * Destroys all {@code PJ_CONTEXT} instances. This is invoked at JVM shutdown time.
+     */
+    static void destroyAll() {
+        Context c;
+        while ((c = CONTEXTS.poll()) != null) {
+            c.destroy();
         }
     }
 
