@@ -134,7 +134,9 @@ chdir <var>PROJ_directory</var>
     <p>
       Download a <a href="https://github.com/Kortforsyningen/PROJ-JNI/packages">PROJ-JNI release</a>.
       (TODO: there is no release yet; use <code>git clone https://github.com/Kortforsyningen/PROJ-JNI.git</code> in the meantime)
-      Unzip in a project directory then build the C/C++ code.
+      Unzip in a project directory then build as below.
+      The build includes both Java and C++ code, and includes also a test phase.
+      Consequently a successful build means that the Java bindings have been correctly linked to PROJ library.
       Note that there is no "install" phase of PROJ-JNI; we keep the build local to the project directory.
     </p>
     <details>
@@ -143,12 +145,8 @@ chdir <var>PROJ_directory</var>
         Execute the following commands in the console:
       </p>
       <pre>cd <var>projects_directory</var>/PROJ-JNI
-mkdir target-native
-cd target-native
-cmake ../src/main/cpp
-cd ..
-cmake --build target-native
-ldd src/main/resources/org/kortforsyningen/proj/linux/libproj-binding.so</pre>
+mvn package
+ldd target/classes/org/kortforsyningen/proj/libproj-binding.so</pre>
       <p>
         The last line in above commands is for checking purpose.
         Its output should contain a line like below (details may vary):
@@ -164,24 +162,11 @@ sudo ln -s /usr/local/lib/libproj.so.15</pre>
 
     <details>
       <summary>Windows</summary>
-      <pre>TODO</pre>
-    </details>
-    <p>
-      After the C/C++ part has been compiled, compiling the Java code can be done as below.
-      This compilation includes a test phase, so a successful build means that the Java bindings
-      have been correctly linked to PROJ.
-    </p>
-    <details open>
-      <summary>Any platform</summary>
-      <pre>mvn package</pre>
-    </details>
-
-    <details>
-      <summary>Windows</summary>
       <p>
         It may be necessary to specify explicitly the path to Maven directory:
       </p>
-      <pre>%MAVEN_HOME%\bin\mvn install</pre>
+      <pre>chdir <var>projects_directory</var>\PROJ-JNI
+%MAVEN_HOME%\bin\mvn package</pre>
     </details>
 
 
