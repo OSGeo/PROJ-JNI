@@ -121,18 +121,11 @@ abstract class NativeResource {
      */
     private static Path libraryPath() throws URISyntaxException, IOException {
         final String os = System.getProperty("os.name");
-        final String libdir, suffix;
+        final String suffix;
         if (os.contains("Windows")) {
-            libdir = "windows";
             suffix = "dll";
-        } else if (os.contains("Mac OS")) {
-            libdir = "darwin";
-            suffix = "so";
-        } else if (os.contains("Linux")) {
-            libdir = "linux";
-            suffix = "so";
         } else {
-            throw new UnsatisfiedLinkError("Unsupported operating system: " + os);
+            suffix = "so";
         }
         /*
          * The resource may be a URL to an ordinary file (typically in the Maven "target/classes" directory)
@@ -143,7 +136,7 @@ abstract class NativeResource {
          *
          * The URL can be used directly only if it is an ordinary file (without "jar" protocol).
          */
-        final String nativeFile = libdir + '/' + NATIVE_LIB + '.' + suffix;
+        final String nativeFile = NATIVE_LIB + '.' + suffix;
         final URL res = NativeResource.class.getResource(nativeFile);
         if (res == null) {
             throw new UnsatisfiedLinkError("Missing native file: " + nativeFile);
@@ -162,7 +155,7 @@ abstract class NativeResource {
         if (s >= 0) {
             location = Paths.get(new URI(file.substring(0, s)));
             final Path directory = location.getParent();
-            location = directory.resolve(NATIVE_LIB + '.' + suffix);
+            location = directory.resolve(nativeFile);
             if (Files.isReadable(location)) {
                 return location;
             }

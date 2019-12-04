@@ -30,19 +30,20 @@
 # C/C++ compilation is currently not part of Maven build. Compilation shall be done manually like below.
 # The following commands need to be executed only once:
 #
-#     mkdir target-native
-#     cd target-native
-#     cmake ../src/main/cpp
-#     cd ..
+#     mvn compile
+#     mkdir target/cmake
+#     cd target/cmake
+#     cmake ../../src/main/cpp
+#     cd ../..
 #
 # Then the following command need to be run from the project root directory, and once again every time
 # the native C/C++ code changed:
 #
-#     cmake --build target-native
+#     cmake --build target/cmake
 #
-# The executable will be created in the "src/resources/…/proj/<platform>/" directory for inclusion in the JAR file.
-# Only the executable for the current platform will be updated. If the JNI have been updated, then `make` will need
-# to be executed on all supported platforms. The JNI may also need to be recompiled when the PROJ version changes.
+# The executable will be created in the "target/classes/…/proj/" directory for inclusion in the JAR file.
+# Only the executable for the current platform will be updated. If the JNI have been updated, then `cmake`
+# will need to be executed again. The JNI may also need to be recompiled when the PROJ version changes.
 #
 cmake_minimum_required(VERSION 3.5)
 
@@ -55,19 +56,8 @@ set(CMAKE_CXX_STANDARD 11)
 # Omit debugging information.
 set(CMAKE_BUILD_TYPE Release)
 
-# The executable will be created in the "src/resources/…/proj/<platform>/" directory for inclusion in the JAR file.
-# Only the executable for the current platform will be updated. If the JNI have been updated, then `make` will need
-# to be executed on all supported platforms. The JNI may also need to be recompiled when the PROJ version changes.
-IF(APPLE)
-  SET(SUBDIR darwin)
-ELSEIF(UNIX)
-  SET(SUBDIR linux)
-ELSEIF(WIN32)
-  SET(SUBDIR window)
-ELSE()
-  MESSAGE(FATAL_ERROR "Unrecognized platform.")
-ENDIF()
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../src/main/resources/org/kortforsyningen/proj/${SUBDIR})
+# The binary will be put in the directory of Java classes package.
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../classes/org/kortforsyningen/proj)
 
 # Find Java Native Interfaces (JNI). The location is system-dependent. In particular there is a "win32",
 # "linux" or "darwin" directory to append to the path. CMake adds automatically the right sub-directory.
