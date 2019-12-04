@@ -4,7 +4,7 @@
   Maven project configuration file
   http://maven.apache.org/
 
-  For building this project: mvn install
+  For building this project: mvn package
 -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -144,17 +144,32 @@
         </configuration>
       </plugin>
 
-      <!-- All links to dependencies for convenience. -->
+      <!-- Compile C/C++ code using CMake. See `src/main/cpp/build.xml` for more details. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.8</version>
         <executions>
           <execution>
+            <id>build-native</id>
+            <phase>process-classes</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target>
+                <property name="source.directory" value="${project.basedir}/src/main/cpp"/>
+                <property name="target.directory" value="${project.build.directory}"/>
+                <property name= "cmake.directory" value="cmake"/>
+                <ant dir="${target.directory}" antfile="${project.basedir}/src/main/cpp/build.xml" inheritAll="true"/>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
+            <id>link-dependencies</id>
             <phase>package</phase>
             <goals><goal>run</goal></goals>
             <configuration>
               <target>
+                <!-- Add links to dependencies for convenience. -->
                 <symlink overwrite="true" link="${project.build.directory}" resource="${maven.dependency.javax.measure.unit-api.jar.path}"/>
                 <symlink overwrite="true" link="${project.build.directory}" resource="${maven.dependency.org.opengis.geoapi.jar.path}"/>
               </target>

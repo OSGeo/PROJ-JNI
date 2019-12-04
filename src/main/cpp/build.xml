@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Ant build file for configuring cmake and building the PROJ-JNI native code.
+  This Ant task is designed for invocation from Maven; there is few reason to
+  invoke this file directly (the command lines documented in `CMakeLists.txt`
+  should work as well).
+-->
+
+<project name="CMake" default="build" basedir="${target.directory}">
+  <!--
+    Check what has been already done. There is two steps to check:
+    whether CMake has been configured and whether the binary has been built.
+    In both cases the generated files are located in the `target` directory;
+    we do not create any file outside that directory.
+  -->
+  <target name="init">
+    <fail unless="cmake.directory">The properties specifying directories are not set.</fail>
+    <available property="cmake.configured" file="${cmake.directory}/Makefile"/>
+    <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/libproj-binding.so"/>
+    <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/proj-binding.dll"/>
+  </target>
+  <!--
+    All CMake configuration files will be stored in the `target/cmake` directory.
+    Because that directory is deleted evertime `mvn clean` is executed, we need
+    to recreate and reconfigure when that directory does not exist or does not
+    contain the generated Makefile.
+  -->
+  <target name="configure" depends="init" unless="cmake.configured">
+    <mkdir dir="${cmake.directory}"/>
+    <exec executable="cmake" dir="${cmake.directory}" failonerror="true">
+      <arg line="${source.directory}"/>
+    </exec>
+  </target>
+  <!--
+    Build the binary (`libproj-binding.so` or `proj-binding.dll`) only if it does not exist.
+    The destination directory is specified in the `CMakeLists.txt` file.
+  -->
+  <target name="build" depends="configure" unless="projjni.compiled">
+    <exec executable="cmake" failonerror="true">
+      <arg line="--build ${cmake.directory}"/>
+    </exec>
+  </target>
+</project>

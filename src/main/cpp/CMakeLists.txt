@@ -27,17 +27,20 @@
 # installing the "proj-devel" package.
 #
 # HOW TO BUILD:
-# C/C++ compilation is currently not part of Maven build. Compilation shall be done manually like below.
-# The following commands need to be executed only once:
+# C/C++ compilation is part of Maven build. The following command executed from the project root directory should
+# be sufficient:
 #
-#     mvn compile
-#     mkdir target/cmake
+#     mvn package
+#
+# If above command fails, then it may be useful to invoke `cmake` manually.
+# It can be done with the following commands:
+#
 #     cd target/cmake
 #     cmake ../../src/main/cpp
 #     cd ../..
 #
-# Then the following command need to be run from the project root directory, and once again every time
-# the native C/C++ code changed:
+# Then the following command can be run from the project root directory (actually it
+# can be run from any directory if `target/cmake` argument is adjusted accordingly):
 #
 #     cmake --build target/cmake
 #
@@ -57,7 +60,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Release)
 
 # The binary will be put in the directory of Java classes package.
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../classes/org/kortforsyningen/proj)
+# Should be consistent with the path checked in `build.xml` file.
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../classes/org/kortforsyningen/proj)
 
 # Find Java Native Interfaces (JNI). The location is system-dependent. In particular there is a "win32",
 # "linux" or "darwin" directory to append to the path. CMake adds automatically the right sub-directory.
