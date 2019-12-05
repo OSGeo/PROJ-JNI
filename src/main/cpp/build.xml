@@ -11,12 +11,12 @@
   <!--
     Check what has been already done. There is two steps to check:
     whether CMake has been configured and whether the binary has been built.
-    In both cases the generated files are located in the `target` directory;
+    In all cases the generated files are located in `target` sub-directories;
     we do not create any file outside that directory.
   -->
   <target name="init">
-    <fail unless="cmake.directory">The properties specifying directories are not set.</fail>
-    <available property="cmake.configured" file="${cmake.directory}/Makefile"/>
+    <fail unless="cmake.subdir">The properties specifying directories are not set.</fail>
+    <available property="cmake.configured" file="${cmake.subdir}/Makefile"/>
     <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/libproj-binding.so"/>
     <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/proj-binding.dll"/>
   </target>
@@ -27,18 +27,28 @@
     contain the generated Makefile.
   -->
   <target name="configure" depends="init" unless="cmake.configured">
-    <mkdir dir="${cmake.directory}"/>
-    <exec executable="cmake" dir="${cmake.directory}" failonerror="true">
+    <mkdir dir="${cmake.subdir}"/>
+    <exec executable="cmake" dir="${cmake.subdir}" failonerror="true">
       <arg line="${source.directory}"/>
     </exec>
   </target>
   <!--
     Build the binary (`libproj-binding.so` or `proj-binding.dll`) only if it does not exist.
-    The destination directory is specified in the `CMakeLists.txt` file.
+    The destination directory is specified in the `CMakeLists.txt` file and should be equal
+    to the directory of files checked by `projjni.compiled` property.
   -->
   <target name="build" depends="configure" unless="projjni.compiled">
     <exec executable="cmake" failonerror="true">
-      <arg line="--build ${cmake.directory}"/>
+      <arg line="--build ${cmake.subdir}"/>
     </exec>
+    <!--
+      At this point the native file (".so" or ".dll") has been written in "classes/org/…/proj/" directory.
+      The exact name depends on the platform. The <first> task below locates that file and the <symlink>
+      task creates a symbolic link to it in the "target" directory for convenience.
+    -->
+    <first id="native-binary">
+      <fileset dir="classes/org/kortforsyningen/proj" includes="*-binding.*"/>
+    </first>
+    <symlink overwrite="true" link="${basedir}" resource="${toString:native-binary}"/>
   </target>
 </project>

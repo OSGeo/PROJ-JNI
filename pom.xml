@@ -144,7 +144,12 @@
         </configuration>
       </plugin>
 
-      <!-- Compile C/C++ code using CMake. See `src/main/cpp/build.xml` for more details. -->
+      <!--
+        Compile C/C++ code using CMake. Configuration will be written in `target/cmake` and will not
+        be redone, unless that directory is deleted. The compiled native file will be written in the
+       `classes/org/…/proj/` directory for inclusion in the JAR file and will not be rebuilt, unless
+        that file is deleted. Symbolik links to binaries will be created in the `target` directory.
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -158,13 +163,13 @@
               <target>
                 <property name="source.directory" value="${project.basedir}/src/main/cpp"/>
                 <property name="target.directory" value="${project.build.directory}"/>
-                <property name= "cmake.directory" value="cmake"/>
+                <property name=    "cmake.subdir" value="cmake"/>
                 <ant dir="${target.directory}" antfile="${project.basedir}/src/main/cpp/build.xml" inheritAll="true"/>
               </target>
             </configuration>
           </execution>
           <execution>
-            <id>link-dependencies</id>
+            <id>package</id>
             <phase>package</phase>
             <goals><goal>run</goal></goals>
             <configuration>
