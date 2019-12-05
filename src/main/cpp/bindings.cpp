@@ -25,6 +25,7 @@
 #include <cstring>
 #include <string>
 #include <cmath>
+#include <atomic>
 #include <proj.h>
 #include <proj/crs.hpp>
 #include "org_kortforsyningen_proj_Type.h"
@@ -172,10 +173,12 @@ using osgeo::proj::util::PropertyMap;
  * Identifier of the Java field which will contain the pointer to PROJ structure in Java class.
  * We get this field at initialization time and reuse it every time we need the pointer value.
  * According JNI specification, jfieldID and jmethodID are valid until the class is unloaded.
+ * We can not cache `jclass` references unless we protect them with `env->NewGlobalRef(…)`.
  *
  * In principle we should keep a reference to NativeResource class for preventing unloading.
  * We don't on the assumption that if the class was unloaded, next use of PROJ would require
  * reloading the class and initialize it again, in which case the values below would be updated.
+ * This is the same approach than the one recommended in Android developer guide.
  *
  * We use this identifier in calls to `env->GetLongField(object, java_field_for_pointer)` where
  * `object` can be a subclass of NativeResource. The JNI specification does not said explicitly
@@ -2453,6 +2456,18 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_assign(JNIEnv *en
 
 
 /**
+ * Whether a call to `GetPrimitiveArrayCritical(…)` gave us a copy of all data instead than giving us
+ * a direct access to the Java array. Tests suggest that we get a direct access. However if a copy is
+ * done, that could have severe performance implications. In current version we just log a warning in
+ * order to be informed that there is a potential problem. But a future version could check this flag
+ * for deciding to use `GetDoubleArrayRegion(…)` instead of `GetPrimitiveArrayCritical(…)`.
+ *
+ * See https://github.com/Kortforsyningen/PROJ-JNI/issues/19
+ */
+std::atomic_flag arrayCriticalDoesCopies;
+
+
+/**
  * Transforms in-place the coordinates in the given array.
  * The coordinates array shall contain (x,y,z,t,…) tuples,
  * where the z and any additional dimensions are optional.
@@ -2484,7 +2499,8 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_transform
          * However we must promise to run the "critical" code fast, to not make any
          * system call that may wait for the JVM and to not invoke any other JNI function.
          */
-        double *data = reinterpret_cast<jdouble*>(env->GetPrimitiveArrayCritical(coordinates, nullptr));
+        jboolean isCopy;
+        double *data = reinterpret_cast<jdouble*>(env->GetPrimitiveArrayCritical(coordinates, &isCopy));
         if (data) {
             double *x = data + offset;
             double *y = (dimension >= 2) ? x+1 : nullptr;
@@ -2500,6 +2516,12 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_Transform_transform
             if (err) {
                 jclass c = env->FindClass(JPJ_TRANSFORM_EXCEPTION);
                 if (c) env->ThrowNew(c, proj_errno_string(err));
+            } else if (isCopy) {
+                // Log this warning only on the first time.
+                if (!arrayCriticalDoesCopies.test_and_set()) {
+                    log(env, "Java Native Interface (JNI) had to copy coordinate array on this platform. "
+                             "This constraint may reduce performance.");
+                }
             }
         }
     }
