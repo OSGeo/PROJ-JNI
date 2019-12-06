@@ -4,6 +4,11 @@
  *    This file is hereby placed into the Public Domain.
  *    This means anyone is free to do whatever they wish with this file.
  */
+import org.opengis.metadata.extent.Extent;
+import org.opengis.metadata.extent.GeographicExtent;
+import org.opengis.metadata.extent.GeographicBoundingBox;
+import org.opengis.metadata.quality.PositionalAccuracy;
+import org.opengis.metadata.quality.Result;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
@@ -56,6 +61,7 @@ public class TransformPoints {
         CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
         CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem(target);
         CoordinateOperation       operation = regops .createOperation(sourceCRS, targetCRS);
+        describe(operation);
         double[] coordinates = {
             45.500,  -73.567,                    // Montreal
             49.250, -123.100,                    // Vancouver
@@ -71,6 +77,58 @@ public class TransformPoints {
         System.out.printf("Vancouver: %11.1f %11.1f%n", coordinates[2], coordinates[3]);
         System.out.printf("Tokyo:     %11.1f %11.1f%n", coordinates[4], coordinates[5]);
         System.out.printf("Paris:     %11.1f %11.1f%n", coordinates[6], coordinates[7]);
+    }
+
+    /**
+     * Prints a description of the given coordinate operation, in particular its domain of validity
+     * and accuracy. It is user's responsibility to ensure that the coordinates to transform are in
+     * the domain of validity.
+     *
+     * @param  operation  the coordinate operation to describe.
+     */
+    private static void describe(CoordinateOperation operation) {
+        String name = operation.getName().getCode();
+        System.out.printf("The coordinate operation is: %s%n", name);
+        Extent extent = operation.getDomainOfValidity();
+        if (extent != null) {
+            /*
+             * The extent may have horizontal, vertical and temporal components. In this example we take only
+             * the horizontal components, and only the ones that are bounding boxes (other types are bounding
+             * polygons and plain text descriptions). Those bounds are easy to use for checking coordinate
+             * validity before transformation.
+             */
+            for (GeographicExtent ge : extent.getGeographicElements()) {
+                if (ge instanceof GeographicBoundingBox) {
+                    final GeographicBoundingBox bbox = (GeographicBoundingBox) ge;
+                    System.out.printf("Its domain of validity is:%n"
+                            + "    West bound longitude: %6.1f%n"
+                            + "    East bound longitude: %6.1f%n"
+                            + "    South bound latitude: %6.1f%n"
+                            + "    North bound latitude: %6.1f%n",
+                            bbox.getWestBoundLongitude(),
+                            bbox.getEastBoundLongitude(),
+                            bbox.getSouthBoundLatitude(),
+                            bbox.getNorthBoundLatitude());
+                }
+            }
+        }
+        /*
+         * The way to get accuracy is a bit unconvenient and depends on whether the accuracy is only a
+         * description or is a quantitative measurement. The reason for this unconvenience is that the
+         * quality API is designed for describing the quality of a wide range of phenomenons, not only
+         * coordinate operations. Developers are encouraged to write their own convenience methods for
+         * their needs.
+         */
+        for (PositionalAccuracy accuracy : operation.getCoordinateOperationAccuracy()) {
+            for (Result result : accuracy.getResults()) {
+                /*
+                 * Result can be QuantitativeResult or ConformanceResult among others.
+                 * For now we just print it.
+                 */
+                System.out.printf("Accuracy is: %s%n", result);
+            }
+        }
+        System.out.println();
     }
 
     /**
