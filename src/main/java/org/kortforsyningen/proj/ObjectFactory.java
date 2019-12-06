@@ -697,7 +697,7 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
      *
      * @param  properties  name and other properties to give to the new object.
      * @param  datum       vertical datum to use in created CRS.
-     * @param  cs          the Vertical coordinate system for the created CRS.
+     * @param  cs          the vertical coordinate system for the created CRS.
      * @return the coordinate reference system for the given properties.
      * @throws FactoryException if the object creation failed.
      */
@@ -716,7 +716,7 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
      *
      * @param  properties  name and other properties to give to the new object.
      * @param  datum       temporal datum to use in created CRS.
-     * @param  cs          the Temporal coordinate system for the created CRS.
+     * @param  cs          the temporal coordinate system for the created CRS.
      * @return the coordinate reference system for the given properties.
      * @throws FactoryException if the object creation failed.
      */

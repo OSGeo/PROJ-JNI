@@ -69,6 +69,9 @@ public final class Units {
                 }
             }
         } catch (IllegalStateException e) {
+            // Ignore: logging message below.
+        }
+        if (system == null) {
             /*
              * The call to NativeResource.logger() is necessary - do not replace by
              * System.getLogger(NativeResource.LOGGER_NAME). The code below has the

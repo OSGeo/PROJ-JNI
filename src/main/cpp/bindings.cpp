@@ -712,7 +712,7 @@ jobject to_java_unit(JNIEnv *env, jobject object, const UnitOfMeasure* unit) {
                                                  java_method_getDefinedUnit,
                                                  (jint) static_cast<int>(unit->type()),
                                                  (jdouble) unit->conversionToSI());
-    if (!result && !env->ExceptionCheck()) {
+    if (!env->ExceptionCheck() && !result) {    // Call to ExceptionCheck() must be unconditional.
         /*
          * This block is not very efficient, but should not be invoked often.
          * See the `create_unit_fallback(…)` documentation for rational.
@@ -1845,7 +1845,7 @@ UnitOfMeasure unit_from_identifier(JNIEnv *env, int code) {
         jmethodID method = env->GetStaticMethodID(c, "getUserDefinedTypeAndScale", "(I)[D");
         if (method) {
             jdoubleArray array = (jdoubleArray) env->CallStaticObjectMethod(c, method, (jint) code);
-            if (!env->ExceptionCheck() && array) {        // Unconditional call to ExceptionCheck().
+            if (!env->ExceptionCheck() && array) {        // Call to ExceptionCheck() must be unconditional.
                 jdouble* values = env->GetDoubleArrayElements(array, nullptr);
                 if (values) {
                     UnitOfMeasure::Type type = static_cast<UnitOfMeasure::Type>((int) values[0]);
