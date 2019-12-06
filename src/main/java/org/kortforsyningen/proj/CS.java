@@ -26,6 +26,7 @@ import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.SphericalCS;
 import org.opengis.referencing.cs.EllipsoidalCS;
+import org.opengis.referencing.cs.ParametricCS;
 import org.opengis.referencing.cs.VerticalCS;
 import org.opengis.referencing.cs.TimeCS;
 
@@ -35,7 +36,7 @@ import org.opengis.referencing.cs.TimeCS;
  * Each subtype is represented by an inner class in this file.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 class CS extends IdentifiableObject implements CoordinateSystem {
@@ -132,6 +133,19 @@ class CS extends IdentifiableObject implements CoordinateSystem {
          * @param ptr pointer to the wrapped PROJ object.
          */
         Time(final long ptr) {
+            super(ptr);
+        }
+    }
+
+    /**
+     * A coordinate system specialization. No new properties compared to parent CS.
+     */
+    static final class Parametric extends CS implements ParametricCS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Parametric(final long ptr) {
             super(ptr);
         }
     }

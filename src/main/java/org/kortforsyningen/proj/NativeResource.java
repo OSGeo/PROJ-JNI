@@ -45,7 +45,7 @@ import javax.measure.Unit;
  * by {@link #ptr} when no longer referenced.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 abstract class NativeResource {
@@ -248,10 +248,12 @@ abstract class NativeResource {
             case Type.ELLIPSOIDAL_CS:              obj = new CS.Ellipsoidal          (rawPointer); break;
             case Type.VERTICAL_CS:                 obj = new CS.Vertical             (rawPointer); break;
             case Type.TEMPORAL_CS:                 obj = new CS.Time                 (rawPointer); break;
+            case Type.PARAMETRIC_CS:               obj = new CS.Parametric           (rawPointer); break;
             case Type.DATUM:                       obj = new Datum                   (rawPointer); break;
             case Type.GEODETIC_REFERENCE_FRAME:    obj = new Datum.Geodetic          (rawPointer); break;
             case Type.VERTICAL_REFERENCE_FRAME:    obj = new Datum.Vertical          (rawPointer); break;
             case Type.TEMPORAL_DATUM:              obj = new Datum.Temporal          (rawPointer); break;
+            case Type.PARAMETRIC_DATUM:            obj = new Datum.Parametric        (rawPointer); break;
             case Type.ENGINEERING_DATUM:           obj = new Datum.Engineering       (rawPointer); break;
             case Type.ELLIPSOID:                   obj = new Datum.Ellipsoid         (rawPointer); break;
             case Type.PRIME_MERIDIAN:              obj = new Datum.PrimeMeridian     (rawPointer); break;
@@ -262,6 +264,7 @@ abstract class NativeResource {
             case Type.PROJECTED_CRS:               obj = new CRS.Projected           (rawPointer); break;
             case Type.VERTICAL_CRS:                obj = new CRS.Vertical            (rawPointer); break;
             case Type.TEMPORAL_CRS:                obj = new CRS.Temporal            (rawPointer); break;
+            case Type.PARAMETRIC_CRS:              obj = new CRS.Parametric          (rawPointer); break;
             case Type.ENGINEERING_CRS:             obj = new CRS.Engineering         (rawPointer); break;
             case Type.COMPOUND_CRS:                obj = new CRS.Compound            (rawPointer); break;
             case Type.COORDINATE_OPERATION:        obj = new Operation               (rawPointer); break;

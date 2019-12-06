@@ -27,10 +27,12 @@ import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.cs.TimeCS;
 import org.opengis.referencing.cs.VerticalCS;
+import org.opengis.referencing.cs.ParametricCS;
 //     org.opengis.referencing.datum.Datum            — Not imported because we use Datum class from this package.
 import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.datum.VerticalDatum;
 import org.opengis.referencing.datum.TemporalDatum;
+import org.opengis.referencing.datum.ParametricDatum;
 import org.opengis.referencing.datum.EngineeringDatum;
 import org.opengis.referencing.operation.Projection;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -40,6 +42,7 @@ import org.opengis.referencing.crs.GeocentricCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.crs.VerticalCRS;
 import org.opengis.referencing.crs.TemporalCRS;
+import org.opengis.referencing.crs.ParametricCRS;
 import org.opengis.referencing.crs.EngineeringCRS;
 import org.opengis.referencing.crs.CompoundCRS;
 
@@ -49,7 +52,7 @@ import org.opengis.referencing.crs.CompoundCRS;
  * Each subtype is represented by an inner class in this file.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
@@ -233,6 +236,35 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
         @Override
         public TemporalDatum getDatum() {
             return getDatum(Datum.Temporal.class);
+        }
+    }
+
+    /**
+     * A coordinate reference system specialization.
+     */
+    static final class Parametric extends CRS implements ParametricCRS {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Parametric(final long ptr) {
+            super(ptr);
+        }
+
+        /**
+         * Returns the parametric specialization of the coordinate system.
+         */
+        @Override
+        public ParametricCS getCoordinateSystem() {
+            return getCoordinateSystem(CS.Parametric.class);
+        }
+
+        /**
+         * Returns the parametric specialization of the datum.
+         */
+        @Override
+        public ParametricDatum getDatum() {
+            return getDatum(Datum.Parametric.class);
         }
     }
 

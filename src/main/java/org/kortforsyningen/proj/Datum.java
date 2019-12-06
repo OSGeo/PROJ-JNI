@@ -34,6 +34,7 @@ import org.opengis.referencing.datum.TemporalDatum;
 import org.opengis.referencing.datum.VerticalDatum;
 import org.opengis.referencing.datum.VerticalDatumType;
 import org.opengis.referencing.datum.EngineeringDatum;
+import org.opengis.referencing.datum.ParametricDatum;
 
 
 /**
@@ -47,7 +48,7 @@ import org.opengis.referencing.datum.EngineeringDatum;
  * implementation is offset by the user convenience.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 class Datum extends IdentifiableObject implements org.opengis.referencing.datum.Datum {
@@ -189,6 +190,19 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
         @Override
         public Date getOrigin() {
             return getDate(Property.TEMPORAL_ORIGIN);
+        }
+    }
+
+    /**
+     * A datum specialization. No new properties compared to parent CS.
+     */
+    static final class Parametric extends Datum implements ParametricDatum {
+        /**
+         * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         * @param ptr pointer to the wrapped PROJ object.
+         */
+        Parametric(final long ptr) {
+            super(ptr);
         }
     }
 

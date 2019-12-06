@@ -368,7 +368,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public ParametricCS createParametricCS(final String code) throws FactoryException {
-            throw new FactoryException(UNSUPPORTED);
+            return createGeodeticObject(CS.Parametric.class, Type.PARAMETRIC_CS, code);
         }
 
         /**
@@ -478,7 +478,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public ParametricDatum createParametricDatum(final String code) throws FactoryException {
-            throw new FactoryException(UNSUPPORTED);
+            return createGeodeticObject(Datum.Parametric.class, Type.PARAMETRIC_DATUM, code);
         }
 
         /**
@@ -586,7 +586,7 @@ final class AuthorityFactory extends NativeResource {
          */
         @Override
         public ParametricCRS createParametricCRS(final String code) throws FactoryException {
-            throw new FactoryException(UNSUPPORTED);
+            return createGeodeticObject(CRS.Parametric.class, Type.PARAMETRIC_CRS, code);
         }
 
         /**
