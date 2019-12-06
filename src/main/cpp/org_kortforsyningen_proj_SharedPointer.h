@@ -33,6 +33,14 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    getArrayProperty
+ * Signature: (S)[D
+ */
+JNIEXPORT jdoubleArray JNICALL Java_org_kortforsyningen_proj_SharedPointer_getArrayProperty
+  (JNIEnv *, jobject, jshort);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    getIntegerProperty
  * Signature: (S)I
  */

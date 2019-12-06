@@ -70,24 +70,25 @@ final class Property {
      * Identify properties which can be returned by {@link SharedPointer#getStringProperty(short)} method.
      */
     @Native
-    static final short NAME_STRING       = 200,
-                       IDENTIFIER_STRING = 201,
-                       CODESPACE         = 202,
-                       CODE              = 203,
-                       VERSION           = 204,
-                       CITATION_TITLE    = 205,
-                       ABBREVIATION      = 206,
-                       DIRECTION         = 207,
-                       ANCHOR_DEFINITION = 208,
-                       TEMPORAL_ORIGIN   = 209,
-                       PUBLICATION_DATE  = 210,
-                       SCOPE             = 211,
-                       REMARKS           = 212,
-                       FORMULA           = 213,
-                       FORMULA_TITLE     = 214,
-                       OPERATION_VERSION = 215,
-                       PARAMETER_STRING  = 216,
-                       PARAMETER_FILE    = 217;
+    static final short NAME_STRING         = 200,
+                       IDENTIFIER_STRING   = 201,
+                       CODESPACE           = 202,
+                       CODE                = 203,
+                       VERSION             = 204,
+                       CITATION_TITLE      = 205,
+                       ABBREVIATION        = 206,
+                       DIRECTION           = 207,
+                       ANCHOR_DEFINITION   = 208,
+                       TEMPORAL_ORIGIN     = 209,
+                       PUBLICATION_DATE    = 210,
+                       SCOPE               = 211,
+                       POSITIONAL_ACCURACY = 212,
+                       REMARKS             = 213,
+                       FORMULA             = 214,
+                       FORMULA_TITLE       = 215,
+                       OPERATION_VERSION   = 216,
+                       PARAMETER_STRING    = 217,
+                       PARAMETER_FILE      = 218;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getNumericProperty(short)} method.
@@ -102,17 +103,23 @@ final class Property {
                        PARAMETER_VALUE = 306;
 
     /**
+     * Identify properties which can be returned by {@link SharedPointer#getArrayProperty(short)} method.
+     */
+    @Native
+    static final short DOMAIN_OF_VALIDITY = 400;
+
+    /**
      * Identify properties which can be returned by {@link SharedPointer#getIntegerProperty(short)} method.
      */
     @Native
-    static final short PARAMETER_TYPE = 400,
-                       PARAMETER_INT  = 401;
+    static final short PARAMETER_TYPE = 500,
+                       PARAMETER_INT  = 501;
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getBooleanProperty(short)} method.
      */
     @Native
-    static final short IS_SPHERE      = 500,
-                       IVF_DEFINITIVE = 501,
-                       PARAMETER_BOOL = 502;
+    static final short IS_SPHERE      = 600,
+                       IVF_DEFINITIVE = 601,
+                       PARAMETER_BOOL = 602;
 }
