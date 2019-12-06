@@ -21,7 +21,14 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Collection;
 import org.opengis.util.FactoryException;
+import org.opengis.metadata.extent.Extent;
+import org.opengis.metadata.extent.GeographicExtent;
+import org.opengis.metadata.extent.GeographicBoundingBox;
+import org.opengis.metadata.quality.PositionalAccuracy;
+import org.opengis.metadata.quality.ConformanceResult;
+import org.opengis.metadata.quality.Result;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.Conversion;
@@ -80,19 +87,76 @@ public final strictfp class OperationFactoryTest {
         final CoordinateOperationContext context = new CoordinateOperationContext();
         /*
          * Fetch an operation over USA. Operation domain of validity
-         * should be "USA - CONUS including EEZ".
+         * should be "USA - CONUS including EEZ" with 10 m accuracy.
+         * But we do not test exact accuracy value since it depends
+         * on whether datum shift grids are available.
          */
         context.setAreaOfInterest(-120, -75, 25, 42);
         OperationFactory factory = new OperationFactory(context);
         CoordinateOperation operation = factory.createOperation(source, target);
-        // TODO: test AREA. We expect "USA - CONUS including EEZ"
+        GeographicBoundingBox bbox = bbox(operation.getDomainOfValidity());
+        assertTrue(bbox.getWestBoundLongitude() <= -124.79);
+        assertTrue(bbox.getEastBoundLongitude() >=  -66.91);
+        assertTrue(bbox.getSouthBoundLatitude() <=   24.41);
+        assertTrue(bbox.getNorthBoundLatitude() >=   49.38);
+        assertNotNull(accuracy(operation.getCoordinateOperationAccuracy()));
         /*
          * Fetch an operation over Canada. Operation domain of validity
-         * should be "Canada - NAD27".
+         * should be "Canada - NAD27" with 20 m accuracy.
          */
         context.setAreaOfInterest(-120, -75, 45, 55);
         factory = new OperationFactory(context);
         operation = factory.createOperation(source, target);
-        // TODO: test AREA. We expect "Canada - NAD27".
+        bbox = bbox(operation.getDomainOfValidity());
+        assertTrue(bbox.getWestBoundLongitude() <= -141.01);
+        assertTrue(bbox.getEastBoundLongitude() >=  -47.74);
+        assertTrue(bbox.getSouthBoundLatitude() <=   40.04);
+        assertTrue(bbox.getNorthBoundLatitude() >=   83.17);
+        assertNotNull(accuracy(operation.getCoordinateOperationAccuracy()));
+    }
+
+    /**
+     * Returns the first geographic bounding box found in the given extent.
+     *
+     * @param  extent  the extent for which to get the geographic bounding box.
+     * @return the first geographic bounding box.
+     */
+    private static GeographicBoundingBox bbox(final Extent extent) {
+        if (extent != null) {
+            for (final GeographicExtent ge : extent.getGeographicElements()) {
+                if (ge instanceof GeographicBoundingBox) {
+                    return (GeographicBoundingBox) ge;
+                }
+            }
+        }
+        fail("No geographic bounding box found.");
+        return null;
+    }
+
+    /**
+     * Returns the first accuracy description found in the given collection.
+     * Note: this implementation searches for a result of type {@link ConformanceResult}
+     * because PROJ provides the result as a character string. But other implementations
+     * may provide {@link org.opengis.metadata.quality.QuantitativeResult} instead.
+     *
+     * @param  accuracy  the accuracies.
+     * @return the first accuracy description.
+     */
+    private static String accuracy(final Collection<PositionalAccuracy> accuracy) {
+        if (accuracy != null) {
+            for (final PositionalAccuracy element : accuracy) {
+                for (final Result result : element.getResults()) {
+                    if (result instanceof ConformanceResult) {
+                        return ((ConformanceResult) result).getExplanation().toString();
+                    }
+                    /*
+                     * If we want to accept other GeoAPI implementations, we should
+                     * also check `if (result instanceof QuantitativeResult)` here.
+                     */
+                }
+            }
+        }
+        fail("No accuracy found.");
+        return null;
     }
 }

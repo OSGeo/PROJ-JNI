@@ -286,10 +286,17 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
     /**
      * Estimate(s) of the impact of this operation on point accuracy.
      *
+     * @todo There is potentially more than one accuracy result,
+     *       but we currently return only one.
+     *
      * @return the position error estimates, or an empty collection if not available.
      */
     @Override
     public Collection<PositionalAccuracy> getCoordinateOperationAccuracy() {
+        final String accuracy = impl.getStringProperty(Property.POSITIONAL_ACCURACY);
+        if (accuracy != null) {
+            return Collections.singleton(new SimpleAccuracy(accuracy));
+        }
         return Collections.emptySet();
     }
 

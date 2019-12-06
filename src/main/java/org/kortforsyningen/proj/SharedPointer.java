@@ -77,6 +77,15 @@ class SharedPointer extends NativeResource {
     final native double getNumericProperty(short property);
 
     /**
+     * Returns a property value as an array of floating point number.
+     *
+     * @param  property  one of {@link Property#DOMAIN_OF_VALIDITY}, <i>etc.</i> values.
+     * @return value of the specified property, or {@code null} if undefined.
+     * @throws RuntimeException if the specified property does not exist for this object.
+     */
+    final native double[] getArrayProperty(short property);
+
+    /**
      * Returns a property value as an integer number.
      * This method can be used for enumeration values.
      *

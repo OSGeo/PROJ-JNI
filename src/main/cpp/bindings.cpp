@@ -130,8 +130,13 @@ using osgeo::proj::io::WKTFormatterNNPtr;
 using osgeo::proj::io::WKTParser;
 using osgeo::proj::metadata::Citation;
 using osgeo::proj::metadata::Extent;
+using osgeo::proj::metadata::ExtentPtr;
+using osgeo::proj::metadata::GeographicBoundingBox;
+using osgeo::proj::metadata::GeographicBoundingBoxPtr;
+using osgeo::proj::metadata::GeographicExtentNNPtr;
 using osgeo::proj::metadata::Identifier;
 using osgeo::proj::metadata::IdentifierNNPtr;
+using osgeo::proj::metadata::PositionalAccuracyNNPtr;
 using osgeo::proj::operation::Conversion;
 using osgeo::proj::operation::ConversionNNPtr;
 using osgeo::proj::operation::CoordinateOperation;
@@ -1231,6 +1236,14 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_SharedPointer_getStringP
                 }
                 return nullptr;
             }
+            case org_kortforsyningen_proj_Property_POSITIONAL_ACCURACY: {
+                CoordinateOperationNNPtr op = get_shared_object<CoordinateOperation>(env, object);
+                for (const PositionalAccuracyNNPtr accuracy : op->coordinateOperationAccuracies()) {
+                    jstring result = non_empty_string(env, accuracy->value());
+                    if (result) return result;              // Returns the first non-empty value.
+                }
+                return nullptr;
+            }
             case org_kortforsyningen_proj_Property_PARAMETER_STRING: {
                 OperationParameterValueNNPtr opv = get_shared_object<OperationParameterValue>(env, object);
                 ParameterValueNNPtr param = opv->parameterValue();
@@ -1328,6 +1341,54 @@ JNIEXPORT jdouble JNICALL Java_org_kortforsyningen_proj_SharedPointer_getNumeric
         rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
     }
     return NAN;
+}
+
+
+/**
+ * Returns a property value as an array of floating-point values.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get a property value.
+ * @param  property  One of POSITIONAL_ACCURACY, etc. values.
+ * @return Value of the specified property, or null if undefined.
+ */
+JNIEXPORT jdoubleArray JNICALL Java_org_kortforsyningen_proj_SharedPointer_getArrayProperty
+    (JNIEnv *env, jobject object, jshort property)
+{
+    try {
+        switch (property) {
+            case org_kortforsyningen_proj_Property_DOMAIN_OF_VALIDITY: {
+                ObjectUsageNNPtr usage = get_shared_object<ObjectUsage>(env, object);
+                for (const ObjectDomainNNPtr domain : usage->domains()) {
+                    ExtentPtr extent = domain->domainOfValidity();
+                    if (extent) {
+                        jdoubleArray array = env->NewDoubleArray(4);
+                        if (!array) break;                              // OutOfMemoryError will be thrown in Java code.
+                        jdouble* elements = env->GetDoubleArrayElements(array, nullptr);
+                        if (!elements) break;                           // OutOfMemoryError will be thrown in Java code.
+                        bool hasBBox = false;
+                        for (GeographicExtentNNPtr ge : extent->geographicElements()) {
+                            GeographicBoundingBoxPtr bbox = std::dynamic_pointer_cast<GeographicBoundingBox>(ge.as_nullable());
+                            if (bbox) {
+                                elements[0] = bbox->westBoundLongitude();
+                                elements[1] = bbox->eastBoundLongitude();
+                                elements[2] = bbox->southBoundLatitude();
+                                elements[3] = bbox->northBoundLatitude();
+                                hasBBox = true;
+                                break;
+                            }
+                        }
+                        env->ReleaseDoubleArrayElements(array, elements, 0);
+                        if (hasBBox) return array;
+                    }
+                }
+                break;
+            }
+        }
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
+    }
+    return nullptr;
 }
 
 

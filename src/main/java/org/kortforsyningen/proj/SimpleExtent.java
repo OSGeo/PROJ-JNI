@@ -116,6 +116,17 @@ final class SimpleExtent implements GeographicBoundingBox, Extent, Serializable 
     }
 
     /**
+     * Creates a geographic bounding box initialized to values from the given array.
+     * This is a convenience constructor invoked indirectly from native code.
+     * See {@code DOMAIN_OF_VALIDITY} in {@code bindings.cpp} for elements order.
+     *
+     * @param  elements  all bounds.
+     */
+    SimpleExtent(final double[] elements) {
+        this(elements[0], elements[1], elements[2], elements[3]);
+    }
+
+    /**
      * Returns the western-most coordinate of the limit of the dataset extent.
      * The value is expressed in longitude in decimal degrees (positive east).
      *
