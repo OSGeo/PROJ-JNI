@@ -23,6 +23,7 @@ package org.kortforsyningen.proj;
 
 import java.util.Map;
 import java.util.Date;
+import java.util.Objects;
 import javax.measure.Unit;
 import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
@@ -46,7 +47,6 @@ import org.opengis.referencing.cs.*;
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
- * @module
  */
 final class ObjectFactory extends NativeResource implements DatumFactory, CSFactory, CRSFactory {
     /**
@@ -851,6 +851,14 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
      */
     @Override
     public CoordinateReferenceSystem createFromWKT(final String wkt) throws FactoryException {
-        throw new FactoryException(UNSUPPORTED);
+        Objects.requireNonNull(wkt);
+        final ReferencingFormat parser = new ReferencingFormat();
+        parser.setConvention(ReferencingFormat.Convention.WKT);
+        parser.setStrict(true);
+        try {
+            return (CoordinateReferenceSystem) parser.parse(wkt);
+        } catch (UnparsableObjectException | ClassCastException e) {
+            throw new FactoryException(e.getMessage(), e);
+        }
     }
 }

@@ -40,7 +40,6 @@ import org.opengis.util.InternationalString;
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
- * @module
  */
 final class SimpleAccuracy implements PositionalAccuracy, ConformanceResult, Serializable {
     /**

@@ -30,14 +30,18 @@
  * The use of GeoAPI interfaces allows developers to write their software in an implementation independent way,
  * using the {@link Proj} class only as a starting point or for PROJ-specific actions.
  *
+ * <h2>Installation</h2>
  * <p>This package requires installation of native libraries.
- * The presence of those libraries can be tested as below:</p>
+ * Compilation instructions are given <a href="install.html">in this page</a>.
+ * The presence of native libraries can be tested as below:</p>
  *
  * <blockquote><pre>
  * {@linkplain Proj#version()}.isPresent()</pre>
  * </blockquote>
  *
- * <p>Coordinate operations can be performed as below.
+ * <h2>Usage example</h2>
+ * <p>Coordinate operations can be performed as below (a more complete code is available
+ * <a href="https://github.com/Kortforsyningen/PROJ-JNI/blob/master/example/TransformPoints.java">here</a>).
  * In this example, only the calls to {@link Proj} static methods are specific to this implementation.
  * All other lines should work in the same way with any GeoAPI implementation.
  * Note that geographic coordinates are in <var>latitude</var>, <var>longitude</var> order,
@@ -113,9 +117,15 @@
  * <h2>Unsupported features</h2>
  * <p>The following method calls will cause an exception to be thrown:</p>
  * <ul>
+ *   <li>{@link org.opengis.referencing.crs.CRSFactory#createFromXML(String)} — XML support requires GDAL.</li>
+ *   <li>{@link org.opengis.referencing.AuthorityFactory#getAuthorityCodes(Class)} — not yet implemented in this binding.</li>
+ *   <li>{@link org.opengis.referencing.operation.CoordinateOperationFactory#createDefiningConversion
+ *       CoordinateOperationFactory.createDefiningConversion(…)} — not yet implemented in this binding.</li>
+ *   <li>{@link org.opengis.referencing.crs.DerivedCRS} — not yet implemented in this binding.</li>
  *   <li>{@link org.opengis.referencing.operation.MathTransform#derivative MathTransform.derivative(DirectPosition)} —
  *       Jacobian matrix calculation is not yet supported by PROJ.</li>
- *   <li>{@link org.opengis.referencing.crs.CRSFactory#createFromXML(String)} — XML support requires GDAL.</li>
+ *   <li>{@link org.opengis.referencing.operation.ConcatenatedOperation} — not yet implemented explicitly in this binding
+ *       (but concatenated operations created by PROJ still work).</li>
  * </ul>
  *
  * <h2>References</h2>

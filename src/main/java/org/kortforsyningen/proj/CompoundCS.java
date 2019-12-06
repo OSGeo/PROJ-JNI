@@ -40,7 +40,7 @@ import org.opengis.util.InternationalString;
  * @version 1.0
  * @since   1.0
  */
-public class CompoundCS implements CoordinateSystem {
+final class CompoundCS implements CoordinateSystem {
     /**
      * The coordinate reference system for which to provide axes. We need to keep a reference to the
      * {@link CRS} object, not its {@link CRS#impl} field, in order to protect from garbage collection.

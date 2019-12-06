@@ -46,7 +46,6 @@ import org.opengis.metadata.citation.Series;
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
  * @since   1.0
- * @module
  */
 class SimpleCitation implements Citation, InternationalString {
     /**

@@ -215,6 +215,7 @@ public class ReferencingFormat {
      */
     public Object parse(final String text) throws UnparsableObjectException {
         warnings.clear();
+        Objects.requireNonNull(text);
         try (Context c = Context.acquire()) {
             return parse(text, c, convention.ordinal(), strict);
         }
