@@ -89,6 +89,14 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse
 
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
+ * Method:    normalizeForVisualization
+ * Signature: ()Lorg/kortforsyningen/proj/IdentifiableObject;
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_normalizeForVisualization
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    format
  * Signature: (Lorg/kortforsyningen/proj/Context;IIZZ)Ljava/lang/String;
  */

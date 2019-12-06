@@ -148,6 +148,14 @@ class SharedPointer extends NativeResource {
     final native IdentifiableObject inverse() throws NoninvertibleTransformException;
 
     /**
+     * Returns an object with axis order such as the east direction is first and north direction is second,
+     * if possible. This method can be applied on coordinate operations.
+     *
+     * @return an object with an axis order convenient for visualization.
+     */
+    final native IdentifiableObject normalizeForVisualization();
+
+    /**
      * Returns a <cite>Well-Known Text</cite> (WKT) or other format for this object.
      * This method can be used with the following types:
      *

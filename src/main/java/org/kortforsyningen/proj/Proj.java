@@ -380,6 +380,22 @@ public final class Proj {
     }
 
     /**
+     * Returns a coordinate operation with axis order such as the east direction is first
+     * and the north direction is second, if possible.
+     *
+     * @param  operation  the operation for which to adjust axis order.
+     * @return an operation with axis order convenient for visualization.
+     */
+    public static CoordinateOperation normalizeForVisualization(final CoordinateOperation operation) {
+        Objects.requireNonNull(operation);
+        if (operation instanceof IdentifiableObject) {
+            return (CoordinateOperation) ((IdentifiableObject) operation).impl.normalizeForVisualization();
+        } else {
+            throw new UnsupportedImplementationException("operation", operation);
+        }
+    }
+
+    /**
      * Returns {@code true} if the given objects are equivalent according the given criterion.
      * If the two given objects are {@code null}, this method returns {@code true}.
      * If one object is null and the other object is non-null, this method returns {@code false}.

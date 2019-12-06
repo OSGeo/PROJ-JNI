@@ -63,6 +63,16 @@ public class UnsupportedImplementationException extends IllegalArgumentException
     }
 
     /**
+     * Constructs an exception with a message for the specified argument value.
+     *
+     * @param  name   the argument name.
+     * @param  value  the illegal argument value.
+     */
+    UnsupportedImplementationException(final String name, final Object value) {
+        super(message(name, value));
+    }
+
+    /**
      * Formats an error message for an illegal argument. Example:
      * <cite>"Argument sourceCRS expects a PROJ implementation, but got an instance of Foo class."</cite>
      *
@@ -70,7 +80,7 @@ public class UnsupportedImplementationException extends IllegalArgumentException
      * @param  value  argument value.
      * @return message to give to {@link IllegalArgumentException}.
      */
-    static String message(final String name, final Object value) {
+    private static String message(final String name, final Object value) {
         final StringBuilder message = new StringBuilder(100)
                 .append("Argument ").append(name).append(" expects a PROJ implementation, but got ");
         if (value == null) {

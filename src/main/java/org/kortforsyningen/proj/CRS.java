@@ -66,7 +66,7 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
         if (value instanceof CRS) {
             return (CRS) value;
         } else {
-            throw new UnsupportedImplementationException(UnsupportedImplementationException.message(name, value));
+            throw new UnsupportedImplementationException(name, value);
         }
     }
 
