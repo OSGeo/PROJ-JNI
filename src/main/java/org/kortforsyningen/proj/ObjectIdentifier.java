@@ -24,7 +24,6 @@ package org.kortforsyningen.proj;
 import java.util.StringJoiner;
 import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
-import org.opengis.referencing.ReferenceIdentifier;
 
 
 /**
@@ -32,11 +31,11 @@ import org.opengis.referencing.ReferenceIdentifier;
  * around an {@code osgeo::proj::metadata::Identifier}.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  * @module
  */
-final class ObjectIdentifier extends IdentifiableObject implements ReferenceIdentifier {
+final class ObjectIdentifier extends IdentifiableObject implements Identifier {
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::metadata::Identifier}.
      *
@@ -117,7 +116,7 @@ final class ObjectIdentifier extends IdentifiableObject implements ReferenceIden
      * The identifier code should be mandatory, but PROJ does not always provide it.
      * This class is a workaround for the case where the code is missing.
      */
-    final class PrimaryName implements ReferenceIdentifier {
+    final class PrimaryName implements Identifier {
         /**
          * The object from which to fetch {@link Property#NAME_STRING} if needed.
          */
@@ -211,7 +210,7 @@ final class ObjectIdentifier extends IdentifiableObject implements ReferenceIden
      * @param  id  the identifier for which to get string representation.
      * @return a pseudo-WKT for the given identifier.
      */
-    private static String format(final ReferenceIdentifier id) {
+    private static String format(final Identifier id) {
         final StringBuilder buffer = new StringBuilder("ID[\"");
         String t = id.getCodeSpace();
         if (t != null) {

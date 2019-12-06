@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Set;
 import java.util.Objects;
 import javax.measure.Unit;
 import javax.measure.Quantity;
@@ -62,13 +63,17 @@ public final class Units {
         SystemOfUnits system = null;
         try {
             final SystemOfUnitsService service = ServiceProvider.current().getSystemOfUnitsService();
-            if (service != null) {
+            // Exclude our own UnitProvider class (defined in test package).
+            if (service != null && !service.getClass().getPackageName().equals(Units.class.getPackageName())) {
                 system = service.getSystemOfUnits("SI");
                 if (system == null) {
                     system = service.getSystemOfUnits();
                 }
             }
         } catch (IllegalStateException e) {
+            // Ignore: logging message below.
+        }
+        if (system == null) {
             /*
              * The call to NativeResource.logger() is necessary - do not replace by
              * System.getLogger(NativeResource.LOGGER_NAME). The code below has the
@@ -197,6 +202,15 @@ public final class Units {
      * Do not allow instantiation of this class.
      */
     private Units() {
+    }
+
+    /**
+     * Returns all predefined units.
+     *
+     * @return all predefined units.
+     */
+    static Set<Unit<?>> predefined() {
+        return Set.of(PREDEFINED);
     }
 
     /**

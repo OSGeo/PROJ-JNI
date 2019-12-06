@@ -23,10 +23,9 @@ package org.kortforsyningen.proj;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Set;
 import javax.measure.Unit;
 import javax.measure.IncommensurableException;
-import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.metadata.Identifier;
 import org.opengis.parameter.InvalidParameterTypeException;
 import org.opengis.parameter.ParameterDescriptor;
 import org.opengis.parameter.ParameterValue;
@@ -44,7 +43,7 @@ import org.opengis.parameter.ParameterValue;
  * is known only in native code.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 @SuppressWarnings("rawtypes")
@@ -69,13 +68,6 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
     public ParameterDescriptor getDescriptor() {
         return this;
     }
-
-    @Override public int        getMinimumOccurs() {return 1;}
-    @Override public int        getMaximumOccurs() {return 1;}
-    @Override public Set        getValidValues()   {return null;}
-    @Override public Comparable getMinimumValue()  {return null;}
-    @Override public Comparable getMaximumValue()  {return null;}
-    @Override public Object     getDefaultValue()  {return null;}
 
     /**
      * Returns the type of this parameter.
@@ -283,7 +275,7 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
         final StringBuilder buffer = new StringBuilder("PARAMETER[\"");
         String name = getNameString(false);
         if (name == null) {
-            for (final ReferenceIdentifier id : getIdentifiers()) {
+            for (final Identifier id : getIdentifiers()) {
                 name = id.getCode();
                 if (name != null) {
                     final String cs = id.getCodeSpace();

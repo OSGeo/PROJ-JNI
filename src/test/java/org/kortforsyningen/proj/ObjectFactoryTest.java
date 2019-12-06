@@ -42,8 +42,7 @@ import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.TemporalCRS;
 import org.opengis.referencing.crs.CompoundCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.ReferenceIdentifier;
-import org.opengis.metadata.citation.Citation;
+import org.opengis.metadata.Identifier;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -53,7 +52,7 @@ import static org.junit.Assert.*;
  * Tests {@link ObjectFactory}.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 public final strictfp class ObjectFactoryTest {
@@ -157,11 +156,9 @@ public final strictfp class ObjectFactoryTest {
      */
     @Test
     public void testEllipsoid() throws FactoryException {
-        final ReferenceIdentifier id = new ReferenceIdentifier() {
+        final Identifier id = new Identifier() {
             @Override public String   getCode()      {return "My code";}
             @Override public String   getCodeSpace() {return "My codespace";}
-            @Override public Citation getAuthority() {return null;}
-            @Override public String   getVersion()   {return null;}
         };
         semiMajorAxis = 12.1 + 4*StrictMath.random();
         Ellipsoid ellipsoid = factory.createEllipsoid(
@@ -175,7 +172,7 @@ public final strictfp class ObjectFactoryTest {
         assertSame  (   Units.METRE, ellipsoid.getAxisUnit());
         assertFalse (ellipsoid.isIvfDefinitive());
 
-        final ReferenceIdentifier firstID = ellipsoid.getIdentifiers().iterator().next();
+        final Identifier firstID = ellipsoid.getIdentifiers().iterator().next();
         assertEquals("My code",      firstID.getCode());
         assertEquals("My codespace", firstID.getCodeSpace());
     }

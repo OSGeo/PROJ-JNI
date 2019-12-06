@@ -25,14 +25,13 @@ import javax.measure.Unit;
 import org.opengis.util.CodeList;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.AxisDirection;
-import org.opengis.referencing.cs.RangeMeaning;
 
 
 /**
  * Wrappers around {@code osgeo::proj::cs::CoordinateSystemAxis}.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
@@ -79,16 +78,9 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      * @return the code list for the given UML identifier.
      */
     private static <T extends CodeList<T>> T search(final Class<T> type, final String code) {
-        return CodeList.valueOf(type, new CodeList.Filter() {
-            @Override public String codename() {
-                return code;
-            }
-
-            @Override public boolean accept(final CodeList<?> candidate) {
-                return code.equalsIgnoreCase(candidate.identifier()) ||
-                       code.equalsIgnoreCase(candidate.name());
-            }
-        });
+        return CodeList.valueOf(type, (candidate) ->
+                code.equalsIgnoreCase(candidate.identifier()) ||
+                code.equalsIgnoreCase(candidate.name()), code);
     }
 
     /**
@@ -123,16 +115,5 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
     public double getMaximumValue() {
         final double v = impl.getNumericProperty(Property.MAXIMUM);
         return Double.isNaN(v) ? Double.POSITIVE_INFINITY : v;
-    }
-
-    /**
-     * Returns the meaning of axis value range specified by the {@linkplain #getMinimumValue()
-     * minimum} and {@linkplain #getMaximumValue() maximum} values.
-     *
-     * @return the range meaning, or {@code null} in none.
-     */
-    @Override
-    public RangeMeaning getRangeMeaning() {
-        return null;
     }
 }

@@ -21,18 +21,10 @@
  */
 package org.kortforsyningen.proj;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import org.opengis.util.InternationalString;
-import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
-import org.opengis.metadata.citation.CitationDate;
-import org.opengis.metadata.citation.PresentationForm;
-import org.opengis.metadata.citation.ResponsibleParty;
-import org.opengis.metadata.citation.Series;
 
 
 /**
@@ -44,7 +36,7 @@ import org.opengis.metadata.citation.Series;
  * about the value represented by the citation or the international string.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  * @module
  */
@@ -164,131 +156,6 @@ class SimpleCitation implements Citation, InternationalString {
     @Override
     public InternationalString getTitle() {
         return this;
-    }
-
-    /**
-     * Short names or other language names by which the cited information is known.
-     * This implementation has none.
-     *
-     * @return an empty set.
-     */
-    @Override
-    public Collection<? extends InternationalString> getAlternateTitles() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Common title with holdings note. This implementation has none.
-     *
-     * @return null.
-     */
-    @Override
-    @Deprecated
-    public InternationalString getCollectiveTitle() {
-        return null;
-    }
-
-    /**
-     * Reference dates for the cited resource. This implementation has none.
-     *
-     * @return an empty set.
-     */
-    @Override
-    public Collection<? extends CitationDate> getDates() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Version of the cited resource.
-     *
-     * @return default to null.
-     */
-    @Override
-    public InternationalString getEdition() {
-        return null;
-    }
-
-    /**
-     * Date of the edition. This implementation has none.
-     *
-     * @return null.
-     */
-    @Override
-    public Date getEditionDate() {
-        return null;
-    }
-
-    /**
-     * Unique identifier for the resource. This implementation has none.
-     *
-     * @return an empty set.
-     */
-    @Override
-    public Collection<? extends Identifier> getIdentifiers() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Role, name, contact and position information for individuals or organizations
-     * that are responsible for the resource. This implementation has none.
-     *
-     * @return an empty set.
-     */
-    @Override
-    public Collection<? extends ResponsibleParty> getCitedResponsibleParties() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Mode in which the resource is represented.
-     *
-     * @return default to an empty set.
-     */
-    @Override
-    public Collection<PresentationForm> getPresentationForms() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Information about the series, or aggregate dataset, of which the dataset is a part.
-     * This implementation has none.
-     *
-     * @return null.
-     */
-    @Override
-    public Series getSeries() {
-        return null;
-    }
-
-    /**
-     * Other information required to complete the citation that is not recorded elsewhere.
-     * This implementation has none.
-     *
-     * @return null.
-     */
-    @Override
-    public InternationalString getOtherCitationDetails() {
-        return null;
-    }
-
-    /**
-     * International Standard Book Number. This implementation has none.
-     *
-     * @return null.
-     */
-    @Override
-    public String getISBN() {
-        return null;
-    }
-
-    /**
-     * International Standard Serial Number. This implementation has none.
-     *
-     * @return null.
-     */
-    @Override
-    public String getISSN() {
-        return null;
     }
 
     /**

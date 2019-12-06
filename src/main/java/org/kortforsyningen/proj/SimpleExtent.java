@@ -28,9 +28,6 @@ import java.io.Serializable;
 import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.extent.GeographicExtent;
 import org.opengis.metadata.extent.GeographicBoundingBox;
-import org.opengis.metadata.extent.TemporalExtent;
-import org.opengis.metadata.extent.VerticalExtent;
-import org.opengis.util.InternationalString;
 
 
 /**
@@ -42,7 +39,7 @@ import org.opengis.util.InternationalString;
  * The exact datum does not matter since this information is only approximate.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 final class SimpleExtent implements GeographicBoundingBox, Extent, Serializable {
@@ -119,16 +116,6 @@ final class SimpleExtent implements GeographicBoundingBox, Extent, Serializable 
     }
 
     /**
-     * The spatial and temporal extent for the referring object.
-     *
-     * @return the spatial and temporal extent, or {@code null} in none.
-     */
-    @Override
-    public InternationalString getDescription() {
-        return null;
-    }
-
-    /**
      * Returns the western-most coordinate of the limit of the dataset extent.
      * The value is expressed in longitude in decimal degrees (positive east).
      *
@@ -194,26 +181,6 @@ final class SimpleExtent implements GeographicBoundingBox, Extent, Serializable 
     @Override
     public Collection<? extends GeographicExtent> getGeographicElements() {
         return Collections.singleton(this);
-    }
-
-    /**
-     * Provides vertical component of the extent of the referring object.
-     *
-     * @return the vertical extent, or an empty list if none.
-     */
-    @Override
-    public Collection<? extends VerticalExtent> getVerticalElements() {
-        return Collections.emptyList();
-    }
-
-    /**
-     * Provides temporal component of the extent of the referring object.
-     *
-     * @return the temporal extent, or an empty list if none.
-     */
-    @Override
-    public Collection<? extends TemporalExtent> getTemporalElements() {
-        return Collections.emptyList();
     }
 
     /**

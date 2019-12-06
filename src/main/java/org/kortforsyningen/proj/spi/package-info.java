@@ -33,7 +33,7 @@
  * While the classes in this packages are public, they usually don't need to be used directly.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 package org.kortforsyningen.proj.spi;

@@ -37,8 +37,8 @@ import javax.measure.Unit;
 import javax.measure.Quantity;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
-import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.metadata.extent.Extent;
+import org.opengis.metadata.Identifier;
 
 
 /**
@@ -50,7 +50,7 @@ import org.opengis.metadata.extent.Extent;
  * from EPSG codes.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 abstract class IdentifiableObject implements Formattable {
@@ -129,7 +129,7 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @return the primary name, or {@code null} if this object does not provide a name.
      */
-    public ReferenceIdentifier getName() {
+    public Identifier getName() {
         return ((ObjectIdentifier) impl.getObjectProperty(Property.NAME)).new PrimaryName(this);
     }
 
@@ -147,7 +147,7 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @return this object identifiers, or an empty collection if there is none.
      */
-    public Set<ReferenceIdentifier> getIdentifiers() {
+    public Set<Identifier> getIdentifiers() {
         return new PropertySet<>(ObjectIdentifier.class, Property.IDENTIFIER);
     }
 

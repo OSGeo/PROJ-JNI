@@ -4,5 +4,5 @@ on-the-fly by the `java` command.
 
 ```
 mvn install
-java --class-path target/proj-1.0-SNAPSHOT.jar example/TransformPoints.java
+java --class-path target/proj-2.0-SNAPSHOT.jar example/TransformPoints.java
 ```

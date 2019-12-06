@@ -24,7 +24,7 @@ package org.kortforsyningen.proj;
 import java.util.List;
 import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
-import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.metadata.Identifier;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
@@ -50,7 +50,7 @@ import static org.opengis.test.Assert.*;
  * Tests the {@link AuthorityFactory} class.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 public final strictfp class AuthorityFactoryTest {
@@ -258,10 +258,10 @@ public final strictfp class AuthorityFactoryTest {
      * @param  identifiers  the collection to verify.
      */
     private static void assertIdentifierEquals(final String codeSpace, final String code,
-            final Iterable<ReferenceIdentifier> identifiers)
+            final Iterable<Identifier> identifiers)
     {
         boolean found = false;
-        for (final ReferenceIdentifier id : identifiers) {
+        for (final Identifier id : identifiers) {
             if (codeSpace.equalsIgnoreCase(id.getCodeSpace())) {
                 assertEquals("code", code, id.getCode());
                 found = true;

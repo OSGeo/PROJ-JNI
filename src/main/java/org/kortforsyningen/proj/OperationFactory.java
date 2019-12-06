@@ -28,6 +28,7 @@ import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.extent.GeographicExtent;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.Conversion;
 import org.opengis.referencing.operation.CoordinateOperation;
@@ -41,7 +42,7 @@ import org.opengis.util.FactoryException;
  * Creates coordinate operations from a pair of CRS, optionally with some contextual information.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 final class OperationFactory implements CoordinateOperationFactory {
@@ -228,5 +229,36 @@ final class OperationFactory implements CoordinateOperationFactory {
             final OperationMethod method, final ParameterValueGroup parameters) throws FactoryException
     {
         throw new FactoryException("Not supported yet.");
+    }
+
+    /**
+     * Creates an operation method from a set of properties and a descriptor group.
+     *
+     * @param  properties       set of properties. Shall contains at least {@code "name"}.
+     * @param  sourceDimension  number of dimensions in the source CRS of the operation method, or {@code null}.
+     * @param  targetDimension  number of dimensions in the target CRS of the operation method, or {@code null}.
+     * @param  parameters       a description of the parameters for the operation method.
+     * @return the operation method.
+     * @throws FactoryException if the object creation failed.
+     *
+     * @since 2.0
+     */
+    @Override
+    public OperationMethod createOperationMethod(Map<String,?> properties,
+                                                 Integer  sourceDimension,
+                                                 Integer  targetDimension,
+                                                 ParameterDescriptorGroup parameters) throws FactoryException
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Returns the build-in operation method of the given name.
+     *
+     * @since 2.0
+     */
+    @Override
+    public OperationMethod getOperationMethod(String name) throws FactoryException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -28,7 +28,7 @@ import java.lang.annotation.Native;
  * Identification of object types.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 final class Type {
@@ -73,5 +73,8 @@ final class Type {
             OPERATION_METHOD            = 27,
             CONVERSION                  = 28,
             TRANSFORMATION              = 29,
-            PARAMETER                   = 30;
+            PARAMETER                   = 30,
+            PARAMETRIC_CS               = 31,
+            PARAMETRIC_CRS              = 32,
+            PARAMETRIC_DATUM            = 33;
 }

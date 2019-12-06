@@ -47,7 +47,7 @@ import org.opengis.referencing.operation.*;
  * same thread.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 final class AuthorityFactory extends NativeResource {
@@ -360,6 +360,18 @@ final class AuthorityFactory extends NativeResource {
         }
 
         /**
+         * Returns a coordinate system which is expected to be parametric.
+         *
+         * @param  code  value allocated by authority.
+         * @return the coordinate system for the given code.
+         * @throws FactoryException if the object creation failed or the CS is another type.
+         */
+        @Override
+        public ParametricCS createParametricCS(final String code) throws FactoryException {
+            throw new FactoryException(UNSUPPORTED);
+        }
+
+        /**
          * Returns a coordinate system which is expected to be polar.
          * PROJ does not yet support this type of coordinate system.
          *
@@ -458,6 +470,18 @@ final class AuthorityFactory extends NativeResource {
         }
 
         /**
+         * Returns a datum for parametric CRS.
+         *
+         * @param  code  value allocated by authority.
+         * @return the datum for the given code.
+         * @throws FactoryException if the object creation failed or the datum is another type.
+         */
+        @Override
+        public ParametricDatum createParametricDatum(final String code) throws FactoryException {
+            throw new FactoryException(UNSUPPORTED);
+        }
+
+        /**
          * Returns a datum for engineering CRS.
          *
          * @param  code  value allocated by authority.
@@ -551,6 +575,18 @@ final class AuthorityFactory extends NativeResource {
         @Override
         public TemporalCRS createTemporalCRS(final String code) throws FactoryException {
             return createGeodeticObject(CRS.Temporal.class, Type.TEMPORAL_CRS, code);
+        }
+
+        /**
+         * Returns a coordinate reference system which is expected to be parametric.
+         *
+         * @param  code  value allocated by authority.
+         * @return the CRS for the given code.
+         * @throws FactoryException if the object creation failed or the CRS is another type.
+         */
+        @Override
+        public ParametricCRS createParametricCRS(final String code) throws FactoryException {
+            throw new FactoryException(UNSUPPORTED);
         }
 
         /**

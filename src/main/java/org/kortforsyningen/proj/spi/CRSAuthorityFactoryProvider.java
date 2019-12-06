@@ -33,6 +33,7 @@ import org.opengis.referencing.crs.EngineeringCRS;
 import org.opengis.referencing.crs.GeocentricCRS;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ImageCRS;
+import org.opengis.referencing.crs.ParametricCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.crs.TemporalCRS;
 import org.opengis.referencing.crs.VerticalCRS;
@@ -47,7 +48,7 @@ import org.opengis.util.InternationalString;
  * should be sufficient.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  *
  * @see <a href="https://github.com/Kortforsyningen/PROJ-JNI/issues/15">Issue #15</a>
@@ -140,5 +141,10 @@ class CRSAuthorityFactoryProvider implements CRSAuthorityFactory {
     @Override
     public VerticalCRS createVerticalCRS(String code) throws FactoryException {
         return impl.createVerticalCRS(code);
+    }
+
+    @Override
+    public ParametricCRS createParametricCRS(String code) throws FactoryException {
+        return impl.createParametricCRS(code);
     }
 }

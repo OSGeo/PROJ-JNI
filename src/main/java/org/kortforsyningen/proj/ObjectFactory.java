@@ -32,7 +32,6 @@ import org.opengis.util.FactoryException;
 import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.IdentifiedObject;
-import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.operation.Conversion;
 import org.opengis.referencing.operation.CoordinateOperationFactory;
 import org.opengis.referencing.datum.*;
@@ -44,7 +43,7 @@ import org.opengis.referencing.cs.*;
  * Creates geodetic objects from their components.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  * @module
  */
@@ -167,9 +166,9 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
                     if (value == null) {
                         continue;
                     }
-                    if (i == IDENTIFIER && id instanceof ReferenceIdentifier) {
+                    if (i == IDENTIFIER) {
                         if (array == null) array = new String[CODESPACE + 1];
-                        array[CODESPACE] = ((ReferenceIdentifier) id).getCodeSpace();
+                        array[CODESPACE] = id.getCodeSpace();
                     }
                 } else if (value instanceof Date) {
                     value = ((Date) value).toInstant();         // ISO 8601 representation.
@@ -500,6 +499,23 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     }
 
     /**
+     * Creates a parametric coordinate system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  axis        the axis.
+     * @return the coordinate system for the given properties and axes.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public ParametricCS createParametricCS(
+            final Map<String,?> properties,
+            final CoordinateSystemAxis axis) throws FactoryException
+    {
+        return (ParametricCS) create(flat(properties),
+                components(axis), null, null, 0, Type.PARAMETRIC_CS);
+    }
+
+    /**
      * Creates a linear coordinate system.
      *
      * @param  properties  name and other properties to give to the new object.
@@ -604,6 +620,21 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     {
         return (TemporalDatum) create(flat(properties),
                 null, new String[] {origin.toInstant().toString()}, null, 0, Type.TEMPORAL_DATUM);
+    }
+
+    /**
+     * Creates a parametric datum from an enumerated type value.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @return the datum for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public ParametricDatum createParametricDatum(
+            final Map<String,?> properties) throws FactoryException
+    {
+        return (ParametricDatum) create(flat(properties),
+                null, null, null, 0, Type.PARAMETRIC_DATUM);
     }
 
     /**
@@ -728,6 +759,25 @@ final class ObjectFactory extends NativeResource implements DatumFactory, CSFact
     {
         return (TemporalCRS) create(flat(properties),
                 components(datum, cs), null, null, 0, Type.TEMPORAL_CRS);
+    }
+
+    /**
+     * Creates a parametric coordinate reference system.
+     *
+     * @param  properties  name and other properties to give to the new object.
+     * @param  datum       parametric datum to use in created CRS.
+     * @param  cs          the parametric coordinate system for the created CRS.
+     * @return the coordinate reference system for the given properties.
+     * @throws FactoryException if the object creation failed.
+     */
+    @Override
+    public ParametricCRS createParametricCRS(
+            final Map<String,?> properties,
+            final ParametricDatum datum,
+            final ParametricCS cs) throws FactoryException
+    {
+        return (ParametricCRS) create(flat(properties),
+                components(datum, cs), null, null, 0, Type.PARAMETRIC_CRS);
     }
 
     /**

@@ -31,6 +31,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
+import org.opengis.metadata.Identifier;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.metadata.citation.Citation;
@@ -38,7 +39,8 @@ import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.quality.PositionalAccuracy;
 import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.crs.GeneralDerivedCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
@@ -55,7 +57,7 @@ import org.opengis.referencing.operation.TransformException;
  * Each subtype is represented by an inner class in this file.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 class Operation extends ParameterGroup implements CoordinateOperation, MathTransform {
@@ -314,9 +316,6 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
             super(ptr);
         }
 
-        /** Removed from ISO 19111:2019. */ @Override public Integer getSourceDimensions() {return null;}
-        /** Removed from ISO 19111:2019. */ @Override public Integer getTargetDimensions() {return null;}
-
         /**
          * The property to request for getting parameter descriptors.
          * This is the value of the fist argument to be given to
@@ -432,9 +431,9 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
             this.op  = op;
         }
 
-        @Override public ReferenceIdentifier            getName()                        {return op.getName();}
+        @Override public Identifier                     getName()                        {return op.getName();}
         @Override public Collection<GenericName>        getAlias()                       {return op.getAlias();}
-        @Override public Set<ReferenceIdentifier>       getIdentifiers()                 {return op.getIdentifiers();}
+        @Override public Set<Identifier>                getIdentifiers()                 {return op.getIdentifiers();}
         @Override public InternationalString            getRemarks()                     {return op.getRemarks();}
         @Override public String                         getOperationVersion()            {return op.getOperationVersion();}
         @Override public OperationMethod                getMethod()                      {return op.getMethod();}
@@ -445,8 +444,8 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
         @Override public MathTransform                  getMathTransform()               {return op.getMathTransform();}
         @Override public String                         toWKT()                          {return op.toWKT();}
         @Override public String                         toString()                       {return op.toString();}
-        @Override public CoordinateReferenceSystem      getTargetCRS()                   {return crs;}
-        @Override public CoordinateReferenceSystem      getSourceCRS()                   {return crs.getBaseCRS();}
+        @Override public ProjectedCRS                   getTargetCRS()                   {return crs;}
+        @Override public GeographicCRS                  getSourceCRS()                   {return crs.getBaseCRS();}
         @Override public int                            hashCode()                       {return crs.hashCode() ^ 37;}
         @Override public boolean                        equals(final Object other) {
             // Since the conversion was obtained from the CRS, comparing the CRS is sufficient.

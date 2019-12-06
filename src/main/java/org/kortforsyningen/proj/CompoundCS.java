@@ -21,14 +21,9 @@
  */
 package org.kortforsyningen.proj;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.metadata.Identifier;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
-import org.opengis.util.GenericName;
-import org.opengis.util.InternationalString;
 
 
 /**
@@ -37,7 +32,7 @@ import org.opengis.util.InternationalString;
  * but GeoAPI does for user convenience.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 public class CompoundCS implements CoordinateSystem {
@@ -62,49 +57,8 @@ public class CompoundCS implements CoordinateSystem {
      * @return null.
      */
     @Override
-    public ReferenceIdentifier getName() {
+    public Identifier getName() {
         return null;
-    }
-
-    /**
-     * Returns an empty set since this coordinate system has no name.
-     *
-     * @return empty.
-     */
-    @Override
-    public Collection<GenericName> getAlias() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Returns an empty set since this coordinate system has no identifier.
-     *
-     * @return empty.
-     */
-    @Override
-    public Set<ReferenceIdentifier> getIdentifiers() {
-        return Collections.emptySet();
-    }
-
-    /**
-     * Returns {@code null} since this coordinate system has no remarks.
-     *
-     * @return null.
-     */
-    @Override
-    public InternationalString getRemarks() {
-        return null;
-    }
-
-    /**
-     * Always throws an exception since this coordinate system can not be formatted in WKT.
-     *
-     * @return never return
-     * @throws UnsupportedOperationException always thrown.
-     */
-    @Override
-    public String toWKT() {
-        throw new UnsupportedOperationException();
     }
 
     /**

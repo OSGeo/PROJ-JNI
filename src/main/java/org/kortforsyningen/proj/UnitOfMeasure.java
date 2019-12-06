@@ -41,7 +41,7 @@ import javax.measure.quantity.Dimensionless;
  * It is used only as a fallback when no JSR-363 implementation has been found on the classpath.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  */
 final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
@@ -101,7 +101,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
      * @param  type  the type of quantity represented by the unit of measurement.
      * @param  toSI  the conversion factory to system unit (provided by PROJ).
      */
-    private UnitOfMeasure(final Class<Q> type, final double toSI) {
+    UnitOfMeasure(final Class<Q> type, final double toSI) {
         this.type = type;
         this.name = null;
         this.toSI = toSI;

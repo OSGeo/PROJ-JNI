@@ -25,6 +25,7 @@ import java.util.Map;
 import org.kortforsyningen.proj.Proj;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.Conversion;
 import org.opengis.referencing.operation.CoordinateOperation;
@@ -39,7 +40,7 @@ import org.opengis.util.FactoryException;
  * in which case the public static {@code provider()} method should be sufficient.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 2.0
  * @since   1.0
  *
  * @see <a href="https://github.com/Kortforsyningen/PROJ-JNI/issues/15">Issue #15</a>
@@ -80,5 +81,15 @@ public final class OperationFactoryProvider implements CoordinateOperationFactor
     @Override
     public Conversion createDefiningConversion(Map<String, ?> map, OperationMethod om, ParameterValueGroup pvg) throws FactoryException {
         return impl.createDefiningConversion(map, om, pvg);
+    }
+
+    @Override
+    public OperationMethod createOperationMethod(Map<String, ?> map, Integer intgr, Integer intgr1, ParameterDescriptorGroup pdg) throws FactoryException {
+        return impl.createOperationMethod(map, intgr, intgr1, pdg);
+    }
+
+    @Override
+    public OperationMethod getOperationMethod(String code) throws FactoryException {
+        return impl.getOperationMethod(code);
     }
 }
