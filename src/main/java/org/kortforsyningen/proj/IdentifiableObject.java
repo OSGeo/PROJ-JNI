@@ -130,7 +130,11 @@ abstract class IdentifiableObject implements Formattable {
      * @return the primary name, or {@code null} if this object does not provide a name.
      */
     public Identifier getName() {
-        return ((ObjectIdentifier) impl.getObjectProperty(Property.NAME)).new PrimaryName(this);
+        if (impl.getBooleanProperty(Property.HAS_NAME)) {
+            return ((ObjectIdentifier) impl.getObjectProperty(Property.NAME)).new PrimaryName(this);
+        } else {
+            return null;
+        }
     }
 
     /**

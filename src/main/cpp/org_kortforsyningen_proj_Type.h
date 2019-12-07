@@ -69,12 +69,14 @@ extern "C" {
 #define org_kortforsyningen_proj_Type_TRANSFORMATION 29L
 #undef org_kortforsyningen_proj_Type_PARAMETER
 #define org_kortforsyningen_proj_Type_PARAMETER 30L
+#undef org_kortforsyningen_proj_Type_PARAMETER_VALUE
+#define org_kortforsyningen_proj_Type_PARAMETER_VALUE 31L
 #undef org_kortforsyningen_proj_Type_PARAMETRIC_CS
-#define org_kortforsyningen_proj_Type_PARAMETRIC_CS 31L
+#define org_kortforsyningen_proj_Type_PARAMETRIC_CS 32L
 #undef org_kortforsyningen_proj_Type_PARAMETRIC_CRS
-#define org_kortforsyningen_proj_Type_PARAMETRIC_CRS 32L
+#define org_kortforsyningen_proj_Type_PARAMETRIC_CRS 33L
 #undef org_kortforsyningen_proj_Type_PARAMETRIC_DATUM
-#define org_kortforsyningen_proj_Type_PARAMETRIC_DATUM 33L
+#define org_kortforsyningen_proj_Type_PARAMETRIC_DATUM 34L
 #ifdef __cplusplus
 }
 #endif

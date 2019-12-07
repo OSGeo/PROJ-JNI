@@ -74,7 +74,8 @@ final class Type {
             CONVERSION                  = 28,
             TRANSFORMATION              = 29,
             PARAMETER                   = 30,
-            PARAMETRIC_CS               = 31,       // From ISO 19111:2019
-            PARAMETRIC_CRS              = 32,
-            PARAMETRIC_DATUM            = 33;
+            PARAMETER_VALUE             = 31,
+            PARAMETRIC_CS               = 32,       // From ISO 19111:2019
+            PARAMETRIC_CRS              = 33,
+            PARAMETRIC_DATUM            = 34;
 }

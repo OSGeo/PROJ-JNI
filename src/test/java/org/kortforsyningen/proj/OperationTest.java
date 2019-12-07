@@ -51,8 +51,8 @@ public final strictfp class OperationTest extends TransformTestCase {
      * Creates a new test case.
      */
     public OperationTest() {
-        factory = new OperationFactory(null);
-        crsFactory = new AuthorityFactory.API("EPSG");
+        factory = TestFactorySource.OPERATIONS;
+        crsFactory = TestFactorySource.EPSG;
     }
 
     /**

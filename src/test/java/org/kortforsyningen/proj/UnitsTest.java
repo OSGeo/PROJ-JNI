@@ -97,7 +97,7 @@ public final strictfp class UnitsTest {
      */
     @Test
     public void testCreateUnitOfMeasure() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = TestFactorySource.EPSG;
         assertSame(Units.METRE,       factory.createUnit("9001"));
         assertSame(Units.RADIAN,      factory.createUnit("9101"));
         assertSame(Units.MICRORADIAN, factory.createUnit("9109"));

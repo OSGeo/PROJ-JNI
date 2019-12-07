@@ -55,7 +55,7 @@ public final strictfp class OperationFactoryTest {
      * Creates a new test case.
      */
     public OperationFactoryTest() {
-        crsFactory = new AuthorityFactory.API("EPSG");
+        crsFactory = TestFactorySource.EPSG;
     }
 
     /**

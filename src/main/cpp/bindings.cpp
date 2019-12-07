@@ -310,6 +310,11 @@ JNIEXPORT jstring JNICALL Java_org_kortforsyningen_proj_NativeResource_version(J
 
 
 /**
+ * A constant for empty string.
+ */
+const std::string empty_string = std::string();
+
+/**
  * Converts the given C++ string into a Java string if non-empty, or returns null if the string is empty.
  * This function assumes UTF-8 encoding with no null character and no supplementary Unicode characters.
  *
@@ -699,8 +704,9 @@ inline jobject create_unit_fallback(JNIEnv *env, jclass uomClass, const UnitOfMe
     if (unit) {
         jmethodID c = env->GetMethodID(uomClass, "<init>", "(ILjava/lang/String;D)V");
         if (c) {
-            jstring name = env->NewStringUTF(unit->name().c_str());
-            if (name) {
+            jstring name = nullptr;
+            std::string sn = unit->name();
+            if (sn.empty() || (name = env->NewStringUTF(sn.c_str()))) {
                 return env->NewObject(uomClass, c, (jint) static_cast<int>(unit->type()),
                                       name, (jdouble) unit->conversionToSI());
             }
@@ -817,7 +823,7 @@ DatabaseContextPtr get_database_context(JNIEnv *env, jobject context) {
         db = unwrap_shared_ptr<DatabaseContext>(dbPtr);
     } else {
         log(env, "Creating PROJ database context.");
-        db = DatabaseContext::create(std::string(), std::vector<std::string>(), get_context(env, context)).as_nullable();
+        db = DatabaseContext::create(empty_string, std::vector<std::string>(), get_context(env, context)).as_nullable();
         dbPtr = wrap_shared_ptr<DatabaseContext>(db);
         env->SetLongField(context, fid, dbPtr);
         // dbPtr may be 0 if out of memory, but the only consequence is that DatabaseContext is not cached.
@@ -985,12 +991,14 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_searchVect
 {
     const char *name_utf = env->GetStringUTFChars(name, nullptr);
     if (name_utf) {
+        jshort type;
         try {
             BaseObjectPtr value;
             switch (property) {
                 case org_kortforsyningen_proj_Property_METHOD_PARAMETER: {
                     for (GeneralOperationParameterNNPtr param : get_shared_object<OperationMethod>(env, object)->parameters()) {
                         if (!strcasecmp(name_utf, param->nameStr().c_str())) {
+                            type = org_kortforsyningen_proj_Type_PARAMETER;
                             value = param.as_nullable();
                             break;
                         }
@@ -1001,6 +1009,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_searchVect
                     for (GeneralParameterValueNNPtr param : get_shared_object<SingleOperation>(env, object)->parameterValues()) {
                         OperationParameterValuePtr single = std::dynamic_pointer_cast<OperationParameterValue>(param.as_nullable());
                         if (single && !strcasecmp(name_utf, single->parameter()->nameStr().c_str())) {
+                            type = org_kortforsyningen_proj_Type_PARAMETER_VALUE;
                             value = single;
                             break;
                         }
@@ -1012,7 +1021,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_searchVect
                 }
             }
             if (value) {
-                return specific_subclass(env, object, value, org_kortforsyningen_proj_Type_PARAMETER);
+                return specific_subclass(env, object, value, type);
             }
         } catch (const std::exception &e) {
             rethrow_as_java_exception(env, JPJ_RUNTIME_EXCEPTION, e);
@@ -1056,7 +1065,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorE
             }
             case org_kortforsyningen_proj_Property_OPERATION_PARAMETER: {
                 value = get_shared_object<SingleOperation>(env, object)->parameterValues().at(index).as_nullable();
-                type  = org_kortforsyningen_proj_Type_PARAMETER;
+                type  = org_kortforsyningen_proj_Type_PARAMETER_VALUE;
                 break;
             }
             case org_kortforsyningen_proj_Property_CRS_COMPONENT: {
@@ -1129,8 +1138,8 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
  * @param  text  the optional string to return as a plain string.
  * @return the plain string, or an empty string if absent.
  */
-inline std::string string_or_empty(const optional<std::string>& text) {
-    return text.has_value() ? *text : std::string();
+inline const std::string& string_or_empty(const optional<std::string>& text) {
+    return text.has_value() ? *text : empty_string;
 }
 
 
@@ -1140,8 +1149,8 @@ inline std::string string_or_empty(const optional<std::string>& text) {
  * @param  citation  the citation from which to get the title.
  * @return title of the given citation, or an empty string if absent.
  */
-inline std::string citation_title(const optional<Citation>& citation) {
-    return citation.has_value() ? string_or_empty(citation->title()) : std::string();
+inline const std::string& citation_title(const optional<Citation>& citation) {
+    return citation.has_value() ? string_or_empty(citation->title()) : empty_string;
 }
 
 
@@ -1439,6 +1448,10 @@ JNIEXPORT jboolean JNICALL Java_org_kortforsyningen_proj_SharedPointer_getBoolea
 {
     try {
         switch (property) {
+            case org_kortforsyningen_proj_Property_HAS_NAME: {
+                IdentifiedObjectNNPtr id = get_identified_object(env, object);
+                return !id->name()->code().empty() || !id->nameStr().empty();
+            }
             case org_kortforsyningen_proj_Property_IS_SPHERE: {
                 return get_shared_object<Ellipsoid>(env, object)->isSphere();
             }
@@ -1920,7 +1933,7 @@ UnitOfMeasure unit_from_identifier(JNIEnv *env, int code) {
                     UnitOfMeasure::Type type = static_cast<UnitOfMeasure::Type>((int) values[0]);
                     double scale = values[1];
                     env->ReleaseDoubleArrayElements(array, values, JNI_ABORT);
-                    return UnitOfMeasure(std::string(), scale, type);
+                    return UnitOfMeasure(empty_string, scale, type);
                 }
             }
         }
@@ -1968,27 +1981,6 @@ template <class T> inline osgeo::proj::util::nn<std::shared_ptr<T>> get_componen
 
 
 /**
- * A key used for a temporary entry in `PropertyMap`.
- */
-static const std::string ANCHOR_POINT_KEY = "anchorPoint";
-
-/**
- * Returns the value associated to `ANCHOR_POINT_KEY` in the given property map.
- *
- * @todo As of PROJ 6.2, call to getStringValue causes a JVM crash with the following message:
- *       "undefined symbol: (snip)PropertyMap14getStringValue(snip)"
- *
- * @param  the map from which to get the anchor point.
- * @return the anchor point.
- */
-inline optional<std::string> get_anchor(const PropertyMap& propertyMap) {
-    optional<std::string> anchor = optional<std::string>();
-//  propertyMap.getStringValue(ANCHOR_POINT_KEY, anchor);
-    return anchor;
-}
-
-
-/**
  * Creates a geodetic object of the given type.
  *
  * @param  env           The JNI environment.
@@ -2016,6 +2008,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
      *      so it is okay to check only the first letter for 't' value.
      */
     PropertyMap propertyMap = PropertyMap();
+    optional<std::string> anchor = optional<std::string>();
     if (properties) {
         PropertyMap identifierMap = PropertyMap();
         for (int i = env->GetArrayLength(properties); --i >= 0;) {
@@ -2025,16 +2018,16 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
                 if (!utf) return nullptr;                                       // May be an OutOfMemoryError — abort.
                 try {
                     switch (i) {
-                        case org_kortforsyningen_proj_ObjectFactory_NAME:         propertyMap.set(IdentifiedObject::NAME_KEY,         utf); break;
-                        case org_kortforsyningen_proj_ObjectFactory_ALIAS:        propertyMap.set(IdentifiedObject::ALIAS_KEY,        utf); break;
-                        case org_kortforsyningen_proj_ObjectFactory_REMARKS:      propertyMap.set(IdentifiedObject::REMARKS_KEY,      utf); break;
-                        case org_kortforsyningen_proj_ObjectFactory_DEPRECATED:   propertyMap.set(IdentifiedObject::DEPRECATED_KEY,  *utf == 't'); break;
-                        case org_kortforsyningen_proj_ObjectFactory_ANCHOR_POINT: propertyMap.set(                  ANCHOR_POINT_KEY, utf); break;
-                        case org_kortforsyningen_proj_ObjectFactory_SCOPE:        propertyMap.set(ObjectUsage::     SCOPE_KEY,        utf); break;
-                        case org_kortforsyningen_proj_ObjectFactory_CODESPACE:  identifierMap.set(Identifier::      CODESPACE_KEY,    utf); break;
+                        case org_kortforsyningen_proj_ObjectFactory_NAME:         propertyMap.set(IdentifiedObject::NAME_KEY,        utf);        break;
+                        case org_kortforsyningen_proj_ObjectFactory_ALIAS:        propertyMap.set(IdentifiedObject::ALIAS_KEY,       utf);        break;
+                        case org_kortforsyningen_proj_ObjectFactory_REMARKS:      propertyMap.set(IdentifiedObject::REMARKS_KEY,     utf);        break;
+                        case org_kortforsyningen_proj_ObjectFactory_DEPRECATED:   propertyMap.set(IdentifiedObject::DEPRECATED_KEY, *utf == 't'); break;
+                        case org_kortforsyningen_proj_ObjectFactory_SCOPE:        propertyMap.set(ObjectUsage::     SCOPE_KEY,       utf);        break;
+                        case org_kortforsyningen_proj_ObjectFactory_ANCHOR_POINT: anchor = optional<std::string>(std::string(utf));               break;
+                        case org_kortforsyningen_proj_ObjectFactory_CODESPACE:  identifierMap.set(Identifier::      CODESPACE_KEY,   utf);        break;
                         case org_kortforsyningen_proj_ObjectFactory_IDENTIFIER: {
                             identifierMap.set(Identifier::CODE_KEY, utf);
-                            IdentifierNNPtr id = Identifier::create(std::string(), identifierMap);
+                            IdentifierNNPtr id = Identifier::create(empty_string, identifierMap);
                             propertyMap.set(IdentifiedObject::IDENTIFIERS_KEY, id);
                             break;
                         }
@@ -2130,12 +2123,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
             case org_kortforsyningen_proj_Type_GEODETIC_REFERENCE_FRAME: {
                 EllipsoidNNPtr     ellipsoid     = get_component<Ellipsoid>    (env, components, 0);
                 PrimeMeridianNNPtr primeMeridian = get_component<PrimeMeridian>(env, components, 1);
-                optional<std::string> anchor = get_anchor(propertyMap);
                 object = GeodeticReferenceFrame::create(propertyMap, ellipsoid, anchor, primeMeridian).as_nullable();
                 break;
             }
             case org_kortforsyningen_proj_Type_VERTICAL_REFERENCE_FRAME: {
-                optional<std::string> anchor = get_anchor(propertyMap);
                 object = VerticalReferenceFrame::create(propertyMap, anchor).as_nullable();
                 break;
             }
@@ -2146,12 +2137,10 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
                 break;
             }
             case org_kortforsyningen_proj_Type_PARAMETRIC_DATUM: {
-                optional<std::string> anchor = get_anchor(propertyMap);
                 object = ParametricDatum::create(propertyMap, anchor).as_nullable();
                 break;
             }
             case org_kortforsyningen_proj_Type_ENGINEERING_DATUM: {
-                optional<std::string> anchor = get_anchor(propertyMap);
                 object = EngineeringDatum::create(propertyMap, anchor).as_nullable();
                 break;
             }
@@ -2165,6 +2154,7 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_ObjectFactory_create
                     SphericalCSPtr spherical = std::dynamic_pointer_cast<SphericalCS>(cs);
                     object = GeodeticCRS::create(propertyMap, datum, NN_CHECK_THROW(spherical)).as_nullable();
                 }
+                break;
             }
             case org_kortforsyningen_proj_Type_GEOGRAPHIC_CRS: {
                 GeodeticReferenceFrameNNPtr datum = get_component<GeodeticReferenceFrame>(env, components, 0);

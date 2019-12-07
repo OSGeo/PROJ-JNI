@@ -98,9 +98,12 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
         @Override public Unit<Length> getAxisUnit()          {return getUnit(Length.class, Property.ELLIPSOID_UNIT);}
         @Override public double       getSemiMajorAxis()     {return impl.getNumericProperty(Property.SEMI_MAJOR);}
         @Override public double       getSemiMinorAxis()     {return impl.getNumericProperty(Property.SEMI_MINOR);}
-        @Override public double       getInverseFlattening() {return impl.getNumericProperty(Property.INVERSE_FLAT);}
         @Override public boolean      isIvfDefinitive()      {return impl.getBooleanProperty(Property.IVF_DEFINITIVE);}
         @Override public boolean      isSphere()             {return impl.getBooleanProperty(Property.IS_SPHERE);}
+        @Override public double       getInverseFlattening() {
+            final double f = impl.getNumericProperty(Property.INVERSE_FLAT);
+            return (f == 0) ? Double.POSITIVE_INFINITY : f;
+        }
     }
 
     /**
@@ -168,7 +171,7 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
          */
         @Override
         public VerticalDatumType getVerticalDatumType() {
-            return null;
+            return VerticalDatumType.valueOf("Unspecified");
         }
     }
 

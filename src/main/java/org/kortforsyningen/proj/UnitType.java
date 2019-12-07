@@ -21,6 +21,7 @@
  */
 package org.kortforsyningen.proj;
 
+import java.util.Map;
 import java.util.Arrays;
 import javax.measure.Unit;
 import javax.measure.Quantity;
@@ -123,6 +124,17 @@ enum UnitType {
     }
 
     /**
+     * Provides {@link UnitType} instances for a given quantity type.
+     * This is similar to {@link #forOrdinal(int)} method, but using
+     * a {@link Class} argument instead than an enumeration ordinal.
+     */
+    static final Map<Class<?>, UnitType> FOR_QUANTITY_TYPE = Map.of(
+            Time.class, TIME,
+            Angle.class, ANGULAR,
+            Length.class, LINEAR,
+            Dimensionless.class, SCALE);
+
+    /**
      * Returns the unit type from the given ordinal value.
      * This method is invoked by {@link UnitOfMeasure} constructor, which is a
      * fallback used when no JSR-363 implementation is found on the classpath.
@@ -177,7 +189,8 @@ enum UnitType {
                 }
             }
             final Unit<?> unit = getSystemUnit();
-            if (!(unit instanceof UnitOfMeasure<?>)) {
+            if (unit != null && !(unit instanceof UnitOfMeasure<?>)) {
+                // Do NOT invoke on UnitOfMeasure instance; it would create a never-ending loop.
                 return unit.multiply(scale);
             }
             /*

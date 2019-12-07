@@ -119,7 +119,8 @@ final class Property {
      * Identify properties which can be returned by {@link SharedPointer#getBooleanProperty(short)} method.
      */
     @Native
-    static final short IS_SPHERE      = 600,
-                       IVF_DEFINITIVE = 601,
-                       PARAMETER_BOOL = 602;
+    static final short HAS_NAME       = 600,
+                       IS_SPHERE      = 601,
+                       IVF_DEFINITIVE = 602,
+                       PARAMETER_BOOL = 603;
 }

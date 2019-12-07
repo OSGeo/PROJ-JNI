@@ -47,7 +47,7 @@ import org.opengis.parameter.ParameterValue;
  * @since   1.0
  */
 @SuppressWarnings("rawtypes")
-final class Parameter extends IdentifiableObject implements ParameterDescriptor, ParameterValue {
+class Parameter extends IdentifiableObject implements ParameterDescriptor {
     /**
      * Creates a new wrapper for the given {@code osgeo::proj::operation::OperationParameterValue}.
      * May also be a {@code osgeo::proj::operation::OperationParameter}, in which case the call to
@@ -60,186 +60,225 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
     }
 
     /**
-     * Returns a description of this parameter.
-     *
-     * @return {@code this}.
-     */
-    @Override
-    public ParameterDescriptor getDescriptor() {
-        return this;
-    }
-
-    /**
-     * Returns the type of this parameter.
+     * Returns the type of this parameter. This base class returns {@code Object.class} because PROJ
+     * defines units of measurements with the parameter value instead than the parameter descriptor,
+     * so the actual class is unknown. The {@link Value} subclass override this method.
      *
      * @return the type of this parameter.
-     * @throws UnsupportedOperationException if the type is unknown.
-     *         It may happen if new type has been added in a new PROJ version,
-     *         in which case we may need to upgrade PROJ-JNI accordingly.
-     */
-    private ParameterType type() {
-        return ParameterType.get(impl.getIntegerProperty(Property.PARAMETER_TYPE));
-    }
-
-    /**
-     * Returns the class of parameter values.
-     *
-     * @return the type of parameter values.
      */
     @Override
     public Class getValueClass() {
-        return type().type;
+        return Object.class;
     }
 
     /**
-     * Returns the parameter value as an object. The object type may be {@link Double},
-     * {@link Integer}, {@link Boolean}, {@link String} or {@link URI}.
-     *
-     * @return the parameter value as an object, or {@code null} if no value has been set.
+     * Read-only parameter value.
      */
-    @Override
-    public Object getValue() {
-        switch (type()) {
-            case MEASURE:  return doubleValue();
-            case INTEGER:  return intValue();
-            case BOOLEAN:  return booleanValue();
-            case STRING:   return stringValue();
-            case FILENAME: return valueFile();
-            default: throw new AssertionError();        // Should never happen.
+    static final class Value extends Parameter implements ParameterValue {
+        /**
+         * Creates a new wrapper for the given {@code osgeo::proj::operation::OperationParameterValue}.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         */
+        Value(final long ptr) {
+            super(ptr);
         }
-    }
 
-    /**
-     * Returns the unit of measurement of values returned by {@link #doubleValue()}, or {@code null} if none.
-     *
-     * @return unit of measurement of {@link #doubleValue()}.
-     */
-    @Override
-    public Unit<?> getUnit() {
-        return (Unit<?>) impl.getObjectProperty(Property.PARAMETER_UNIT);
-    }
+        /**
+         * Returns a description of this parameter.
+         *
+         * @return {@code this}.
+         */
+        @Override
+        public ParameterDescriptor getDescriptor() {
+            return this;
+        }
 
-    /**
-     * Returns the parameter value in the given unit of measurement.
-     *
-     * @param  unit  the desired unit of measurement.
-     * @return the parameter value converted to the given unit.
-     * @throws IllegalArgumentException if the specified unit is invalid for this parameter.
-     * @throws InvalidParameterTypeException if the value is not a numeric type.
-     */
-    @Override
-    public double doubleValue(final Unit unit) {
-        double value = doubleValue();
-        if (unit != null) {
-            final Unit<?> source = getUnit();
-            if (source != null) try {
-                value = source.getConverterToAny(unit).convert(value);
-            } catch (IncommensurableException e) {
-                throw new IllegalArgumentException("Can not convert \"" +
-                        getName().getCode() + "\" values to unit " + unit, e);
+        /**
+         * Returns the type of this parameter.
+         *
+         * @return the type of this parameter.
+         * @throws UnsupportedOperationException if the type is unknown.
+         *         It may happen if new type has been added in a new PROJ version,
+         *         in which case we may need to upgrade PROJ-JNI accordingly.
+         */
+        private ParameterType type() {
+            return ParameterType.get(impl.getIntegerProperty(Property.PARAMETER_TYPE));
+        }
+
+        /**
+         * Returns the class of parameter values.
+         *
+         * @return the type of parameter values.
+         */
+        @Override
+        public Class getValueClass() {
+            return type().type;
+        }
+
+        /**
+         * Returns the parameter value as an object. The object type may be {@link Double},
+         * {@link Integer}, {@link Boolean}, {@link String} or {@link URI}.
+         *
+         * @return the parameter value as an object, or {@code null} if no value has been set.
+         */
+        @Override
+        public Object getValue() {
+            switch (type()) {
+                case MEASURE:  return doubleValue();
+                case INTEGER:  return intValue();
+                case BOOLEAN:  return booleanValue();
+                case STRING:   return stringValue();
+                case FILENAME: return valueFile();
+                default: throw new AssertionError();        // Should never happen.
             }
         }
-        return value;
-    }
 
-    /**
-     * Returns the parameter value as a floating point number.
-     * The unit of measurement is specified by {@link #getUnit()}.
-     *
-     * @return the numeric parameter value.
-     * @throws InvalidParameterTypeException if the value is not a numeric type.
-     */
-    @Override
-    public double doubleValue() {
-        return impl.getNumericProperty(Property.PARAMETER_VALUE);
-    }
+        /**
+         * Returns the unit of measurement of values returned by {@link #doubleValue()}, or {@code null} if none.
+         *
+         * @return unit of measurement of {@link #doubleValue()}.
+         */
+        @Override
+        public Unit<?> getUnit() {
+            return (Unit<?>) impl.getObjectProperty(Property.PARAMETER_UNIT);
+        }
 
-    /**
-     * Returns the parameter value as an integer value.
-     *
-     * @return the integer parameter value.
-     * @throws InvalidParameterTypeException if the value is not an integer type.
-     */
-    @Override
-    public int intValue() {
-        return impl.getIntegerProperty(Property.PARAMETER_INT);
-    }
+        /**
+         * Returns the parameter value in the given unit of measurement.
+         *
+         * @param  unit  the desired unit of measurement.
+         * @return the parameter value converted to the given unit.
+         * @throws IllegalArgumentException if the specified unit is invalid for this parameter.
+         * @throws InvalidParameterTypeException if the value is not a numeric type.
+         */
+        @Override
+        public double doubleValue(final Unit unit) {
+            double value = doubleValue();
+            if (unit != null) {
+                final Unit<?> source = getUnit();
+                if (source != null) try {
+                    value = source.getConverterToAny(unit).convert(value);
+                } catch (IncommensurableException e) {
+                    throw new IllegalArgumentException("Can not convert \"" +
+                            getName().getCode() + "\" values to unit " + unit, e);
+                }
+            }
+            return value;
+        }
 
-    /**
-     * Returns the parameter value as a boolean value.
-     *
-     * @return the boolean parameter value.
-     * @throws InvalidParameterTypeException if the value is not a boolean type.
-     */
-    @Override
-    public boolean booleanValue() {
-        return impl.getBooleanProperty(Property.PARAMETER_BOOL);
-    }
+        /**
+         * Returns the parameter value as a floating point number.
+         * The unit of measurement is specified by {@link #getUnit()}.
+         *
+         * @return the numeric parameter value.
+         * @throws InvalidParameterTypeException if the value is not a numeric type.
+         */
+        @Override
+        public double doubleValue() {
+            return impl.getNumericProperty(Property.PARAMETER_VALUE);
+        }
 
-    /**
-     * Returns the string value of this parameter.
-     *
-     * @return the string value represented by this parameter.
-     * @throws InvalidParameterTypeException if the value is not a string.
-     */
-    @Override
-    public String stringValue() {
-        return impl.getStringProperty(Property.PARAMETER_STRING);
-    }
+        /**
+         * Returns the parameter value as an integer value.
+         *
+         * @return the integer parameter value.
+         * @throws InvalidParameterTypeException if the value is not an integer type.
+         */
+        @Override
+        public int intValue() {
+            return impl.getIntegerProperty(Property.PARAMETER_INT);
+        }
 
-    /**
-     * Returns a reference to a file or a part of a file containing one or more parameter values.
-     *
-     * @return the reference to a file containing parameter values.
-     * @throws InvalidParameterTypeException if the value is not a reference to a file or a URI.
-     */
-    @Override
-    public URI valueFile() {
-        final String file = impl.getStringProperty(Property.PARAMETER_STRING);
-        return (file != null) ? new File(file).toURI() : null;
-    }
+        /**
+         * Returns the parameter value as a boolean value.
+         *
+         * @return the boolean parameter value.
+         * @throws InvalidParameterTypeException if the value is not a boolean type.
+         */
+        @Override
+        public boolean booleanValue() {
+            return impl.getBooleanProperty(Property.PARAMETER_BOOL);
+        }
 
-    /**
-     * Returns an ordered sequence of numeric values in the specified unit of measure.
-     *
-     * @param  unit  the unit of measure for the value to be returned.
-     * @return the sequence of values represented by this parameter after conversion to given unit.
-     * @throws IllegalArgumentException if the specified unit is invalid for this parameter.
-     * @throws InvalidParameterTypeException if the value is not an array of {@code double}s.
-     */
-    @Override
-    public double[] doubleValueList(final Unit unit) {
-        return new double[] {doubleValue(unit)};
-    }
+        /**
+         * Returns the string value of this parameter.
+         *
+         * @return the string value represented by this parameter.
+         * @throws InvalidParameterTypeException if the value is not a string.
+         */
+        @Override
+        public String stringValue() {
+            return impl.getStringProperty(Property.PARAMETER_STRING);
+        }
 
-    /**
-     * Returns an ordered sequence of numeric values of this parameter.
-     *
-     * @return the sequence of values represented by this parameter.
-     * @throws InvalidParameterTypeException if the value is not an array of {@code double}s.
-     */
-    @Override
-    public double[] doubleValueList() {
-        return new double[] {doubleValue()};
-    }
+        /**
+         * Returns a reference to a file or a part of a file containing one or more parameter values.
+         *
+         * @return the reference to a file containing parameter values.
+         * @throws InvalidParameterTypeException if the value is not a reference to a file or a URI.
+         */
+        @Override
+        public URI valueFile() {
+            final String file = impl.getStringProperty(Property.PARAMETER_STRING);
+            return (file != null) ? new File(file).toURI() : null;
+        }
 
-    /**
-     * Returns an ordered sequence of integer values of this parameter.
-     *
-     * @return the sequence of values represented by this parameter.
-     * @throws InvalidParameterTypeException if the value is not an array of {@code int}s.
-     */
-    @Override
-    public int[] intValueList() {
-        return new int[] {intValue()};
-    }
+        /**
+         * Returns an ordered sequence of numeric values in the specified unit of measure.
+         *
+         * @param  unit  the unit of measure for the value to be returned.
+         * @return the sequence of values represented by this parameter after conversion to given unit.
+         * @throws IllegalArgumentException if the specified unit is invalid for this parameter.
+         * @throws InvalidParameterTypeException if the value is not an array of {@code double}s.
+         */
+        @Override
+        public double[] doubleValueList(final Unit unit) {
+            return new double[] {doubleValue(unit)};
+        }
 
-    @Override public void setValue(double[] value, Unit unit) {throw new UnsupportedOperationException("Read-only parameter.");}
-    @Override public void setValue(double   value, Unit unit) {throw new UnsupportedOperationException("Read-only parameter.");}
-    @Override public void setValue(double   value)            {throw new UnsupportedOperationException("Read-only parameter.");}
-    @Override public void setValue(int      value)            {throw new UnsupportedOperationException("Read-only parameter.");}
-    @Override public void setValue(boolean  value)            {throw new UnsupportedOperationException("Read-only parameter.");}
-    @Override public void setValue(Object   value)            {throw new UnsupportedOperationException("Read-only parameter.");}
+        /**
+         * Returns an ordered sequence of numeric values of this parameter.
+         *
+         * @return the sequence of values represented by this parameter.
+         * @throws InvalidParameterTypeException if the value is not an array of {@code double}s.
+         */
+        @Override
+        public double[] doubleValueList() {
+            return new double[] {doubleValue()};
+        }
+
+        /**
+         * Returns an ordered sequence of integer values of this parameter.
+         *
+         * @return the sequence of values represented by this parameter.
+         * @throws InvalidParameterTypeException if the value is not an array of {@code int}s.
+         */
+        @Override
+        public int[] intValueList() {
+            return new int[] {intValue()};
+        }
+
+        @Override public void setValue(double[] value, Unit unit) {throw new UnsupportedOperationException("Read-only parameter.");}
+        @Override public void setValue(double   value, Unit unit) {throw new UnsupportedOperationException("Read-only parameter.");}
+        @Override public void setValue(double   value)            {throw new UnsupportedOperationException("Read-only parameter.");}
+        @Override public void setValue(int      value)            {throw new UnsupportedOperationException("Read-only parameter.");}
+        @Override public void setValue(boolean  value)            {throw new UnsupportedOperationException("Read-only parameter.");}
+        @Override public void setValue(Object   value)            {throw new UnsupportedOperationException("Read-only parameter.");}
+
+        /**
+         * Returns a copy of this parameter value that user can modify.
+         *
+         * @return a modifiable copy of this parameter value.
+         */
+        @Override
+        @SuppressWarnings("CloneDoesntCallSuperClone")
+        public ParameterValue clone() {
+            final ParameterValue value = createValue();
+            value.setValue(getValue());
+            return value;
+        }
+    }
 
     /**
      * Creates a modifiable parameter value with initially no value.
@@ -249,19 +288,6 @@ final class Parameter extends IdentifiableObject implements ParameterDescriptor,
     @Override
     public ParameterValue createValue() {
         throw new UnsupportedOperationException();      // TODO
-    }
-
-    /**
-     * Returns a copy of this parameter value that user can modify.
-     *
-     * @return a modifiable copy of this parameter value.
-     */
-    @Override
-    @SuppressWarnings("CloneDoesntCallSuperClone")
-    public ParameterValue clone() {
-        final ParameterValue value = createValue();
-        value.setValue(getValue());
-        return value;
     }
 
     /**

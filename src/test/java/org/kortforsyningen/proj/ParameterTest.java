@@ -76,7 +76,7 @@ public final strictfp class ParameterTest {
      */
     @Test
     public void testMercator() throws FactoryException {
-        AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        AuthorityFactory.API factory = TestFactorySource.EPSG;
         verifyWorldMercator((Conversion) factory.createCoordinateOperation("19883"));
     }
 
