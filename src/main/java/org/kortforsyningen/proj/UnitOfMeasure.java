@@ -117,6 +117,25 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     static native UnitOfMeasure<?> create(short code);
 
     /**
+     * Returns a unit of measurement of the same kind than this unit bit with the given {@link #toSI} factor
+     * (ignoring a small tolerance threshold). This method returns a predefined unit if possible or create a
+     * new one otherwise.
+     *
+     * @param  scale  the desired {@link #toSI} scale.
+     * @return a unit of measurement for the given scale.
+     */
+    private Unit<Q> forScale(final double scale) {
+        final UnitType t = UnitType.FOR_QUANTITY_TYPE.get(type);
+        if (t != null) {
+            final Unit<?> unit = t.getPredefinedUnit(scale);
+            if (unit != null) {
+                return unit.asType(type);
+            }
+        }
+        return new UnitOfMeasure<>(type, scale);
+    }
+
+    /**
      * Returns the symbol of this unit, or {@code null} if this unit has no specific symbol associated with.
      */
     @Override
@@ -273,7 +292,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     @Override
     public Unit<Q> multiply(final double multiplier) {
         if (multiplier == 1) return this;
-        return new UnitOfMeasure<>(type, toSI * multiplier);
+        return forScale(toSI * multiplier);
     }
 
     /**
@@ -298,7 +317,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     @Override
     public Unit<Q> divide(final double divisor) {
         if (divisor == 1) return this;
-        return new UnitOfMeasure<>(type, toSI / divisor);
+        return forScale(toSI / divisor);
     }
 
     /**
@@ -362,6 +381,6 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
      */
     @Override
     public String toString() {
-        return getName();
+        return (name != null) ? name : "Unnamed";
     }
 }

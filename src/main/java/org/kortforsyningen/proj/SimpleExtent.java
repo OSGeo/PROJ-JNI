@@ -87,8 +87,8 @@ final class SimpleExtent implements GeographicBoundingBox, Extent, Serializable 
      * @param  eastBoundLongitude  the maximal <var>x</var> value.
      * @param  southBoundLatitude  the minimal <var>y</var> value.
      * @param  northBoundLatitude  the maximal <var>y</var> value.
-     * @throws IllegalArgumentException if (<var>west bound</var> &gt; <var>east bound</var>)
-     *         or (<var>south bound</var> &gt; <var>north bound</var>).
+     * @throws IllegalArgumentException if |<var>west bound</var>| or |<var>east bound</var>| &gt; 180°
+     *         or if (<var>south bound</var> &gt; <var>north bound</var>).
      *         Note that {@linkplain Double#NaN NaN} values are allowed.
      */
     SimpleExtent(final double westBoundLongitude,
@@ -98,7 +98,7 @@ final class SimpleExtent implements GeographicBoundingBox, Extent, Serializable 
     {
         final String dim;
         final double min, max;
-        if (westBoundLongitude > eastBoundLongitude) {
+        if (Math.abs(westBoundLongitude) > 180 || Math.abs(eastBoundLongitude) > 180) {
             min = westBoundLongitude;
             max = eastBoundLongitude;
             dim = "longitude";

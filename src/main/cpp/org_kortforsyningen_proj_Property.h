@@ -101,12 +101,14 @@ extern "C" {
 #define org_kortforsyningen_proj_Property_PARAMETER_TYPE 500L
 #undef org_kortforsyningen_proj_Property_PARAMETER_INT
 #define org_kortforsyningen_proj_Property_PARAMETER_INT 501L
+#undef org_kortforsyningen_proj_Property_HAS_NAME
+#define org_kortforsyningen_proj_Property_HAS_NAME 600L
 #undef org_kortforsyningen_proj_Property_IS_SPHERE
-#define org_kortforsyningen_proj_Property_IS_SPHERE 600L
+#define org_kortforsyningen_proj_Property_IS_SPHERE 601L
 #undef org_kortforsyningen_proj_Property_IVF_DEFINITIVE
-#define org_kortforsyningen_proj_Property_IVF_DEFINITIVE 601L
+#define org_kortforsyningen_proj_Property_IVF_DEFINITIVE 602L
 #undef org_kortforsyningen_proj_Property_PARAMETER_BOOL
-#define org_kortforsyningen_proj_Property_PARAMETER_BOOL 602L
+#define org_kortforsyningen_proj_Property_PARAMETER_BOOL 603L
 #ifdef __cplusplus
 }
 #endif

@@ -33,27 +33,27 @@ import java.net.URI;
  */
 enum ParameterType {
     /**
-     * Value with a unit given by {@link Parameter#doubleValue()}.
+     * Value with a unit given by {@link Parameter.Value#doubleValue()}.
      */
     MEASURE(Double.class),
 
     /**
-     * Character string given by {@link Parameter#stringValue()}.
+     * Character string given by {@link Parameter.Value#stringValue()}.
      */
     STRING(String.class),
 
     /**
-     * Integer given by {@link Parameter#intValue()}.
+     * Integer given by {@link Parameter.Value#intValue()}.
      */
     INTEGER(Integer.class),
 
     /**
-     * Boolean given by {@link Parameter#booleanValue()}.
+     * Boolean given by {@link Parameter.Value#booleanValue()}.
      */
     BOOLEAN(Boolean.class),
 
     /**
-     * Filename given by {@link Parameter#valueFile()}.
+     * Filename given by {@link Parameter.Value#valueFile()}.
      */
     FILENAME(URI.class);
 

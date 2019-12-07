@@ -119,6 +119,7 @@
             <java.util.logging.config.file>${project.basedir}/src/config/logging.properties</java.util.logging.config.file>
           </systemPropertyVariables>
           <argLine>-Xcheck:jni</argLine>
+          <trimStackTrace>false</trimStackTrace>
         </configuration>
       </plugin>
 

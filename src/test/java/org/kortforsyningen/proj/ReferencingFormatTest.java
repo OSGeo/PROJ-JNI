@@ -83,7 +83,7 @@ public final strictfp class ReferencingFormatTest {
      */
     @Test
     public void testToWKT() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = TestFactorySource.EPSG;
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
         final String wkt = crs.toWKT();
         assertTrue(wkt, wkt.startsWith(
@@ -104,7 +104,7 @@ public final strictfp class ReferencingFormatTest {
      */
     @Test
     public void testFormatWKT() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = TestFactorySource.EPSG;
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
         final ReferencingFormat formatter = new ReferencingFormat();
         formatter.setConvention(ReferencingFormat.Convention.WKT1_ESRI);
@@ -122,7 +122,7 @@ public final strictfp class ReferencingFormatTest {
      */
     @Test
     public void testFormatJSON() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = TestFactorySource.EPSG;
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
         final ReferencingFormat formatter = new ReferencingFormat();
         formatter.setConvention(ReferencingFormat.Convention.JSON);
@@ -137,7 +137,7 @@ public final strictfp class ReferencingFormatTest {
      */
     @Test
     public void testFormatPROJ() throws FactoryException {
-        final AuthorityFactory.API factory = new AuthorityFactory.API("EPSG");
+        final AuthorityFactory.API factory = TestFactorySource.EPSG;
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("3395");
         final ReferencingFormat formatter = new ReferencingFormat();
         formatter.setConvention(ReferencingFormat.Convention.PROJ_5);

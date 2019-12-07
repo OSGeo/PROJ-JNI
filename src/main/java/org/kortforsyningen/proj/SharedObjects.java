@@ -288,7 +288,7 @@ final class SharedObjects extends StampedLock implements Runnable {
      * @return whether {@link #count} matches the expected value.
      */
     private boolean isValid() {
-        if (count > upperCapacityThreshold(table.length)) {
+        if (count >= table.length) {
             throw new AssertionError(count);
         }
         int n = 0;
