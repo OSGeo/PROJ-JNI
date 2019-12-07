@@ -50,9 +50,10 @@ import javax.measure.Unit;
  */
 abstract class NativeResource {
     /**
-     * Name of the native library.
+     * Name of the native library, without the {@code "lib"} prefix used on Unix system
+     * and without the platform-specific suffix.
      */
-    private static final String NATIVE_LIB = "libproj-binding";
+    private static final String NATIVE_LIB = "proj-binding";
 
     /**
      * Name of the logger to use for all warnings or debug messages emitted by this package.
@@ -121,10 +122,15 @@ abstract class NativeResource {
      */
     private static Path libraryPath() throws URISyntaxException, IOException {
         final String os = System.getProperty("os.name");
-        final String suffix;
+        final String prefix, suffix;
         if (os.contains("Windows")) {
+            prefix = "";
             suffix = "dll";
+        } else if (os.contains("Mac OS")) {
+            prefix = "lib";
+            suffix = "dylib";
         } else {
+            prefix = "lib";
             suffix = "so";
         }
         /*
@@ -136,7 +142,7 @@ abstract class NativeResource {
          *
          * The URL can be used directly only if it is an ordinary file (without "jar" protocol).
          */
-        final String nativeFile = NATIVE_LIB + '.' + suffix;
+        final String nativeFile = prefix + NATIVE_LIB + '.' + suffix;
         final URL res = NativeResource.class.getResource(nativeFile);
         if (res == null) {
             throw new UnsatisfiedLinkError("Missing native file: " + nativeFile);
@@ -169,7 +175,7 @@ abstract class NativeResource {
          * application is launched.
          */
         if (location == null) {
-            location = Files.createTempFile(NATIVE_LIB, suffix);
+            location = Files.createTempFile(prefix + NATIVE_LIB, suffix);
             location.toFile().deleteOnExit();
         }
         try (InputStream in = res.openStream()) {

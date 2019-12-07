@@ -18,6 +18,7 @@
     <fail unless="cmake.subdir">The properties specifying directories are not set.</fail>
     <available property="cmake.configured" file="${cmake.subdir}/Makefile"/>
     <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/libproj-binding.so"/>
+    <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/libproj-binding.dylib"/>
     <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/proj-binding.dll"/>
   </target>
   <!--
