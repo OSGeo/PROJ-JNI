@@ -61,8 +61,8 @@ class Parameter extends IdentifiableObject implements ParameterDescriptor {
 
     /**
      * Returns the type of this parameter. This base class returns {@code Object.class} because PROJ
-     * defines units of measurements with the parameter value instead than the parameter descriptor,
-     * so the actual class is unknown. The {@link Value} subclass override this method.
+     * defines value type with the parameter value instead than with the parameter descriptor,
+     * so the expected type is unknown. The {@link Value} subclass overrides this method.
      *
      * @return the type of this parameter.
      */
