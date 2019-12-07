@@ -2637,6 +2637,27 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_inverse(JN
 
 
 /**
+ * Creates an object with axis order such as the east direction is first and north direction is second,
+ * if possible.
+ *
+ * @param  env         The JNI environment.
+ * @param  operation   The Java object wrapping the PROJ operation to inverse.
+ * @return an object with an axis order convenient for visualization.
+ */
+JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_normalizeForVisualization(JNIEnv *env, jobject operation) {
+    try {
+        CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, operation);
+        cop = cop->normalizeForVisualization();
+        BaseObjectPtr ptr = cop.as_nullable();
+        return specific_subclass(env, operation, ptr, org_kortforsyningen_proj_Type_COORDINATE_OPERATION);
+    } catch (const std::exception &e) {
+        rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
+    }
+    return nullptr;
+}
+
+
+/**
  * Destroys the PJ object.
  *
  * @param  env        The JNI environment.

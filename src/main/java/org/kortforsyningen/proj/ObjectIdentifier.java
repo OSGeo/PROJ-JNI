@@ -33,7 +33,6 @@ import org.opengis.metadata.citation.Citation;
  * @author  Martin Desruisseaux (Geomatys)
  * @version 2.0
  * @since   1.0
- * @module
  */
 final class ObjectIdentifier extends IdentifiableObject implements Identifier {
     /**
