@@ -23,6 +23,7 @@ package org.kortforsyningen.proj;
 
 import java.util.Map;
 import java.util.Arrays;
+import java.util.HashMap;
 import javax.measure.Unit;
 import javax.measure.Quantity;
 import javax.measure.UnitConverter;
@@ -128,11 +129,15 @@ enum UnitType {
      * This is similar to {@link #forOrdinal(int)} method, but using
      * a {@link Class} argument instead than an enumeration ordinal.
      */
-    static final Map<Class<?>, UnitType> FOR_QUANTITY_TYPE = Map.of(
-            Time.class, TIME,
-            Angle.class, ANGULAR,
-            Length.class, LINEAR,
-            Dimensionless.class, SCALE);
+    static final Map<Class<?>, UnitType> FOR_QUANTITY_TYPE;
+    static {
+        final HashMap<Class<?>, UnitType> m = new HashMap<>(8);
+        m.put(Time.class, TIME);
+        m.put(Angle.class, ANGULAR);
+        m.put(Length.class, LINEAR);
+        m.put(Dimensionless.class, SCALE);
+        FOR_QUANTITY_TYPE = m;
+    }
 
     /**
      * Returns the unit type from the given ordinal value.

@@ -23,6 +23,8 @@ package org.kortforsyningen.proj;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -100,7 +102,7 @@ final class CleanerThread extends Thread {
                     SharedObjects.CACHE.remove(ref);
                 }
             } catch (Throwable exception) {
-                System.getLogger(NativeResource.LOGGER_NAME).log(System.Logger.Level.WARNING, exception);
+                Logger.getLogger(NativeResource.LOGGER_NAME).log(Level.WARNING, exception.getLocalizedMessage(), exception);
             }
         }
         // Do not log anything at this point, since the loggers may be shutdown now.

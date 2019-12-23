@@ -74,11 +74,11 @@ public final class Units {
         if (system == null) {
             /*
              * The call to NativeResource.logger() is necessary - do not replace by
-             * System.getLogger(NativeResource.LOGGER_NAME). The code below has the
+             * Logger.getLogger(NativeResource.LOGGER_NAME). The code below has the
              * desired side effect of initializing the NativeResource class, which
              * is necessary for using the UnitOfMeasure fallback.
              */
-            NativeResource.logger().log(System.Logger.Level.DEBUG, "No JSR-363 implementation found.");
+            NativeResource.logger().fine("No JSR-363 implementation found.");
         }
         SI = system;
     }

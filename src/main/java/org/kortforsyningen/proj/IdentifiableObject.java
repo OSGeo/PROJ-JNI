@@ -430,9 +430,11 @@ abstract class IdentifiableObject implements Formattable {
         final String format;
         final Object[] args;
         if (width > length && (width -= value.codePointCount(0, length)) > 0) {
+            final char[] spaces = new char[Math.max(width, 0)];
+            java.util.Arrays.fill(spaces, ' ');
             format = "%s%s";
             args = new Object[] {value, value};
-            args[(flags & FormattableFlags.LEFT_JUSTIFY) != 0 ? 1 : 0] = " ".repeat(width);
+            args[(flags & FormattableFlags.LEFT_JUSTIFY) != 0 ? 1 : 0] = String.valueOf(spaces);
         } else {
             format = isUpperCase ? "%S" : "%s";
             args = new Object[] {value};

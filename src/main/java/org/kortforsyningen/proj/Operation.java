@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Formattable;
 import java.util.Formatter;
+import java.util.logging.Level;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import org.opengis.util.GenericName;
@@ -81,7 +82,7 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
              * If we do not have the authorization to read the property value, this is not a big issue.
              * We can work with the default value.
              */
-            NativeResource.logger().log(System.Logger.Level.DEBUG, e.getLocalizedMessage(), e);
+            NativeResource.logger().log(Level.FINE, e.getLocalizedMessage(), e);
         }
         /*
          * The default value below (4) is arbitrary. If that default value is modified,

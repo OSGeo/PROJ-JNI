@@ -24,6 +24,8 @@ package org.kortforsyningen.proj;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.opengis.util.Factory;
 import org.opengis.util.FactoryException;
 import org.opengis.geometry.DirectPosition;
@@ -74,20 +76,20 @@ public final class Proj {
      * @return the PROJ release string, or an empty value if the native library has not been found.
      */
     public static Optional<String> version() {
-        final System.Logger.Level level;
+        final Level level;
         final LinkageError error;
         try {
             return Optional.of(NativeResource.version());
         } catch (UnsatisfiedLinkError | NoSuchFieldError e) {
             // Thrown the first time that we try to use the library.
-            level = System.Logger.Level.ERROR;
+            level = Level.SEVERE;
             error = e;
         } catch (NoClassDefFoundError e) {
             // Thrown on attempts after the first one if the exception was not caught.
-            level = System.Logger.Level.TRACE;
+            level = Level.FINER;
             error = e;
         }
-        System.getLogger(NativeResource.LOGGER_NAME).log(level, "Can not link PROJ native library.", error);
+        Logger.getLogger(NativeResource.LOGGER_NAME).log(level, "Can not link PROJ native library.", error);
         return Optional.empty();
     }
 

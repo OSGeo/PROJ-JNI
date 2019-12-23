@@ -33,6 +33,7 @@ import java.nio.file.StandardCopyOption;
 import java.lang.annotation.Native;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.logging.Logger;
 import org.opengis.util.FactoryException;
 import javax.measure.Unit;
 
@@ -303,7 +304,7 @@ abstract class NativeResource {
      *
      * @return the logger.
      */
-    static System.Logger logger() {
-        return System.getLogger(LOGGER_NAME);
+    static Logger logger() {
+        return Logger.getLogger(LOGGER_NAME);
     }
 }

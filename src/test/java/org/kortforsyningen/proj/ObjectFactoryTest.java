@@ -24,6 +24,7 @@ package org.kortforsyningen.proj;
 import java.util.Map;
 import java.util.Date;
 import java.util.List;
+import java.util.HashMap;
 import javax.measure.Unit;
 import javax.measure.quantity.Length;
 import javax.measure.IncommensurableException;
@@ -47,6 +48,7 @@ import org.opengis.metadata.citation.Citation;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static java.util.Collections.singletonMap;
 
 
 /**
@@ -112,7 +114,7 @@ public final strictfp class ObjectFactoryTest {
     @Test
     public void testCoordinateSystemAxis() throws FactoryException {
         CoordinateSystemAxis axis = factory.createCoordinateSystemAxis(
-                Map.of(CoordinateSystemAxis.NAME_KEY, "My axis"),
+                singletonMap(CoordinateSystemAxis.NAME_KEY, "My axis"),
                 "x", AxisDirection.NORTH_EAST, Units.METRE);
 
         assertEquals("My axis", axis.getName().getCode());
@@ -131,15 +133,15 @@ public final strictfp class ObjectFactoryTest {
     public void testCartesianCS() throws FactoryException, IncommensurableException {
         final Unit<Length> foot = Units.METRE.multiply(0.3048);
         CoordinateSystemAxis axis0 = factory.createCoordinateSystemAxis(
-                Map.of(CoordinateSystemAxis.NAME_KEY, "My axis"),
+                singletonMap(CoordinateSystemAxis.NAME_KEY, "My axis"),
                 "x", AxisDirection.WEST, foot);
 
         CoordinateSystemAxis axis1 = factory.createCoordinateSystemAxis(
-                Map.of(CoordinateSystemAxis.NAME_KEY, "My other axis"),
+                singletonMap(CoordinateSystemAxis.NAME_KEY, "My other axis"),
                 "y", AxisDirection.SOUTH, foot);
 
         CartesianCS cs = factory.createCartesianCS(
-                Map.of(CartesianCS.NAME_KEY, "My CS"),
+                singletonMap(CartesianCS.NAME_KEY, "My CS"),
                 axis0, axis1);
 
         assertEquals("My CS", cs.getName().getCode());
@@ -164,9 +166,11 @@ public final strictfp class ObjectFactoryTest {
             @Override public String   getVersion()   {return null;}
         };
         semiMajorAxis = 12.1 + 4*StrictMath.random();
+        HashMap<String,Object> properties = new HashMap<>(4);
+        properties.put(Ellipsoid.NAME_KEY, "My ellipsoid");
+        properties.put(Ellipsoid.IDENTIFIERS_KEY, id);
         Ellipsoid ellipsoid = factory.createEllipsoid(
-                Map.of(Ellipsoid.NAME_KEY, "My ellipsoid",
-                       Ellipsoid.IDENTIFIERS_KEY, id),
+                properties,
                 semiMajorAxis, 12, Units.METRE);
 
         assertEquals("My ellipsoid", ellipsoid.getName().getCode());
@@ -199,7 +203,7 @@ public final strictfp class ObjectFactoryTest {
     private Ellipsoid createFlattenedSphere() throws FactoryException {
         semiMajorAxis = 10 + 4*StrictMath.random();
         return factory.createFlattenedSphere(
-                Map.of(Ellipsoid.NAME_KEY, "My ellipsoid"),
+                singletonMap(Ellipsoid.NAME_KEY, "My ellipsoid"),
                 semiMajorAxis, 300, Units.METRE);
     }
 
@@ -235,7 +239,7 @@ public final strictfp class ObjectFactoryTest {
     private PrimeMeridian createPrimeMeridian() throws FactoryException {
         greenwichLongitude = 1 + 2*StrictMath.random();
         return factory.createPrimeMeridian(
-                Map.of(PrimeMeridian.NAME_KEY, "My meridian"),
+                singletonMap(PrimeMeridian.NAME_KEY, "My meridian"),
                 greenwichLongitude, Units.DEGREE);
     }
 
@@ -267,7 +271,7 @@ public final strictfp class ObjectFactoryTest {
      * @throws FactoryException if creation of the datum failed.
      */
     private GeodeticDatum createGeodeticReferenceFrame() throws FactoryException {
-        return factory.createGeodeticDatum(Map.of(GeodeticDatum.NAME_KEY, "My datum"),
+        return factory.createGeodeticDatum(singletonMap(GeodeticDatum.NAME_KEY, "My datum"),
                        createFlattenedSphere(),
                        createPrimeMeridian());
     }
@@ -302,7 +306,7 @@ public final strictfp class ObjectFactoryTest {
     private TemporalDatum createTemporalDatum() throws FactoryException {
         origin = new Date();
         return factory.createTemporalDatum(
-                Map.of(TemporalDatum.NAME_KEY, "My datum"), origin);
+                singletonMap(TemporalDatum.NAME_KEY, "My datum"), origin);
     }
 
     /**
@@ -333,19 +337,19 @@ public final strictfp class ObjectFactoryTest {
      */
     private GeographicCRS createGeographicCRS() throws FactoryException {
         CoordinateSystemAxis axis0 = factory.createCoordinateSystemAxis(
-                Map.of(CoordinateSystemAxis.NAME_KEY, "My first axis"),
+                singletonMap(CoordinateSystemAxis.NAME_KEY, "My first axis"),
                 "x", AxisDirection.WEST, Units.DEGREE);
 
         CoordinateSystemAxis axis1 = factory.createCoordinateSystemAxis(
-                Map.of(CoordinateSystemAxis.NAME_KEY, "My other axis"),
+                singletonMap(CoordinateSystemAxis.NAME_KEY, "My other axis"),
                 "y", AxisDirection.SOUTH, Units.DEGREE);
 
         EllipsoidalCS cs = factory.createEllipsoidalCS(
-                Map.of(EllipsoidalCS.NAME_KEY, "My ellipsoidal CS"),
+                singletonMap(EllipsoidalCS.NAME_KEY, "My ellipsoidal CS"),
                 axis0, axis1);
 
         return factory.createGeographicCRS(
-                Map.of(GeographicCRS.NAME_KEY, "My geographic CRS"),
+                singletonMap(GeographicCRS.NAME_KEY, "My geographic CRS"),
                 createGeodeticReferenceFrame(), cs);
     }
 
@@ -387,15 +391,15 @@ public final strictfp class ObjectFactoryTest {
      */
     private TemporalCRS createTemporalCRS() throws FactoryException {
         CoordinateSystemAxis axis = factory.createCoordinateSystemAxis(
-                Map.of(CoordinateSystemAxis.NAME_KEY, "My temporal axis"),
+                singletonMap(CoordinateSystemAxis.NAME_KEY, "My temporal axis"),
                 "t", AxisDirection.FUTURE, Units.YEAR);
 
         TimeCS cs = factory.createTimeCS(
-                Map.of(EllipsoidalCS.NAME_KEY, "My temporal CS"),
+                singletonMap(EllipsoidalCS.NAME_KEY, "My temporal CS"),
                 axis);
 
         return factory.createTemporalCRS(
-                Map.of(TemporalDatum.NAME_KEY, "My temporal CRS"),
+                singletonMap(TemporalDatum.NAME_KEY, "My temporal CRS"),
                 createTemporalDatum(), cs);
     }
 
@@ -435,7 +439,7 @@ public final strictfp class ObjectFactoryTest {
      */
     private CompoundCRS createCompoundCRS() throws FactoryException {
         return factory.createCompoundCRS(
-                Map.of(TemporalDatum.NAME_KEY, "My compound CRS"),
+                singletonMap(TemporalDatum.NAME_KEY, "My compound CRS"),
                 createGeographicCRS(),
                 createTemporalCRS());
     }

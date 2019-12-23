@@ -24,6 +24,7 @@ package org.kortforsyningen.proj;
 import java.util.Map;
 import java.util.List;
 import java.util.Objects;
+import java.util.Collections;
 import java.lang.annotation.Native;
 import javax.measure.Unit;
 import javax.measure.UnitConverter;
@@ -232,7 +233,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
         @Override public boolean             isIdentity()          {return factor == 1;}
         @Override public Number              convert(Number value) {return factor * value.doubleValue();}
         @Override public double              convert(double value) {return factor * value;}
-        @Override public List<UnitConverter> getConversionSteps()  {return List.of(this);}
+        @Override public List<UnitConverter> getConversionSteps()  {return Collections.singletonList(this);}
         @Override public UnitConverter       concatenate(final UnitConverter other) {
             if (other.isLinear()) {
                 return new Converter(factor * other.convert(1));

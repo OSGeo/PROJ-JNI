@@ -231,15 +231,15 @@ JNIEXPORT void JNICALL Java_org_kortforsyningen_proj_NativeResource_initialize(J
          * null. We use that as a sentinel value for determining that the
          * logging system is not available.
          */
-        jclass c = env->FindClass("java/lang/System$Logger");
+        jclass c = env->FindClass("java/util/logging/Logger");
         if (c) {
-            java_method_log = env->GetMethodID(c, "log", "(Ljava/lang/System$Logger$Level;Ljava/lang/String;)V");
+            java_method_log = env->GetMethodID(c, "log", "(Ljava/util/logging/Level;Ljava/lang/String;)V");
             if (java_method_log) {
-                c = env->FindClass("java/lang/System$Logger$Level");
+                c = env->FindClass("java/util/logging/Level");
                 if (c) {
-                    java_field_debug_level = env->GetStaticFieldID(c, "DEBUG", "Ljava/lang/System$Logger$Level;");
+                    java_field_debug_level = env->GetStaticFieldID(c, "FINE", "Ljava/util/logging/Level;");
                     if (java_field_debug_level) {
-                        java_method_getLogger = env->GetStaticMethodID(caller, "logger", "()Ljava/lang/System$Logger;");
+                        java_method_getLogger = env->GetStaticMethodID(caller, "logger", "()Ljava/util/logging/Logger;");
                     }
                 }
             }
@@ -346,7 +346,7 @@ void log(JNIEnv *env, const std::string &text) {
     if (c) {
         jobject logger = env->CallStaticObjectMethod(c, java_method_getLogger);
         if (!env->ExceptionCheck()) {                               // ExceptionCheck() must be always invoked.
-            c = env->FindClass("java/lang/System$Logger$Level");
+            c = env->FindClass("java/util/logging/Level");
             if (c) {
                 jobject level = env->GetStaticObjectField(c, java_field_debug_level);
                 jstring str = env->NewStringUTF(text.c_str());
