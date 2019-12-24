@@ -102,4 +102,27 @@ final class Alias extends SimpleName {
         final String ns = getElement(Property.ALIAS_NS);
         return (ns != null) ? new SimpleName(ns) : null;
     }
+
+    /**
+     * Returns {@code true} if the other object is also an {@link Alias} with the same name.
+     *
+     * @param  other  the other object to compare with this alias.
+     * @return whether the two objects are equal.
+     */
+    @Override
+    public boolean equals(final Object other) {
+        if (super.equals(other)) {
+            final Alias that = (Alias) other;
+            return index == that.index && owner.equals(that.owner);
+        }
+        return false;
+    }
+
+    /**
+     * Returns a hash code value for this alias.
+     */
+    @Override
+    public int hashCode() {
+        return super.hashCode() + 31 * owner.hashCode();
+    }
 }

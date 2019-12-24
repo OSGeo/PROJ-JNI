@@ -160,6 +160,27 @@ class SimpleName implements LocalName, NameSpace {
     }
 
     /**
+     * Returns {@code true} if the other object is also a {@link SimpleName} with the same name.
+     *
+     * @param  other  the other object to compare with this name.
+     * @return whether the two objects are equal.
+     */
+    @Override
+    public boolean equals(final Object other) {
+        return (other != null) && getClass().equals(other.getClass()) && name.equals(((SimpleName) other).name);
+    }
+
+    /**
+     * Returns a hash code value for this name.
+     *
+     * @return  an arbitrary hash code value.
+     */
+    @Override
+    public int hashCode() {
+        return name.hashCode() ^ 1793790372;
+    }
+
+    /**
      * Returns a locale-independent string representation of this local name.
      *
      * @return the local-independent string representation of this name.
