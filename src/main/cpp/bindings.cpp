@@ -157,7 +157,10 @@ using osgeo::proj::operation::SingleOperation;
 using osgeo::proj::operation::Transformation;
 using osgeo::proj::util::BaseObject;
 using osgeo::proj::util::BaseObjectPtr;
+using osgeo::proj::util::GenericNameNNPtr;
+using osgeo::proj::util::GenericNamePtr;
 using osgeo::proj::util::IComparable;
+using osgeo::proj::util::NameSpacePtr;
 using osgeo::proj::util::optional;
 using osgeo::proj::util::PropertyMap;
 // </editor-fold>
@@ -889,6 +892,19 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_Context_createFromUserIn
 
 
 /**
+ * Converts the given osgeo::proj::util::GenericName into a Java string.
+ *
+ * @param  env   The JNI environment.
+ * @param  name  The name to convert to Java string.
+ * @return the Java string.
+ */
+inline jstring name_to_string(JNIEnv *env, GenericNameNNPtr name) {
+    const std::string &text = name->toString();
+    return env->NewStringUTF(text.c_str());
+}
+
+
+/**
  * Returns a property value as an object.
  *
  * @param  env       The JNI environment.
@@ -1033,6 +1049,19 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_searchVect
 
 
 /**
+ * Returns the alias at given index. This is a shortcut for a relatively frequent operation.
+ *
+ * @param  env       The JNI environment.
+ * @param  object    The Java object wrapping the PROJ object for which to get an alias.
+ * @param  index     Index of the alias to return.
+ * @return Value of the specified alias.
+ */
+inline GenericNameNNPtr get_alias(JNIEnv *env, jobject object, jint index) {
+    return  get_identified_object(env, object)->aliases().at(index);
+}
+
+
+/**
  * Returns a property value as an element in a std::vector.
  *
  * @param  env       The JNI environment.
@@ -1052,6 +1081,26 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorE
                 value = get_identified_object(env, object)->identifiers().at(index).as_nullable();
                 type  = org_kortforsyningen_proj_Type_IDENTIFIER;
                 break;
+            }
+            case org_kortforsyningen_proj_Property_ALIAS: {
+                return name_to_string(env, get_alias(env, object, index));
+            }
+            case org_kortforsyningen_proj_Property_ALIAS_NS: {
+                NameSpacePtr ns = get_alias(env, object, index)->scope();
+                if (ns) {
+                    GenericNamePtr name = ns->name();
+                    if (name) {
+                        return name_to_string(env, NN_CHECK_ASSERT(name));
+                    }
+                }
+                return nullptr;
+            }
+            case org_kortforsyningen_proj_Property_ALIAS_NS_IS_GLOBAL: {
+                NameSpacePtr ns = get_alias(env, object, index)->scope();
+                return env->NewStringUTF((!ns || ns->isGlobal()) ? "true" : "false");
+            }
+            case org_kortforsyningen_proj_Property_FULLY_QUALIFIED: {
+                return name_to_string(env, get_alias(env, object, index)->toFullyQualifiedName());
             }
             case org_kortforsyningen_proj_Property_AXIS: {
                 value = get_shared_object<CoordinateSystem>(env, object)->axisList().at(index).as_nullable();
@@ -1111,6 +1160,9 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
         switch (property) {
             case org_kortforsyningen_proj_Property_IDENTIFIER: {
                 return get_identified_object(env, object)->identifiers().size();
+            }
+            case org_kortforsyningen_proj_Property_ALIAS: {
+                return get_identified_object(env, object)->aliases().size();
             }
             case org_kortforsyningen_proj_Property_AXIS: {
                 return get_and_unwrap_ptr<CoordinateSystem>(env, object)->axisList().size();

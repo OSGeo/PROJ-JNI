@@ -122,7 +122,7 @@ class SharedPointer extends NativeResource {
      * @throws RuntimeException if the specified property does not exist for this object.
      * @throws IndexOutOfBoundsException if the given index is out of bounds.
      */
-    final native IdentifiableObject getVectorElement(short property, int index);
+    final native Object getVectorElement(short property, int index);
 
     /**
      * Returns a property value as an object for the given name.

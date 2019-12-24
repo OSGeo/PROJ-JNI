@@ -24,7 +24,6 @@ package org.kortforsyningen.proj;
 import java.time.Instant;
 import java.util.Set;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.AbstractSet;
 import java.util.AbstractList;
 import java.util.Formattable;
@@ -143,7 +142,7 @@ abstract class IdentifiableObject implements Formattable {
      * @return alternative names and abbreviations, or an empty collection if there is none.
      */
     public Collection<GenericName> getAlias() {
-        return Collections.emptySet();              // TODO
+        return new Aliases();
     }
 
     /**
@@ -211,6 +210,30 @@ abstract class IdentifiableObject implements Formattable {
     }
 
     /**
+     * Collection of aliases stored by PROJ in a vector.
+     * This is a specialization of {@link PropertyList} — see that class for comments.
+     */
+    private final class Aliases extends AbstractList<GenericName> {
+        /**
+         * Returns the length of the C++ vector.
+         *
+         * @return number of elements in the wrapped vector.
+         */
+        @Override
+        public int size() {
+            return impl.getVectorSize(Property.ALIAS);
+        }
+
+        /**
+         * Returns the element at the given index.
+         */
+        @Override
+        public GenericName get(final int index) {
+            return new Alias((String) impl.getVectorElement(Property.ALIAS, index), IdentifiableObject.this, index);
+        }
+    }
+
+    /**
      * Collection of objects stored by PROJ in a vector.
      *
      * <p>This class must be declared here, not in {@link SharedPointer}, because we need to keep
@@ -267,7 +290,7 @@ abstract class IdentifiableObject implements Formattable {
      *
      * @param  <E>  type of values returned by this collection.
      */
-    private class PropertySet<E> extends AbstractSet<E> {
+    private final class PropertySet<E> extends AbstractSet<E> {
         /**
          * Type of values returned by this collection.
          */
