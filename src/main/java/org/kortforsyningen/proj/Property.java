@@ -60,11 +60,15 @@ final class Property {
      */
     @Native
     static final short AXIS                = 100,
-                       IDENTIFIER          = 101,
-                       METHOD_PARAMETER    = 102,
-                       OPERATION_PARAMETER = 103,
-                       CRS_COMPONENT       = 104,
-                       SOURCE_TARGET_CRS   = 105;           // Index 0 for source, 1 for target.
+                       ALIAS               = 101,
+                       ALIAS_NS            = 102,
+                       ALIAS_NS_IS_GLOBAL  = 103,
+                       FULLY_QUALIFIED     = 104,
+                       IDENTIFIER          = 105,
+                       METHOD_PARAMETER    = 106,
+                       OPERATION_PARAMETER = 107,
+                       CRS_COMPONENT       = 108,
+                       SOURCE_TARGET_CRS   = 109;           // Index 0 for source, 1 for target.
 
     /**
      * Identify properties which can be returned by {@link SharedPointer#getStringProperty(short)} method.

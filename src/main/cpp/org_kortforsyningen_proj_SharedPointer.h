@@ -66,7 +66,7 @@ JNIEXPORT jint JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorSize
 /*
  * Class:     org_kortforsyningen_proj_SharedPointer
  * Method:    getVectorElement
- * Signature: (SI)Lorg/kortforsyningen/proj/IdentifiableObject;
+ * Signature: (SI)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getVectorElement
   (JNIEnv *, jobject, jshort, jint);
