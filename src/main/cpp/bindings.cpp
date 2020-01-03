@@ -44,6 +44,16 @@
 // TODO: remove after PROJ 6.3 release.
 #include <proj_experimental.h>
 
+/*
+ * The strcase*-functions are not Standard C, but a POSIX extension.
+ * The Microsoft Visual C++ 2015 compiler does not support them, but
+ * provides the alternatives below.
+ */
+#ifdef _MSC_VER
+#include <string.h>
+#define strcasecmp _stricmp
+#endif
+
 using osgeo::proj::common::Angle;
 using osgeo::proj::common::DateTime;
 using osgeo::proj::common::IdentifiedObject;
