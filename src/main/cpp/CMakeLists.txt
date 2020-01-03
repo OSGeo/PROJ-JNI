@@ -28,15 +28,16 @@
 #
 # HOW TO BUILD:
 # C/C++ compilation is part of Maven build. The following command executed from the project root directory should
-# be sufficient:
+# be sufficient on POSIX systems:
 #
 #     mvn package
 #
-# If above command fails, then it may be useful to invoke `cmake` manually.
-# It can be done with the following commands:
+# If above command fails (for example on Windows), then it may be useful to invoke `cmake` manually.
+# It can be done with the following commands (the `-DPROJINC` and `-DPROJLIB` arguments can be omitted
+# on POSIX systems):
 #
 #     cd target/cmake
-#     cmake ../../src/main/cpp
+#     cmake ../../src/main/cpp -DPROJINC=Proj6/Path/include -DPROJLIB=Proj6/Path
 #     cd ../..
 #
 # Then the following command can be run from the project root directory (actually it
@@ -91,3 +92,4 @@ target_compile_features(proj-binding PUBLIC cxx_nullptr cxx_static_assert)
 
 # Dependencies
 target_link_libraries(proj-binding ${PROJLIB})
+target_include_directories(proj-binding PUBLIC ${PROJINC})
