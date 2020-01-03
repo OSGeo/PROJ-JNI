@@ -248,9 +248,13 @@ sudo ln -s /usr/local/lib/libproj.so.15</pre>
 <details>
     <summary>Windows</summary>
     <p>
-        It may be necessary to specify explicitly the path to Maven directory:
+        It may be necessary to specify explicitly the path to PROJ library and the path to Maven directory:
     </p>
     <pre>chdir <var>projects_directory</var>\PROJ-JNI
+mkdir target\cmake
+chdir target\cmake
+cmake ..\..\src\main\cpp -DPROJINC=<var>Proj6\Path\include</var> -DPROJLIB=<var>Proj6\Path</var>
+chdir ..\..
 %MAVEN_HOME%\bin\mvn package</pre>
 </details>
 
