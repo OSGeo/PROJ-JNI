@@ -15,7 +15,7 @@
 
   <groupId>org.kortforsyningen</groupId>
   <artifactId>proj</artifactId>
-  <version>1.0-RC3</version>
+  <version>1.0-RC4</version>
   <name>PROJ bindings</name>
   <url>https://github.com/Kortforsyningen/PROJ-JNI</url>
   <description>
