@@ -126,13 +126,13 @@ abstract class NativeResource {
         final String prefix, suffix;
         if (os.contains("Windows")) {
             prefix = "";
-            suffix = "dll";
+            suffix = ".dll";
         } else if (os.contains("Mac OS")) {
             prefix = "lib";
-            suffix = "dylib";
+            suffix = ".dylib";
         } else {
             prefix = "lib";
-            suffix = "so";
+            suffix = ".so";
         }
         /*
          * The resource may be a URL to an ordinary file (typically in the Maven "target/classes" directory)
@@ -143,13 +143,13 @@ abstract class NativeResource {
          *
          * The URL can be used directly only if it is an ordinary file (without "jar" protocol).
          */
-        final String nativeFile = prefix + NATIVE_LIB + '.' + suffix;
+        final String nativeFile = prefix + NATIVE_LIB + suffix;
         final URL res = NativeResource.class.getResource(nativeFile);
         if (res == null) {
             throw new UnsatisfiedLinkError("Missing native file: " + nativeFile);
         }
-        if (!"jar".equals(res.getProtocol())) {
-            return Paths.get(res.toURI());
+        if (!"jar".equals(res.getProtocol()) && !"bundleresource".equals(res.getProtocol())) {
+           return Paths.get(res.toURI());
         }
         /*
          * The native file is inside the JAR file. We need to extract it somewhere on the file system.
