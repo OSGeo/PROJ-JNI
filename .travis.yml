@@ -22,4 +22,4 @@ script:
   - mvn package
   - ls
   # tests
-  - java --class-path target/proj-1.0-RC4.jar example/TransformPoints.java
+  - java --class-path target/proj-1.0-RC5.jar example/TransformPoints.java
