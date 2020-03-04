@@ -5,6 +5,7 @@ geospatial coordinates from one coordinate reference system (CRS) to another.
 This includes cartographic projections as well as geodetic transformations.
 This package exposes PROJ services as implementations of [GeoAPI](http://www.geoapi.org/) interfaces.
 Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
+Latest release is [1.0](https://github.com/Kortforsyningen/PROJ-JNI/releases/1.0).
 
 ## Developer documentation:
 
@@ -14,7 +15,7 @@ Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
   * [Example](./example)
 
 **WARNING:** the `kortforsyningen` namespace in package name, module name, Maven artifact, _etc._
-is temporary. The final name will be selected later, tentatively in December 2019.
+is temporary. The final name will be selected later.
 
 ## Prerequites:
 
