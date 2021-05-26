@@ -27,3 +27,13 @@ is temporary. The final name will be selected later.
   * For running:
     - Java Runtime Environment (JRE) version 11 or later.
     - PROJ 6.
+
+## Contributing
+
+Please submit issues or pull requests on the Github [project
+page](https://github.com/Kortforsyningen/PROJ-JNI].
+
+## Code of conduct
+
+Please note that this project is released with a Contributor Code of Conduct. By
+participating in this project you agree to abide by its terms.
