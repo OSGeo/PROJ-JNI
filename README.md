@@ -1,3 +1,5 @@
+<img src="PROJ-JNI.min.svg" alt="PROJ-JNI" width="30%">
+
 # PROJ-JNI
 Java Native Interface for [PROJ](https://proj.org/) C/C++ library.
 PROJ is a generic coordinate transformation software that transforms
