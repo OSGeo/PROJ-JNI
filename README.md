@@ -19,7 +19,7 @@ Latest release is [1.0](https://github.com/Kortforsyningen/PROJ-JNI/releases/1.0
 **WARNING:** the `kortforsyningen` namespace in package name, module name, Maven artifact, _etc._
 is temporary. The final name will be selected later.
 
-## Prerequites:
+## Prerequisites:
 
   * For building:
     - Java Developer Kit (JDK) version 11 or later.
@@ -32,8 +32,8 @@ is temporary. The final name will be selected later.
 
 ## Contributing
 
-Please submit issues or pull requests on the Github [project
-page](https://github.com/Kortforsyningen/PROJ-JNI).
+See
+[CONTRIBUTING.md](https://github.com/Kortforsyningen/PROJ-JNI/blob/master/CONTRIBUTING.md).
 
 ## Code of conduct
 
