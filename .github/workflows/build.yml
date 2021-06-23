@@ -21,7 +21,7 @@ jobs:
     - name: Update apt-get
       run: sudo apt-get update
     - name: Install sqlite3
-      run: sudo apt get install sqlite3
+      run: sudo apt-get install sqlite3
     - name: Download PROJ
       run: wget https://download.osgeo.org/proj/proj-6.2.1.tar.gz
     - name: Extract PROJ source
