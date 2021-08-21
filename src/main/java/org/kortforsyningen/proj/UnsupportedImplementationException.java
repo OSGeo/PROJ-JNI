@@ -24,18 +24,19 @@ package org.kortforsyningen.proj;
 
 /**
  * Thrown when a method can not execute because a given argument value is not a PROJ implementation.
- * This exception may happen when invoking a method with arguments declared as GeoAPI interfaces,
+ *
+ * <p>This exception may happen when invoking a method with arguments declared as GeoAPI interfaces,
  * but that method can work only with values provided by this PROJ-JNI implementation.
- * In may happen in particular in the following contexts:
+ * In particular, it may happen in the following contexts:
  *
  * <ul>
  *   <li>Methods expecting {@link org.opengis.referencing.crs.CoordinateReferenceSystem} argument.</li>
  *   <li>Any method from {@link org.opengis.referencing.crs.CRSFactory} or other component factory.</li>
  * </ul>
  *
- * This exception can happen only if PROJ-JNI is used together with another implementation of GeoAPI
- * interfaces. Not also that mixing implementations will not necessarily cause this exception;
- * it happens only if PROJ-JNI can not map the "foreigner" implementation to PROJ implementation.
+ * <p>This exception can happen only if PROJ-JNI is used together with another implementation of GeoAPI
+ * interfaces. Note that mixing implementations will not necessarily cause this exception;
+ * it happens only if PROJ-JNI can not map the "foreign" implementation to the PROJ implementation.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -43,7 +44,7 @@ package org.kortforsyningen.proj;
  */
 public class UnsupportedImplementationException extends IllegalArgumentException {
     /**
-     * Serial number for inter-operability with different versions.
+     * Serial number for interoperability with different versions.
      */
     private static final long serialVersionUID = -84175258452782989L;
 
@@ -73,7 +74,9 @@ public class UnsupportedImplementationException extends IllegalArgumentException
     }
 
     /**
-     * Formats an error message for an illegal argument. Example:
+     * Formats an error message for an illegal argument.
+     *
+     * <p>Example:
      * <cite>"Argument sourceCRS expects a PROJ implementation, but got an instance of Foo class."</cite>
      *
      * @param  name   argument name.

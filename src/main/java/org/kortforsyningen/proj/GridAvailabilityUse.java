@@ -43,7 +43,7 @@ public enum GridAvailabilityUse {
     DISCARD_OPERATION_IF_MISSING_GRID,
 
     /**
-     * Ignore grid availability at all.
+     * Ignore grid availability completely.
      * Results will be presented as if all grids were available.
      */
     IGNORE_GRID_AVAILABILITY,

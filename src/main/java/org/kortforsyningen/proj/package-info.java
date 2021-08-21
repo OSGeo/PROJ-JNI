@@ -22,10 +22,11 @@
 
 /**
  * Java Native Interface for the <a href="https://proj.org/">PROJ</a> C/C++ library.
- * PROJ is a generic coordinate transformation software that transforms geospatial
+ *
+ * <p>PROJ is generic coordinate transformation software that transforms geospatial
  * coordinates from one coordinate reference system (CRS) to another.
  * This includes cartographic projections as well as geodetic transformations.
- * This package exposes PROJ services as implementations of <a href="http://www.geoapi.org">GeoAPI</a> interfaces.
+ * This package exposes PROJ services as implementations of <a href="https://www.geoapi.org">GeoAPI</a> interfaces.
  * Both PROJ 6 and GeoAPI are modeled according the ISO 19111 international standard.
  * The use of GeoAPI interfaces allows developers to write their software in an implementation independent way,
  * using the {@link Proj} class only as a starting point or for PROJ-specific actions.
@@ -40,7 +41,7 @@
  * </blockquote>
  *
  * <h2>Usage example</h2>
- * <p>Coordinate operations can be performed as below (a more complete code is available
+ * <p>Coordinate operations can be performed as below (a more complete example is available
  * <a href="https://github.com/Kortforsyningen/PROJ-JNI/blob/master/example/TransformPoints.java">here</a>).
  * In this example, only the calls to {@link Proj} static methods are specific to this implementation.
  * All other lines should work in the same way with any GeoAPI implementation.
@@ -52,7 +53,7 @@
  * CoordinateOperationFactory regops    = Proj.getOperationFactory(null);
  * CoordinateReferenceSystem  sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
  * CoordinateReferenceSystem  targetCRS = factory.createCoordinateReferenceSystem("3395");   // WGS 84 / World Mercator
- * CoordinateOperation        operation = regops .createOperation(sourceCRS, targetCRS);
+ * CoordinateOperation        operation = regops.createOperation(sourceCRS, targetCRS);
  * double[] coordinates = {
  *     45.500,  -73.567,                    // Montreal
  *     49.250, -123.100,                    // Vancouver
@@ -106,7 +107,7 @@
  * Note that those string representations do not perform database access, and consequently may be less
  * complete than the formatting done by {@link ReferencingFormat}.</p>
  *
- * <p>Referencing objects implements also the {@link java.util.Formattable} interface.
+ * <p>Referencing objects also implement the {@link java.util.Formattable} interface.
  * The {@code "%s"} flag formats the object name, while the alternative form {@code "%#s"}
  * formats the authority (typically EPSG) code.</p>
  *
@@ -130,7 +131,7 @@
  *
  * <h2>References</h2>
  * <ul>
- *   <li><a href="http://docs.opengeospatial.org/as/18-005r4/18-005r4.html">OGC Abstract Specification Topic 2: Referencing by coordinates</a>
+ *   <li><a href="https://docs.opengeospatial.org/as/18-005r4/18-005r4.html">OGC Abstract Specification Topic 2: Referencing by coordinates</a>
  *   <li><a href="https://www.geoapi.org/3.0/index.html">OGC GeoAPI 3.0.1</a> (derived from OGC Topic 2)</li>
  *   <li><a href="https://proj.org/development/reference/cpp/index.html">PROJ C++ API</a> (derived from OGC Topic 2)</li>
  *   <li><a href="https://github.com/Kortforsyningen/PROJ-JNI">PROJ-JNI Source code</a></li>

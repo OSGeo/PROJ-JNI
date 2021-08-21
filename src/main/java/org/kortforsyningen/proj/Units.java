@@ -36,9 +36,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A set of predefined units of measurements used by PROJ.
- * Units of measurement are represented by the standard {@link Unit} interface, which is implemented by
+ *
+ * <p>Units of measurement are represented by the standard {@link Unit} interface, which is implemented by
  * <a href="https://jcp.org/aboutJava/communityprocess/implementations/jsr363/index.html">external libraries</a>.
- * PROJ-JNI uses whatever JSR-363 implementation is found on the classpath at the time this {@link Units} class is
+ * PROJ-JNI uses whichever JSR-363 implementation is found on the classpath at the time this {@link Units} class is
  * initialized. If such implementation is found, then the constants in this class ({@link #DEGREE}, {@link #METRE},
  * {@link #SECOND}, <i>etc.</i>) are references to {@link Unit} instances provided by that implementation.
  * Otherwise those constants are references to an internal fallback implementation with limited capability.
@@ -54,8 +55,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Units {
     /**
      * The international system of units, or {@code null} if none was found.
-     * No implementation of this class is provided by PROJ-JNI; it has to be
-     * provided by an external library at user choice.
+     *
+     * <p>No implementation of this class is provided by PROJ-JNI; it has to be
+     * provided by an external library of the user's choice.
      */
     private static final SystemOfUnits SI;
     static {
@@ -84,9 +86,12 @@ public final class Units {
     }
 
     /**
-     * All predefined units. Indices are {@link UnitOfMeasure} constant values
+     * All predefined units.
+     *
+     * <p>Indices are {@link UnitOfMeasure} constant values
      * and elements are {@link #SCALE_UNITY}, {@link #PARTS_PER_MILLION}, etc.
-     * This array shall be unmodifiable.
+     *
+     * <p>This array shall be unmodifiable.
      *
      * @see #getUnit(short)
      */
@@ -94,19 +99,23 @@ public final class Units {
 
     /**
      * The scale factors from {@code PREDEFINED[i]} unit to its system unit.
-     * This array shall be unmodifiable.
+     *
+     * <p>This array shall be unmodifiable.
      */
     private static final double[] FACTORS = new double[PREDEFINED.length];
 
     /**
      * The next identifier to use when a new unit needs to be created.
-     * This is used only for units not in {@link #PREDEFINED} list.
+     *
+     * <p>This is used only for units not in the {@link #PREDEFINED} list.
      */
     static final AtomicInteger NEXT_IDENTIFIER = new AtomicInteger(PREDEFINED.length);
 
     /**
-     * Creates a unit of measurement for the given quantity type. If a JSR-363 implementation
-     * is available, it will be used. Otherwise {@link UnitOfMeasure} is used as a fallback.
+     * Creates a unit of measurement for the given quantity type.
+     *
+     * <p>If a JSR-363 implementation is available, it will be used. Otherwise {@link UnitOfMeasure}
+     * is used as a fallback.
      *
      * @param  <Q>   compile time value of {@code type}.
      * @param  type  the type of quantity represented by the unit of measurement.

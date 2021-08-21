@@ -82,9 +82,10 @@ class SimpleCitation implements Citation, InternationalString {
     private final String title;
 
     /**
-     * Creates a new citation having the given title. The given string will be returned,
-     * directly or indirectly, by the {@link #getTitle()}, {@link #toString()} and
-     * {@link #toString(Locale)} methods.
+     * Creates a new citation having the given title.
+     *
+     * The given string will be returned, directly or indirectly, by the {@link #getTitle()},
+     * {@link #toString()} and {@link #toString(Locale)} methods.
      *
      * @param title  the citation title to be returned indirectly by {@link #getTitle()}.
      */
@@ -104,7 +105,7 @@ class SimpleCitation implements Citation, InternationalString {
     }
 
     /**
-     * Returns the {@linkplain #getTitle() title} character at the given index
+     * Returns the {@linkplain #getTitle() title} character at the given index.
      *
      * @param  index  the index of the {@code char} value to be returned.
      * @return the specified {@code char} value.

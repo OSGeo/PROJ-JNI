@@ -31,7 +31,7 @@ package org.kortforsyningen.proj;
  */
 public class UnparsableObjectException extends RuntimeException {
     /**
-     * Serial number for inter-operability with different versions.
+     * Serial number for interoperability with different versions.
      */
     private static final long serialVersionUID = -2092270598439694323L;
 

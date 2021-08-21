@@ -53,8 +53,8 @@ import org.opengis.referencing.operation.MathTransform;
  * </ul>
  *
  * Alternatively the {@link #getAuthorityFactory(String)} and {@link #getOperationFactory(CoordinateOperationContext)}
- * methods provide similar functionalities in a more implementation neutral way, at the cost of one indirection level
- * (need to fetch the factory before to invoke methods on it).
+ * methods provide similar functionality in a more implementation neutral way, at the cost of one indirection level
+ * (need to fetch the factory before invoking methods on it).
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -73,7 +73,7 @@ public final class Proj {
      * then this method logs an error message and returns an empty value.
      * This method can be used as a way to check if the library is present.
      *
-     * @return the PROJ release string, or an empty value if the native library has not been found.
+     * @return the PROJ release string, or an empty value if the native library is not found.
      */
     public static Optional<String> version() {
         final Level level;
@@ -105,7 +105,7 @@ public final class Proj {
      * </ul>
      *
      * After a factory has been obtained, its {@link CRSAuthorityFactory#createCoordinateReferenceSystem(String)
-     * createCoordinateReferenceSystem(…)} method can be invoked for creating a CRS from an authority code.
+     * createCoordinateReferenceSystem(…)} method can be invoked to create a CRS from an authority code.
      * For example the code below creates the <cite>"WGS 84"</cite> coordinate reference system
      * for the <cite>"EPSG::4326"</cite> code.
      * In that example, only the first line is PROJ-specific;
@@ -118,11 +118,11 @@ public final class Proj {
      * </blockquote>
      *
      * The factory returned by this method is safe for concurrent use in multi-threads environment.
-     * The object returned by this method implements also the
+     * The object returned by this method also implements the
      * {@link org.opengis.referencing.cs.CSAuthorityFactory},
      * {@link org.opengis.referencing.datum.DatumAuthorityFactory} and
      * {@link org.opengis.referencing.operation.CoordinateOperationAuthorityFactory} interfaces
-     * (so it can be casted to any of those interfaces),
+     * (so it can be cast to any of those interfaces),
      * but typically only the {@link CRSAuthorityFactory} interface is used.
      *
      * @param  authority  authority name of the factory (e.g. {@code "EPSG"}).
@@ -142,8 +142,10 @@ public final class Proj {
     }
 
     /**
-     * Creates a new operation factory for the given context. The context is an optional argument which allows
-     * to specify in particular the {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest}
+     * Creates a new operation factory for the given context.
+     *
+     * The context is an optional argument which allows
+     * specifying the {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest}
      * and {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}.
      * The returned factory can be used for creating {@link CoordinateOperation}s for given pairs of
      * {@link CoordinateReferenceSystem}s. Example:
@@ -264,7 +266,7 @@ public final class Proj {
      * taking in account the given context. If more than one operation exists, the preferred one is returned.
      * If no operation exists, then an exception is thrown.
      *
-     * <p>The context is an optional argument which allows to specify in particular the
+     * <p>The context is an optional argument which specifying the
      * {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest} and
      * {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}.
      * If this argument is {@code null}, then the default setting is:</p>
@@ -311,7 +313,7 @@ public final class Proj {
      * taking in account the given context. If no coordinate operation is found, then this method
      * returns an empty list.
      *
-     * <p>The context is an optional argument which allows to specify in particular the
+     * <p>The context is an optional argument which allows specifying the
      * {@linkplain CoordinateOperationContext#setAreaOfInterest area of interest} and
      * {@linkplain CoordinateOperationContext#setDesiredAccuracy(double) desired accuracy}.
      * If this argument is {@code null}, then the default values are
@@ -338,7 +340,8 @@ public final class Proj {
 
     /**
      * Creates a position with the given coordinate values and an optional CRS.
-     * At least one of {@code crs} and {@code coordinates} arguments must be non-null.
+     *
+     * <p>At least one of {@code crs} and {@code coordinates} arguments must be non-null.
      * If both arguments are non-null, then the number of dimensions of the given CRS
      * must match the number of coordinate values.
      *
