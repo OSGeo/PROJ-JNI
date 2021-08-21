@@ -35,8 +35,9 @@ import javax.measure.quantity.Time;
 
 /**
  * Maps {@code osgeo::proj::common::UnitOfMeasure::Type} to JSR-363 elements.
- * Enumeration values shall be declared in the same order than in C++ header.
- * The C++ code have some additional types that we can not map to JSR-363,
+ *
+ * <p>Enumeration values shall be declared in the same order as in the C++ header.
+ * The C++ code has some additional types that we can not map to JSR-363,
  * for example "parametric" (mapping would need a more precise type).
  *
  * @author  Martin Desruisseaux (Geomatys)
@@ -209,8 +210,10 @@ enum UnitType {
     }
 
     /**
-     * If no predefined unit has been found, searches among customized units.
-     * If no customized unit is found neither, adds the given scale factor to
+     * Get a user-defined identifier for this unit type.
+     *
+     * <p>If no predefined unit has been found, searches among customized units.
+     * If no customized unit is found either, adds the given scale factor to
      * the list of customized units.
      *
      * @param  scale  the conversion factor to system unit.

@@ -239,7 +239,7 @@ final class Context extends NativeResource implements AutoCloseable {
     /**
      * Invokes the C/C++ {@code proj_context_destroy(…)} method.
      * This method shall be invoked exactly once when {@link Context} is disposed.
-     * It is caller's responsibility to ensure that the {@code PJ_CONTEXT} is not
+     * It is the caller's responsibility to ensure that the {@code PJ_CONTEXT} is not
      * used anymore, for example that all {@link #factories} have been disposed.
      */
     private native void destroyPJ();

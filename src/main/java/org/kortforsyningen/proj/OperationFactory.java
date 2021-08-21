@@ -178,7 +178,7 @@ final class OperationFactory implements CoordinateOperationFactory {
     }
 
     /**
-     * Returns an operation using a particular method for conversion or transformation
+     * Returns an operation using a particular method for conversion or transformation.
      * between two coordinate reference systems. The current implementation ignores the
      * given method.
      *

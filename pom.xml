@@ -61,7 +61,7 @@
       <name>Martin Desruisseaux</name>
       <email>martin.desruisseaux@geomatys.com</email>
       <organization>Geomatys</organization>
-      <organizationUrl>http://www.geomatys.com</organizationUrl>
+      <organizationUrl>https://www.geomatys.com</organizationUrl>
       <roles>
         <role>Java developer</role>
       </roles>
@@ -185,7 +185,7 @@
       <!-- JavaDoc configuration. -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.3.0</version>
         <configuration>
           <excludePackageNames>org.kortforsyningen.proj.spi</excludePackageNames>
           <encoding>${project.build.sourceEncoding}</encoding>
@@ -201,7 +201,7 @@
           <detectJavaApiLink>false</detectJavaApiLink>
           <links>
             <link>https://docs.oracle.com/en/java/javase/13/docs/api</link>
-            <link>http://www.geoapi.org/3.0/javadoc</link>
+            <link>https://www.geoapi.org/3.0/javadoc</link>
           </links>
           <additionalOptions>
             <additionalOption>--add-stylesheet "${project.basedir}/src/main/javadoc/customization.css"</additionalOption>

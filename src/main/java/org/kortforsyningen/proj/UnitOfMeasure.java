@@ -38,8 +38,12 @@ import javax.measure.quantity.Dimensionless;
 
 
 /**
- * Mirror of {@code osgeo::proj::common::UnitOfMeasure} constants. This class does not wrap native object.
- * It is used only as a fallback when no JSR-363 implementation has been found on the classpath.
+ * Mirror of {@code osgeo::proj::common::UnitOfMeasure} constants.
+ * 
+ * This class does not wrap native object. It is used only as a fallback when no JSR-363
+ * implementation has been found on the classpath.
+ *
+ * @param <Q> The type of the quantity.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -221,7 +225,8 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
      * use ratio for example instead than a IEEE 754 double-prevision value).
      */
     private static final class Converter implements UnitConverter {
-        /** The conversion factor. */ private final double factor;
+        /** The conversion factor. */
+        private final double factor;
 
         /**
          * Creates a new converter with the given conversion factor.

@@ -75,7 +75,7 @@ public class TransformPoints {
     private void printCoordinates(String target) throws FactoryException, TransformException {
         CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
         CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem(target);
-        CoordinateOperation       operation = regops .createOperation(sourceCRS, targetCRS);
+        CoordinateOperation       operation = regops.createOperation(sourceCRS, targetCRS);
         describe(operation);
         double[] coordinates = {
             45.500,  -73.567,                    // Montreal
@@ -128,8 +128,8 @@ public class TransformPoints {
             }
         }
         /*
-         * The way to get accuracy is a bit unconvenient and depends on whether the accuracy is only a
-         * description or is a quantitative measurement. The reason for this unconvenience is that the
+         * The way to get accuracy is a bit inconvenient and depends on whether the accuracy is only a
+         * description or is a quantitative measurement. The reason for this inconvenience is that the
          * quality API is designed for describing the quality of a wide range of phenomenons, not only
          * coordinate operations. Developers are encouraged to write their own convenience methods for
          * their needs.

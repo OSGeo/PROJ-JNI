@@ -5,7 +5,7 @@ Java Native Interface for [PROJ](https://proj.org/) C/C++ library.
 PROJ is a generic coordinate transformation software that transforms
 geospatial coordinates from one coordinate reference system (CRS) to another.
 This includes cartographic projections as well as geodetic transformations.
-This package exposes PROJ services as implementations of [GeoAPI](http://www.geoapi.org/) interfaces.
+This package exposes PROJ services as implementations of [GeoAPI](https://www.geoapi.org/) interfaces.
 Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
 Latest release is [1.0](https://github.com/Kortforsyningen/PROJ-JNI/releases/1.0).
 
@@ -13,7 +13,7 @@ Latest release is [1.0](https://github.com/Kortforsyningen/PROJ-JNI/releases/1.0
 
   * [Installation guide](https://kortforsyningen.github.io/PROJ-JNI/install.html)
   * [PROJ binding Javadoc](https://kortforsyningen.github.io/PROJ-JNI/index.html)
-  * [GeoAPI 3.0.1 Javadoc](http://www.geoapi.org/3.0/javadoc/index.html)
+  * [GeoAPI 3.0.1 Javadoc](https://www.geoapi.org/3.0/javadoc/index.html)
   * [Example](./example)
 
 **WARNING:** the `kortforsyningen` namespace in package name, module name, Maven artifact, _etc._

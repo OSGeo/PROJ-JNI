@@ -40,7 +40,7 @@ import org.opengis.metadata.extent.Extent;
  * <h2>Limitations</h2>
  * {@code CoordinateOperationContext} is <em>not</em> thread-safe.
  * It is only a temporary object for creating coordinate operations
- * and rarely need to be shared between different threads.
+ * and rarely needs to be shared between different threads.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0

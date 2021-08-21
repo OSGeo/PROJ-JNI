@@ -32,8 +32,8 @@ import org.opengis.referencing.operation.CoordinateOperation;
 
 /**
  * Parses and format referencing objects in <cite>Well Known Text</cite>, JSON or PROJ format.
- * {@code ReferencingFormat} allows to chose the format (WKT, JSON or PROJ), the format version
- * (e.g. WKT 2 versus WKT 1), or the "flavor" when there is different interpretations of the same format.
+ * {@code ReferencingFormat} allows choice of the format (WKT, JSON or PROJ), the format version
+ * (e.g. WKT 2 versus WKT 1), or the "flavor" when there are different interpretations of the same format.
  * {@code ReferencingFormat} provides also some control on the formatting process, for example the
  * number of spaces in indentations.
  *
@@ -267,7 +267,7 @@ public class ReferencingFormat {
      *       99-049 — Simple Feature Implementation (1999)</a> had various interpretations with some
      *       incompatibilities between them (e.g. regarding units of measurement). A CRS formatted with
      *       one WKT 1 flavor is not guaranteed to be read correctly with a different WKT 1 flavor.</li>
-     *   <li>The WKT 1 format defined in <a href="http://www.opengeospatial.org/standards/ct">OGC
+     *   <li>The WKT 1 format defined in <a href="https://www.opengeospatial.org/standards/ct">OGC
      *       01-009 — Coordinate Transformation Service (2001)</a> fixed many OGC 99-049 ambiguities
      *       but is not supported by PROJ.</li>
      * </ul>
@@ -276,7 +276,7 @@ public class ReferencingFormat {
      * versions supported by current implementation.
      *
      * <h2>Note about WKT in GeoPackage</h2>
-     * The <a href="http://www.geopackage.org/spec/#gpkg_spatial_ref_sys_cols_crs_wkt">GeoPackage standard</a>
+     * The <a href="https://www.geopackage.org/spec/#gpkg_spatial_ref_sys_cols_crs_wkt">GeoPackage standard</a>
      * defines two columns for specifying Coordinate Reference System in Well Known Text format:
      * the {@code "definition"} column shall contain a WKT 1 string as defined by OGC 01-009 while
      * the {@code "definition_12_063"} column contains a WKT 2 string as defined by OGC 12-063.
@@ -299,7 +299,7 @@ public class ReferencingFormat {
          * </ul>
          *
          * @see #WKT
-         * @see <a href="http://docs.opengeospatial.org/is/18-010r7/18-010r7.html">Well-known
+         * @see <a href="https://docs.opengeospatial.org/is/18-010r7/18-010r7.html">Well-known
          *      text representation of coordinate reference systems (2019)</a>
          */
         WKT2_2019,
@@ -308,7 +308,7 @@ public class ReferencingFormat {
          * Full Well Known Text version 2 string, conforming to ISO 19162:2015(E) / OGC 12-063r5.
          * The output contains all possible nodes and new keyword names.
          *
-         * @see <a href="http://docs.opengeospatial.org/is/12-063r5/12-063r5.html">Well-known
+         * @see <a href="https://docs.opengeospatial.org/is/12-063r5/12-063r5.html">Well-known
          *      text representation of coordinate reference systems (2015)</a>
          */
         WKT2_2015,
