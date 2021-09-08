@@ -400,6 +400,17 @@ public final class Proj {
         }
     }
 
+
+
+    public static CoordinateReferenceSystem normalizeForVisualization(final CoordinateReferenceSystem crs) {
+        Objects.requireNonNull(crs);
+        if (crs instanceof IdentifiableObject) {
+            return (CoordinateReferenceSystem) ((IdentifiableObject) crs).impl.normalizeForVisualization();
+        } else {
+            throw new UnsupportedImplementationException("crs", crs);
+        }
+    }
+
     /**
      * Returns {@code true} if the given objects are equivalent according the given criterion.
      * If the two given objects are {@code null}, this method returns {@code true}.

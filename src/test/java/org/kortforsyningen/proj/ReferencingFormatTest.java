@@ -88,7 +88,13 @@ public final strictfp class ReferencingFormatTest {
         final String wkt = crs.toWKT();
         assertTrue(wkt, wkt.startsWith(
                 "GEOGCRS[\"WGS 84\",\n" +
-                "    DATUM[\"World Geodetic System 1984\",\n" +
+                "    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n" +
+                "        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n" +
+                "        MEMBER[\"World Geodetic System 1984 (G730)\"],\n" +
+                "        MEMBER[\"World Geodetic System 1984 (G873)\"],\n" +
+                "        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n" +
+                "        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n" +
+                "        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n" +
                 "        ELLIPSOID[\"WGS 84\","));
         /*
          * We verify only the first few lines in order to reduce the risk to break the tests

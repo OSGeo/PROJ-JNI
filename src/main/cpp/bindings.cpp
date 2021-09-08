@@ -104,6 +104,7 @@ using osgeo::proj::cs::TemporalMeasureCS;
 using osgeo::proj::cs::VerticalCS;
 using osgeo::proj::cs::VerticalCSNNPtr;
 using osgeo::proj::datum::Datum;
+using osgeo::proj::datum::DatumNNPtr;
 using osgeo::proj::datum::Ellipsoid;
 using osgeo::proj::datum::EllipsoidNNPtr;
 using osgeo::proj::datum::EngineeringDatum;
@@ -948,6 +949,9 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_getObjectP
             }
             case org_kortforsyningen_proj_Property_DATUM: {
                 value = get_shared_object<SingleCRS>(env, object)->datum();
+                if (value == nullptr) {
+                    value = get_shared_object<SingleCRS>(env, object)->datumEnsemble()->datums().front().as_nullable();
+                }
                 type  = org_kortforsyningen_proj_Type_DATUM;
                 break;
             }
@@ -2677,7 +2681,13 @@ JNIEXPORT jobject JNICALL Java_org_kortforsyningen_proj_SharedPointer_normalizeF
         BaseObjectPtr ptr = cop.as_nullable();
         return specific_subclass(env, operation, ptr, org_kortforsyningen_proj_Type_COORDINATE_OPERATION);
     } catch (const std::exception &e) {
-        rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
+        try {
+            CRSNNPtr crs = get_shared_object<CRS>(env, operation);
+            BaseObjectPtr ptr = crs.as_nullable();
+            return specific_subclass(env, operation, ptr, org_kortforsyningen_proj_Type_COORDINATE_REFERENCE_SYSTEM);
+        } catch (const std::exception &e) {
+            rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
+        }
     }
     return nullptr;
 }
