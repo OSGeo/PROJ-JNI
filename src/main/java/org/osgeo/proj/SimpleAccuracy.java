@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019-2021 Agency for Data Supply and Efficiency 
+ * Copyright © 2019-2021 Agency for Data Supply and Efficiency
  * Copyright © 2021 Open Source Geospatial Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
