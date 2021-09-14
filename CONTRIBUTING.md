@@ -24,14 +24,14 @@ advantage.
 ## Help a fellow PROJ-JNI user
 
 The main forum for support for PROJ-JNI is the GitHub repository. You can see
-existing issues [here](https://github.com/Kortforsyningen/PROJ-JNI/issues) and
+existing issues [here](https://github.com/OSGeo/PROJ-JNI/issues) and
 existing pull requests
-[here](https://github.com/Kortforsyningen/PROJ-JNI/pulls).
+[here](https://github.com/OSGeo/PROJ-JNI/pulls).
 
 ## Adding bug reports
 
 Bug reports are handled in the [issue
-tracker](https://github.com/Kortforsyningen/PROJ-JNI/issues) on PROJ-JNI's home
+tracker](https://github.com/OSGeo/PROJ-JNI/issues) on PROJ-JNI's home
 on GitHub. Writing a good bug report is not easy. But fixing a poorly documented
 bug is not easy either, so please put in the effort it takes to create a
 thorough bug report.
@@ -59,7 +59,7 @@ problem before you submit an issue.
 
 Got an idea for a new feature in PROJ-JNI? Submit a thorough description of the
 new feature in the [issue
-tracker](https://github.com/Kortforsyningen/PROJ-JNI/issues). Please include any
+tracker](https://github.com/OSGeo/PROJ-JNI/issues). Please include any
 technical documents that can help the developer make the new feature a reality.
 An example of this could be a publicly available academic paper that describes a
 new projection. Also, including a numerical test case will make it much easier
@@ -73,11 +73,11 @@ Note that not all feature requests are accepted.
 PROJ-JNI is in dire need of better documentation. Any contributions of
 documentation are greatly appreciated. The PROJ-JNI documentation is available
 on
-[GitHub](https://kortforsyningen.github.io/PROJ-JNI/org/kortforsyningen/proj/package-summary.html).
+[GitHub](https://osgeo.github.io/PROJ-JNI/org/osgeo/proj/package-summary.html).
 The website is generated with
 [Javadoc](https://www.oracle.com/technical-resources/articles/java/javadoc-tool.html).
 Contributions to the documentation should be made as [Pull
-Requests](https://github.com/Kortforsyningen/PROJ-JNI/pulls) on GitHub.
+Requests](https://github.com/OSGeo/PROJ-JNI/pulls) on GitHub.
 
 ## Code contributions
 

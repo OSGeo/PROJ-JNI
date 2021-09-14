@@ -1,5 +1,6 @@
 /*
- * Copyright © 2019 Agency for Data Supply and Efficiency
+ * Copyright © 2019-2021 Agency for Data Supply and Efficiency
+ * Copyright © 2021 Open Source Geospatial Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +31,7 @@ import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.CoordinateOperationFactory;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
-import org.kortforsyningen.proj.Proj;
+import org.osgeo.proj.Proj;
 
 
 /**

@@ -17,9 +17,9 @@
   <target name="init">
     <fail unless="cmake.subdir">The properties specifying directories are not set.</fail>
     <available property="cmake.configured" file="${cmake.subdir}/Makefile"/>
-    <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/libproj-binding.so"/>
-    <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/libproj-binding.dylib"/>
-    <available property="projjni.compiled" file="classes/org/kortforsyningen/proj/proj-binding.dll"/>
+    <available property="projjni.compiled" file="classes/org/osgeo/proj/libproj-binding.so"/>
+    <available property="projjni.compiled" file="classes/org/osgeo/proj/libproj-binding.dylib"/>
+    <available property="projjni.compiled" file="classes/org/osgeo/proj/proj-binding.dll"/>
   </target>
   <!--
     All CMake configuration files will be stored in the `target/cmake` directory.
@@ -48,7 +48,7 @@
       task creates a symbolic link to it in the "target" directory for convenience.
     -->
     <first id="native-binary">
-      <fileset dir="classes/org/kortforsyningen/proj" includes="*-binding.*"/>
+      <fileset dir="classes/org/osgeo/proj" includes="*-binding.*"/>
     </first>
     <symlink overwrite="true" link="${basedir}" resource="${toString:native-binary}"/>
   </target>
