@@ -16,9 +16,6 @@ Latest release is [1.0](https://github.com/OSGeo/PROJ-JNI/releases/1.0).
   * [GeoAPI 3.0.1 Javadoc](https://www.geoapi.org/3.0/javadoc/index.html)
   * [Example](./example)
 
-**WARNING:** the `osgeo` namespace in package name, module name, Maven artifact, _etc._
-is temporary. The final name will be selected later.
-
 ## Prerequisites:
 
   * For building:
