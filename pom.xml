@@ -13,11 +13,11 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kortforsyningen</groupId>
+  <groupId>org.osgeo</groupId>
   <artifactId>proj</artifactId>
   <version>1.0-SNAPSHOT</version>
   <name>PROJ bindings</name>
-  <url>https://github.com/Kortforsyningen/PROJ-JNI</url>
+  <url>https://github.com/OSGeo/PROJ-JNI</url>
   <description>
     Java Native Interface for the PROJ C/C++ library.
     PROJ is a generic coordinate transformation software that transforms
@@ -28,8 +28,8 @@
   </description>
 
   <organization>
-    <name>Agency for Data Supply and Efficiency</name>
-    <url>https://www.kortforsyningen.dk/</url>
+    <name>Open Source Geospatial Foundation</name>
+    <url>https://www.osgeo.org/</url>
   </organization>
 
   <licenses>
@@ -40,8 +40,8 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:https://github.com/Kortforsyningen/PROJ-JNI</connection>
-    <url>https://github.com/Kortforsyningen/PROJ-JNI</url>
+    <connection>scm:git:https://github.com/OSGeo/PROJ-JNI</connection>
+    <url>https://github.com/OSGeo/PROJ-JNI</url>
   </scm>
 
   <developers>
@@ -49,8 +49,8 @@
       <id>kbevers</id>
       <name>Kristian Evers</name>
       <email>kristianevers@gmail.com</email>
-      <organization>Kortforsyningen</organization>
-      <organizationUrl>https://www.kortforsyningen.dk</organizationUrl>
+      <organization>Open Source Geospatial Foundation</organization>
+      <organizationUrl>https://www.osgeo.org</organizationUrl>
       <roles>
         <role>C/C++ developer</role>
       </roles>
@@ -136,7 +136,7 @@
             </manifest>
             <manifestEntries>
               <Automatic-Module-Name>
-                org.kortforsyningen.proj
+                org.osgeo.proj
               </Automatic-Module-Name>
             </manifestEntries>
           </archive>
@@ -187,7 +187,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
-          <excludePackageNames>org.kortforsyningen.proj.spi</excludePackageNames>
+          <excludePackageNames>org.osgeo.proj.spi</excludePackageNames>
           <encoding>${project.build.sourceEncoding}</encoding>
           <docencoding>${project.build.sourceEncoding}</docencoding>
           <charset>${project.build.sourceEncoding}</charset>

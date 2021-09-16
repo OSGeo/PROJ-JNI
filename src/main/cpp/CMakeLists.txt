@@ -1,5 +1,6 @@
 #
-# Copyright © 2019 Agency for Data Supply and Efficiency
+# Copyright © 2019-2021 Agency for Data Supply and Efficiency
+# Copyright © 2021 Open Source Geospatial Foundation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -62,7 +63,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 # The binary will be put in the directory of Java classes package.
 # Should be consistent with the path checked in `build.xml` file.
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../classes/org/kortforsyningen/proj)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../classes/org/osgeo/proj)
 
 # Find Java Native Interfaces (JNI). The location is system-dependent. In particular there is a "win32",
 # "linux" or "darwin" directory to append to the path. CMake adds automatically the right sub-directory.
