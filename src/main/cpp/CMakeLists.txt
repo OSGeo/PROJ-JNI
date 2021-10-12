@@ -38,7 +38,7 @@
 # on POSIX systems):
 #
 #     cd target/cmake
-#     cmake ../../src/main/cpp -DPROJINC=Proj6/Path/include -DPROJLIB=Proj6/Path
+#     cmake ../../src/main/cpp -DPROJINC=Proj/Path/include -DPROJLIB=Proj/Path
 #     cd ../..
 #
 # Then the following command can be run from the project root directory (actually it
