@@ -39,7 +39,7 @@ import static org.junit.Assert.*;
  * Tests {@link ReferencingFormat}.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public final strictfp class ReferencingFormatTest {
@@ -87,14 +87,16 @@ public final strictfp class ReferencingFormatTest {
         final AuthorityFactory.API factory = TestFactorySource.EPSG;
         final CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
         final String wkt = crs.toWKT();
-        assertTrue(wkt, wkt.startsWith(
-                "GEOGCRS[\"WGS 84\",\n" +
-                "    DATUM[\"World Geodetic System 1984\",\n" +
-                "        ELLIPSOID[\"WGS 84\","));
+        assertTrue(wkt, wkt.matches("(?s)" +        // Dot matches any character including line terminator.
+                "GEOGCRS\\[\"WGS 84\"," +
+                "\\s+ENSEMBLE\\[\"World Geodetic System 1984.*" +
+                "\\s+ELLIPSOID\\[\"WGS 84\",.*" +
+                "\\s+PRIMEM\\[\"Greenwich\",.*" +
+                "\\s+CS\\[ellipsoidal,\\s*2\\],.*" +
+                "\\s+ID\\[\"EPSG\",\\s*4326\\]\\]\\s*"));
         /*
-         * We verify only the first few lines in order to reduce the risk to break the tests
-         * if some output details change in future PROJ versions. The part tested above are
-         * more likely to be stable.
+         * We verify only a few main elements using a regular exoression in order to reduce
+         * the risk to break the test if some output details change in future PROJ versions.
          */
     }
 
