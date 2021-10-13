@@ -63,6 +63,8 @@ public final strictfp class AuthorityFactoryTest {
     /**
      * A temporary flag for disabling some tests until we upgrade PROJ-JNI for supporting datum ensembles.
      *
+     * @see <a href="https://github.com/OSGeo/PROJ-JNI/issues/53">Issue #53</a>
+     *
      * @since 1.1
      */
     private static final boolean ENSEMBLE_SUPPORTED = false;
