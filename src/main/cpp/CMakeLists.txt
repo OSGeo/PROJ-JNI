@@ -1,5 +1,6 @@
 #
-# Copyright © 2019 Agency for Data Supply and Efficiency
+# Copyright © 2019-2021 Agency for Data Supply and Efficiency
+# Copyright © 2021 Open Source Geospatial Foundation
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,15 +29,16 @@
 #
 # HOW TO BUILD:
 # C/C++ compilation is part of Maven build. The following command executed from the project root directory should
-# be sufficient:
+# be sufficient on POSIX systems:
 #
 #     mvn package
 #
-# If above command fails, then it may be useful to invoke `cmake` manually.
-# It can be done with the following commands:
+# If above command fails (for example on Windows), then it may be useful to invoke `cmake` manually.
+# It can be done with the following commands (the `-DPROJINC` and `-DPROJLIB` arguments can be omitted
+# on POSIX systems):
 #
 #     cd target/cmake
-#     cmake ../../src/main/cpp
+#     cmake ../../src/main/cpp -DPROJINC=Proj/Path/include -DPROJLIB=Proj/Path
 #     cd ../..
 #
 # Then the following command can be run from the project root directory (actually it
@@ -61,7 +63,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 # The binary will be put in the directory of Java classes package.
 # Should be consistent with the path checked in `build.xml` file.
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../classes/org/kortforsyningen/proj)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../classes/org/osgeo/proj)
 
 # Find Java Native Interfaces (JNI). The location is system-dependent. In particular there is a "win32",
 # "linux" or "darwin" directory to append to the path. CMake adds automatically the right sub-directory.
@@ -91,3 +93,4 @@ target_compile_features(proj-binding PUBLIC cxx_nullptr cxx_static_assert)
 
 # Dependencies
 target_link_libraries(proj-binding ${PROJLIB})
+target_include_directories(proj-binding PUBLIC ${PROJINC})

@@ -13,11 +13,11 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kortforsyningen</groupId>
+  <groupId>org.osgeo</groupId>
   <artifactId>proj</artifactId>
   <version>2.0-SNAPSHOT</version>
   <name>PROJ bindings</name>
-  <url>https://github.com/Kortforsyningen/PROJ-JNI</url>
+  <url>https://github.com/OSGeo/PROJ-JNI</url>
   <description>
     Java Native Interface for the PROJ C/C++ library.
     PROJ is a generic coordinate transformation software that transforms
@@ -28,8 +28,8 @@
   </description>
 
   <organization>
-    <name>Agency for Data Supply and Efficiency</name>
-    <url>https://www.kortforsyningen.dk/</url>
+    <name>Open Source Geospatial Foundation</name>
+    <url>https://www.osgeo.org/</url>
   </organization>
 
   <licenses>
@@ -40,8 +40,8 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:https://github.com/Kortforsyningen/PROJ-JNI</connection>
-    <url>https://github.com/Kortforsyningen/PROJ-JNI</url>
+    <connection>scm:git:https://github.com/OSGeo/PROJ-JNI</connection>
+    <url>https://github.com/OSGeo/PROJ-JNI</url>
   </scm>
 
   <developers>
@@ -49,8 +49,8 @@
       <id>kbevers</id>
       <name>Kristian Evers</name>
       <email>kristianevers@gmail.com</email>
-      <organization>Kortforsyningen</organization>
-      <organizationUrl>https://www.kortforsyningen.dk</organizationUrl>
+      <organization>Open Source Geospatial Foundation</organization>
+      <organizationUrl>https://www.osgeo.org</organizationUrl>
       <roles>
         <role>C/C++ developer</role>
       </roles>
@@ -61,7 +61,7 @@
       <name>Martin Desruisseaux</name>
       <email>martin.desruisseaux@geomatys.com</email>
       <organization>Geomatys</organization>
-      <organizationUrl>http://www.geomatys.com</organizationUrl>
+      <organizationUrl>https://www.geomatys.com</organizationUrl>
       <roles>
         <role>Java developer</role>
       </roles>
@@ -103,7 +103,6 @@
           <compilerArgs>
             <arg>-Xlint:all</arg>
             <arg>-Xdoclint:all</arg>
-            <arg>--doclint-format</arg> <arg>html5</arg>
             <arg>-h</arg> <arg>${project.build.sourceDirectory}/../cpp</arg>
           </compilerArgs>
         </configuration>
@@ -138,7 +137,7 @@
             </manifest>
             <manifestEntries>
               <Automatic-Module-Name>
-                org.kortforsyningen.proj
+                org.osgeo.proj
               </Automatic-Module-Name>
             </manifestEntries>
           </archive>
@@ -187,9 +186,9 @@
       <!-- JavaDoc configuration. -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.3.0</version>
         <configuration>
-          <excludePackageNames>org.kortforsyningen.proj.spi</excludePackageNames>
+          <excludePackageNames>org.osgeo.proj.spi</excludePackageNames>
           <encoding>${project.build.sourceEncoding}</encoding>
           <docencoding>${project.build.sourceEncoding}</docencoding>
           <charset>${project.build.sourceEncoding}</charset>
@@ -203,7 +202,7 @@
           <detectJavaApiLink>false</detectJavaApiLink>
           <links>
             <link>https://docs.oracle.com/en/java/javase/13/docs/api</link>
-            <link>http://www.geoapi.org/3.0/javadoc</link>
+            <link>https://www.geoapi.org/3.0/javadoc</link>
           </links>
           <additionalOptions>
             <additionalOption>--add-stylesheet "${project.basedir}/src/main/javadoc/customization.css"</additionalOption>

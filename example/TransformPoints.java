@@ -1,8 +1,24 @@
 /*
- *    Java bindings to PROJ
+ * Copyright © 2019-2021 Agency for Data Supply and Efficiency
+ * Copyright © 2021 Open Source Geospatial Foundation
  *
- *    This file is hereby placed into the Public Domain.
- *    This means anyone is free to do whatever they wish with this file.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.extent.GeographicExtent;
@@ -15,7 +31,7 @@ import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.CoordinateOperationFactory;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
-import org.kortforsyningen.proj.Proj;
+import org.osgeo.proj.Proj;
 
 
 /**
@@ -60,7 +76,7 @@ public class TransformPoints {
     private void printCoordinates(String target) throws FactoryException, TransformException {
         CoordinateReferenceSystem sourceCRS = factory.createCoordinateReferenceSystem("4326");   // WGS 84
         CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem(target);
-        CoordinateOperation       operation = regops .createOperation(sourceCRS, targetCRS);
+        CoordinateOperation       operation = regops.createOperation(sourceCRS, targetCRS);
         describe(operation);
         double[] coordinates = {
             45.500,  -73.567,                    // Montreal
@@ -113,8 +129,8 @@ public class TransformPoints {
             }
         }
         /*
-         * The way to get accuracy is a bit unconvenient and depends on whether the accuracy is only a
-         * description or is a quantitative measurement. The reason for this unconvenience is that the
+         * The way to get accuracy is a bit inconvenient and depends on whether the accuracy is only a
+         * description or is a quantitative measurement. The reason for this inconvenience is that the
          * quality API is designed for describing the quality of a wide range of phenomenons, not only
          * coordinate operations. Developers are encouraged to write their own convenience methods for
          * their needs.

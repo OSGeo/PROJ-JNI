@@ -1,2 +1,2 @@
-org.kortforsyningen.proj.spi.EPSG
-org.kortforsyningen.proj.spi.IAU
+org.osgeo.proj.spi.EPSG
+org.osgeo.proj.spi.IAU
