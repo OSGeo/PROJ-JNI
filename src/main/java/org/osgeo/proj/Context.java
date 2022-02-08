@@ -206,6 +206,7 @@ final class Context extends NativeResource implements AutoCloseable {
                 }
                 c.destroy();
                 c = CONTEXTS.peekFirst();                   // Check if next context should also be disposed.
+                if (c == null) break;
             }
         }
     }
