@@ -27,6 +27,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.lang.annotation.Native;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
@@ -67,6 +69,12 @@ final class Context extends NativeResource implements AutoCloseable {
      * allowing the same thread or another thread to use them again.
      */
     private static final Deque<Context> CONTEXTS = new ConcurrentLinkedDeque<>();
+
+    /**
+     * Ensure that only one thread at a time is destroying expired Context instances otherwise
+     * this can lead to NullPointerExceptions when accessing long primitives.
+     */
+    private static final ReentrantLock DESTROY_EXPIRED_LOCK = new ReentrantLock();
 
     /**
      * Timestamp (as given by {@link System#nanoTime()}) of last use of this context.
@@ -190,22 +198,28 @@ final class Context extends NativeResource implements AutoCloseable {
      * some PROJ objects are garbage collected.
      */
     private static void destroyExpired() {
-        Context c = CONTEXTS.peekFirst();
-        if (c != null) {
-            final long time = System.nanoTime();
-            while (time - c.lastUse > TIMEOUT) {
-                c = CONTEXTS.pollFirst();                   // Verify again since it may have changed concurrently.
-                if (c == null) return;
-                if (time - c.lastUse <= TIMEOUT) try {
-                    c.lastUse = time;                       // Pretend we just used that context, for consistent ordering.
-                    CONTEXTS.add(c);
-                    return;
-                } catch (Throwable e) {
-                    c.destroy();
-                    throw e;
+        if(DESTROY_EXPIRED_LOCK.tryLock()) {
+            try {
+                Context c = CONTEXTS.peekFirst();
+                if (c != null) {
+                    final long time = System.nanoTime();
+                    while (time - c.lastUse > TIMEOUT) {  // Accessing lastUse can lead to a NullpointerException when multiple threads are calling this method
+                        c = CONTEXTS.pollFirst();                   // Verify again since it may have changed concurrently.
+                        if (c == null) return;
+                        if (time - c.lastUse <= TIMEOUT) try {
+                            c.lastUse = time;                       // Pretend we just used that context, for consistent ordering.
+                            CONTEXTS.add(c);
+                            return;
+                        } catch (Throwable e) {
+                            c.destroy();
+                            throw e;
+                        }
+                        c.destroy();
+                        c = CONTEXTS.peekFirst();                   // Check if next context should also be disposed.
+                    }
                 }
-                c.destroy();
-                c = CONTEXTS.peekFirst();                   // Check if next context should also be disposed.
+            } finally {
+                DESTROY_EXPIRED_LOCK.unlock();
             }
         }
     }
