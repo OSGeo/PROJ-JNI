@@ -11,7 +11,7 @@ Latest release is [1.0](https://github.com/OSGeo/PROJ-JNI/releases/1.0).
 
 ## Developer documentation:
 
-  * [Installation guide](https://osgeo.github.io/PROJ-JNI/install.html)
+  * [Installation guide](https://github.com/OSGeo/PROJ-JNI/wiki/Install)
   * [PROJ binding Javadoc](https://osgeo.github.io/PROJ-JNI/index.html)
   * [GeoAPI 3.0.1 Javadoc](https://www.geoapi.org/3.0/javadoc/index.html)
   * [Example](./example)
