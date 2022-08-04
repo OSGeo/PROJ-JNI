@@ -24,6 +24,7 @@ package org.osgeo.proj;
 
 import javax.measure.Unit;
 import org.opengis.util.CodeList;
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.RangeMeaning;
@@ -41,8 +42,9 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      * Creates a new wrapper for the given {@code osgeo::proj::cs::CoordinateSystemAxis}.
      *
      * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    Axis(final long ptr) {
+    Axis(final long ptr) throws FactoryException {
         super(ptr);
     }
 

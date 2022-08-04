@@ -27,6 +27,7 @@ import java.net.URI;
 import java.util.Set;
 import javax.measure.Unit;
 import javax.measure.IncommensurableException;
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.parameter.InvalidParameterTypeException;
 import org.opengis.parameter.ParameterDescriptor;
@@ -56,8 +57,9 @@ class Parameter extends IdentifiableObject implements ParameterDescriptor {
      * any {@code ParameterValue} method will cause an exception to be thrown.
      *
      * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    Parameter(final long ptr) {
+    Parameter(final long ptr) throws FactoryException {
         super(ptr);
     }
 
@@ -100,8 +102,9 @@ class Parameter extends IdentifiableObject implements ParameterDescriptor {
          * Creates a new wrapper for the given {@code osgeo::proj::operation::OperationParameterValue}.
          *
          * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Value(final long ptr) {
+        Value(final long ptr) throws FactoryException {
             super(ptr);
         }
 

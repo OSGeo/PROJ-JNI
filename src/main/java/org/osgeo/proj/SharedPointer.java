@@ -22,6 +22,7 @@
  */
 package org.osgeo.proj;
 
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 
 
@@ -44,9 +45,9 @@ class SharedPointer extends NativeResource {
      * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
      *
      * @param  ptr  pointer to the {@code std::shared_ptr}, or 0 if out of memory.
-     * @throws OutOfMemoryError if {@code ptr} is 0.
+     * @throws FactoryException if the PROJ object can not be allocated.
      */
-    SharedPointer(final long ptr) {
+    SharedPointer(final long ptr) throws FactoryException {
         super(ptr);
     }
 

@@ -22,6 +22,7 @@
  */
 package org.osgeo.proj;
 
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
 
@@ -41,9 +42,10 @@ final class Transform extends NativeResource {
      *
      * @param  operation  wrapper for the operation for which to create a transform.
      * @param  context    the thread context in which the operation will be executed.
+     * @throws FactoryException if the PROJ object can not be allocated.
      * @throws TransformException if the construction failed.
      */
-    Transform(final NativeResource operation, final Context context) throws TransformException {
+    Transform(final NativeResource operation, final Context context) throws FactoryException, TransformException {
         super(context.createPJ(operation));
     }
 

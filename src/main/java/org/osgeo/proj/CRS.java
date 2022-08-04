@@ -23,6 +23,7 @@
 package org.osgeo.proj;
 
 import java.util.List;
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.EllipsoidalCS;
@@ -75,8 +76,9 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
      * Creates a new wrapper for the given {@code osgeo::proj::crs::CRS}.
      *
      * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    CRS(final long ptr) {
+    CRS(final long ptr) throws FactoryException {
         super(ptr);
     }
 
@@ -129,9 +131,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static class Geodetic extends CRS implements GeodeticCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Geodetic(final long ptr) {
+        Geodetic(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -150,9 +154,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static final class Geographic extends Geodetic implements GeographicCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Geographic(final long ptr) {
+        Geographic(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -172,9 +178,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static final class Geocentric extends Geodetic implements GeocentricCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Geocentric(final long ptr) {
+        Geocentric(final long ptr) throws FactoryException {
             super(ptr);
         }
     }
@@ -185,9 +193,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static final class Vertical extends CRS implements VerticalCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Vertical(final long ptr) {
+        Vertical(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -214,9 +224,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static final class Temporal extends CRS implements TemporalCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Temporal(final long ptr) {
+        Temporal(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -243,9 +255,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static final class Engineering extends CRS implements EngineeringCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Engineering(final long ptr) {
+        Engineering(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -264,9 +278,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static final class Projected extends CRS implements ProjectedCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Projected(final long ptr) {
+        Projected(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -311,9 +327,11 @@ class CRS extends IdentifiableObject implements CoordinateReferenceSystem {
     static final class Compound extends CRS implements CompoundCRS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Compound(final long ptr) {
+        Compound(final long ptr) throws FactoryException {
             super(ptr);
         }
 

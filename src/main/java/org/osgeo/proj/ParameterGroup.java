@@ -24,6 +24,7 @@ package org.osgeo.proj;
 
 import java.util.List;
 import java.util.Objects;
+import org.opengis.util.FactoryException;
 import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.GeneralParameterValue;
@@ -50,8 +51,9 @@ abstract class ParameterGroup extends IdentifiableObject {
      * Creates a new wrapper for the group of parameters included in the wrapped object.
      *
      * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    ParameterGroup(final long ptr) {
+    ParameterGroup(final long ptr) throws FactoryException {
         super(ptr);
     }
 

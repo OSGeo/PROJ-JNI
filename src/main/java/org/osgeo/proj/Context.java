@@ -90,8 +90,10 @@ final class Context extends NativeResource implements AutoCloseable {
 
     /**
      * Creates and wraps a new {@code PJ_CONTEXT}.
+     *
+     * @throws FactoryException if the PROJ object can not be allocated.
      */
-    private Context() {
+    private Context() throws FactoryException {
         super(create());
     }
 
@@ -115,9 +117,10 @@ final class Context extends NativeResource implements AutoCloseable {
      *
      * All objects obtained from {@link Context} shall be used inside the {@code try} block.
      *
-     * @return  wrapper for the {@code PJ_CONTEXT} structure, together with resources that depends on it.
+     * @return wrapper for the {@code PJ_CONTEXT} structure, together with resources that depends on it.
+     * @throws FactoryException if the PROJ object can not be allocated.
      */
-    static Context acquire() {
+    static Context acquire() throws FactoryException {
         final Context c = CONTEXTS.pollLast();
         return (c != null) ? c : new Context();
     }

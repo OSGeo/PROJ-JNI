@@ -33,6 +33,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
+import org.opengis.util.FactoryException;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.metadata.citation.Citation;
@@ -144,9 +145,9 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
          * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
          *
          * @param  ptr  pointer to the {@code std::shared_ptr}, or 0 if out of memory.
-         * @throws OutOfMemoryError if {@code ptr} is 0.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Cleaner(final long ptr) {
+        Cleaner(final long ptr) throws FactoryException {
             super(ptr);
             transforms = new Transform[NUM_THREADS];
         }
@@ -179,8 +180,9 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
      * The source and target CRS needs to be specified after construction.
      *
      * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    Operation(final long ptr) {
+    Operation(final long ptr) throws FactoryException {
         super(new Cleaner(ptr));
         transforms = ((Cleaner) impl).transforms;
         srcDim = getDimension(0);
@@ -317,9 +319,11 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
     static final class Method extends ParameterGroup implements OperationMethod, ParameterDescriptorGroup {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         *
          * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Method(final long ptr) {
+        Method(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -387,9 +391,11 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
     {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         *
          * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Conversion(final long ptr) {
+        Conversion(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -405,9 +411,11 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
     {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
+         *
          * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Transformation(final long ptr) {
+        Transformation(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -516,7 +524,7 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
      * @return the {@code PJ} wrapper for the current thread.
      * @throws TransformException if the {@code PJ} object can not be created.
      */
-    private Transform acquire(final Context c) throws TransformException {
+    private Transform acquire(final Context c) throws FactoryException, TransformException {
         synchronized (transforms) {
             for (int i=transforms.length; --i >= 0;) {
                 final Transform tr = transforms[i];
@@ -546,6 +554,29 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
             }
         }
         tr.destroy();
+    }
+
+    /**
+     * Returns the exception to throw when a call to {@code acquire(…)} failed to allocate a PROJ object.
+     *
+     * @param  e  the exception that occurred when trying to get the PROJ object.
+     * @return the exception to throw.
+     */
+    private TransformException canNotDelegateToPROJ(FactoryException e) {
+        Exception suppressed = null;
+        String name = null;
+        try {
+            ReferenceIdentifier id = getName();
+            if (id != null) name = id.getCode();
+        } catch (Exception s) {
+            suppressed = s;
+        }
+        if (name == null) name = "?";
+        TransformException t = new TransformException("Can not delegate “" + name + "” to PROJ.", e);
+        if (suppressed != null) {
+            t.addSuppressed(suppressed);
+        }
+        return t;
     }
 
     /**
@@ -581,6 +612,8 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
             } finally {
                 release(tr);
             }
+        } catch (FactoryException e) {
+            throw canNotDelegateToPROJ(e);
         }
         /*
          * Copy the result to final location.
@@ -784,6 +817,8 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
                 } finally {
                     release(tr);
                 }
+            } catch (FactoryException e) {
+                throw canNotDelegateToPROJ(e);
             }
             if (buffer != dstPts) {
                 copy(buffer, bufOff, dimension,
@@ -823,6 +858,8 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
                 } finally {
                     release(tr);
                 }
+            } catch (FactoryException e) {
+                throw canNotDelegateToPROJ(e);
             }
             doublesToFloats(buffer, 0, dimension, dstPts, dstOff, dstDim, numPts);
         }
@@ -858,6 +895,8 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
                 } finally {
                     release(tr);
                 }
+            } catch (FactoryException e) {
+                throw canNotDelegateToPROJ(e);
             }
             doublesToFloats(buffer, 0, dimension, dstPts, dstOff, dstDim, numPts);
         }
@@ -903,6 +942,8 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
                 } finally {
                     release(tr);
                 }
+            } catch (FactoryException e) {
+                throw canNotDelegateToPROJ(e);
             }
             if (buffer != dstPts) {
                 copy(buffer, bufOff, dimension,

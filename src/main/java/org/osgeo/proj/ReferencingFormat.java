@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Objects;
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
@@ -194,6 +195,8 @@ public class ReferencingFormat {
             try (Context c = Context.acquire()) {
                 text = ((IdentifiableObject) object).impl.format(c,
                         convention.ordinal(), indentation, multiline, strict);
+            } catch (FactoryException e) {
+                throw new UnformattableObjectException("Can not format WKT.", e);
             }
             if (text != null) {
                 return text;
@@ -219,6 +222,8 @@ public class ReferencingFormat {
         Objects.requireNonNull(text);
         try (Context c = Context.acquire()) {
             return parse(text, c, convention.ordinal(), strict);
+        } catch (FactoryException e) {
+            throw new UnparsableObjectException("Can not parse WKT.", e);
         }
     }
 

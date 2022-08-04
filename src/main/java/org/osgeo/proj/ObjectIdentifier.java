@@ -26,6 +26,7 @@ import java.util.StringJoiner;
 import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.ReferenceIdentifier;
+import org.opengis.util.FactoryException;
 
 
 /**
@@ -41,9 +42,9 @@ final class ObjectIdentifier extends IdentifiableObject implements ReferenceIden
      * Creates a new wrapper for the given {@code osgeo::proj::metadata::Identifier}.
      *
      * @param  ptr  pointer to the PROJ structure to wrap.
-     * @throws OutOfMemoryError if {@code ptr} is 0.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    ObjectIdentifier(final long ptr) {
+    ObjectIdentifier(final long ptr) throws FactoryException {
         super(ptr);
     }
 

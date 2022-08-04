@@ -22,6 +22,7 @@
  */
 package org.osgeo.proj;
 
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.cs.CartesianCS;
@@ -44,8 +45,9 @@ class CS extends IdentifiableObject implements CoordinateSystem {
      * Creates a new wrapper for the given {@code osgeo::proj::cs::CoordinateSystem}.
      *
      * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    CS(final long ptr) {
+    CS(final long ptr) throws FactoryException {
         super(ptr);
     }
 
@@ -78,9 +80,11 @@ class CS extends IdentifiableObject implements CoordinateSystem {
     static final class Cartesian extends CS implements CartesianCS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Cartesian(final long ptr) {
+        Cartesian(final long ptr) throws FactoryException {
             super(ptr);
         }
     }
@@ -91,9 +95,11 @@ class CS extends IdentifiableObject implements CoordinateSystem {
     static final class Spherical extends CS implements SphericalCS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Spherical(final long ptr) {
+        Spherical(final long ptr) throws FactoryException {
             super(ptr);
         }
     }
@@ -104,9 +110,11 @@ class CS extends IdentifiableObject implements CoordinateSystem {
     static final class Ellipsoidal extends CS implements EllipsoidalCS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Ellipsoidal(final long ptr) {
+        Ellipsoidal(final long ptr) throws FactoryException {
             super(ptr);
         }
     }
@@ -117,9 +125,11 @@ class CS extends IdentifiableObject implements CoordinateSystem {
     static final class Vertical extends CS implements VerticalCS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Vertical(final long ptr) {
+        Vertical(final long ptr) throws FactoryException {
             super(ptr);
         }
     }
@@ -130,9 +140,11 @@ class CS extends IdentifiableObject implements CoordinateSystem {
     static final class Time extends CS implements TimeCS {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Time(final long ptr) {
+        Time(final long ptr) throws FactoryException {
             super(ptr);
         }
     }

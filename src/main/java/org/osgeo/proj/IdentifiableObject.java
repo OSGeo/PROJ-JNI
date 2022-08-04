@@ -37,6 +37,7 @@ import javax.measure.Unit;
 import javax.measure.Quantity;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
+import org.opengis.util.FactoryException;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.metadata.extent.Extent;
 
@@ -64,9 +65,9 @@ abstract class IdentifiableObject implements Formattable {
      * It is caller's responsibility to invoke {@link #releaseWhenUnreachable()} after construction.
      *
      * @param  ptr  pointer to the PROJ structure to wrap.
-     * @throws OutOfMemoryError if {@code ptr} is 0.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    IdentifiableObject(final long ptr) {
+    IdentifiableObject(final long ptr) throws FactoryException {
         impl = new SharedPointer(ptr);
     }
 

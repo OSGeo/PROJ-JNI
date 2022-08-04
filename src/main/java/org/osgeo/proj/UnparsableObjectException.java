@@ -50,4 +50,14 @@ public class UnparsableObjectException extends RuntimeException {
     public UnparsableObjectException(String message) {
         super(message);
     }
+
+    /**
+     * Constructs an exception with the specified detail message and cause.
+     *
+     * @param message  the detail message, saved for later retrieval by the {@link #getMessage()} method.
+     * @param cause    the cause, saved for later retrieval by the {@link #getCause()} method.
+     */
+    public UnparsableObjectException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

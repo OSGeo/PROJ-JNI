@@ -26,6 +26,7 @@ import java.util.Date;
 import javax.measure.Unit;
 import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
+import org.opengis.util.FactoryException;
 import org.opengis.util.InternationalString;
 //     org.opengis.referencing.datum.Datum            — Not imported because this class is also named Datum.
 //     org.opengis.referencing.datum.Ellipsoid        — Not imported because we define an Ellipsoid in this class.
@@ -56,8 +57,9 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
      * Creates a new wrapper for the given {@code osgeo::proj::datum::Datum}.
      *
      * @param  ptr  pointer to the wrapped PROJ object.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    Datum(final long ptr) {
+    Datum(final long ptr) throws FactoryException {
         super(ptr);
     }
 
@@ -89,9 +91,11 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
     static final class Ellipsoid extends IdentifiableObject implements org.opengis.referencing.datum.Ellipsoid {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Ellipsoid(final long ptr) {
+        Ellipsoid(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -112,9 +116,11 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
     static final class PrimeMeridian extends IdentifiableObject implements org.opengis.referencing.datum.PrimeMeridian {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        PrimeMeridian(final long ptr) {
+        PrimeMeridian(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -128,9 +134,11 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
     static final class Geodetic extends Datum implements GeodeticDatum {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Geodetic(final long ptr) {
+        Geodetic(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -157,9 +165,11 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
     static final class Vertical extends Datum implements VerticalDatum {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Vertical(final long ptr) {
+        Vertical(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -181,9 +191,11 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
     static final class Temporal extends Datum implements TemporalDatum {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr  pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Temporal(final long ptr) {
+        Temporal(final long ptr) throws FactoryException {
             super(ptr);
         }
 
@@ -202,9 +214,11 @@ class Datum extends IdentifiableObject implements org.opengis.referencing.datum.
     static final class Engineering extends Datum implements EngineeringDatum {
         /**
          * Invoked by {@link AuthorityFactory#wrapGeodeticObject} only.
-         * @param ptr pointer to the wrapped PROJ object.
+         *
+         * @param  ptr pointer to the wrapped PROJ object.
+         * @throws FactoryException if {@code ptr} is 0.
          */
-        Engineering(final long ptr) {
+        Engineering(final long ptr) throws FactoryException {
             super(ptr);
         }
     }

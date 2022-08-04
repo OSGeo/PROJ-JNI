@@ -88,15 +88,16 @@ abstract class NativeResource {
 
     /**
      * Wraps the PROJ resource at the given address.
-     * A null pointer is assumed caused by a failure to allocate memory from C/C++ code.
+     * A null pointer is assumed caused by a failure to allocate the PROJ object from C/C++ code
+     * (not necessarily because out of memory).
      *
-     * @param  ptr  pointer to the PROJ resource, or 0 if out of memory.
-     * @throws OutOfMemoryError if {@code ptr} is 0.
+     * @param  ptr  pointer to the PROJ resource, or 0 if it can not be allocated.
+     * @throws FactoryException if {@code ptr} is 0.
      */
-    NativeResource(final long ptr) {
+    NativeResource(final long ptr) throws FactoryException {
         this.ptr = ptr;
         if (ptr == 0) {
-            throw new OutOfMemoryError("Can not allocate PROJ object.");
+            throw new FactoryException("Can not allocate PROJ object.");
         }
     }
 
