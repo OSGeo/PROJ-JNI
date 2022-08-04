@@ -87,7 +87,7 @@ same for both, so they will be discussed together in this section.
 ### Making Changes
 
 * Create a topic branch from where you want to base your work.
-* You usually should base your topic branch off of the master branch.
+* You usually should base your topic branch off of the main branch.
 * To quickly create a topic branch: git checkout -b my-topic-branch
 * Make commits of logical units.
 * Check for unnecessary whitespace with git diff --check before committing.
@@ -100,10 +100,10 @@ same for both, so they will be discussed together in this section.
 * Push your changes to a topic branch in your fork of the repository.
 * Submit a pull request to the PROJ-JNI repository.
 * If your pull request fixes/references an issue, include that issue number in
-  the pull request. For example: 
-  
+  the pull request. For example:
+
   ```
-  Wiz the bang 
+  Wiz the bang
   Fixes #123.
   ``````
 

@@ -30,10 +30,10 @@ Latest release is [1.0](https://github.com/OSGeo/PROJ-JNI/releases/1.0).
 ## Contributing
 
 See
-[CONTRIBUTING.md](https://github.com/OSGeo/PROJ-JNI/blob/master/CONTRIBUTING.md).
+[CONTRIBUTING.md](https://github.com/OSGeo/PROJ-JNI/blob/main/CONTRIBUTING.md).
 
 ## Code of conduct
 
 Please note that this project is released with a [Contributor Code of
-Conduct](https://github.com/OSGeo/PROJ-JNI/blob/master/CODE_OF_CONDUCT.md).
+Conduct](https://github.com/OSGeo/PROJ-JNI/blob/main/CODE_OF_CONDUCT.md).
 By participating in this project you agree to abide by its terms.

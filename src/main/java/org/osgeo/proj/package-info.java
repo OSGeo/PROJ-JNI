@@ -43,7 +43,7 @@
  *
  * <h2>Usage example</h2>
  * <p>Coordinate operations can be performed as below (a more complete example is available
- * <a href="https://github.com/OSGeo/PROJ-JNI/blob/master/example/TransformPoints.java">here</a>).
+ * <a href="https://github.com/OSGeo/PROJ-JNI/blob/main/example/TransformPoints.java">here</a>).
  * In this example, only the calls to {@link Proj} static methods are specific to this implementation.
  * All other lines should work in the same way with any GeoAPI implementation.
  * Note that geographic coordinates are in <var>latitude</var>, <var>longitude</var> order,
