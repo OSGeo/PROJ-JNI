@@ -699,7 +699,7 @@ inline const UnitOfMeasure* get_predefined_unit(int code) {
  *
  * Implementation is not very efficient (method ID searched in each method call), but it should
  * not be invoked often. After initialization, it should be invoked only for uncommon units and
- * only if there is no JSR-363 implementation on the classpath.
+ * only if there is no JSR-385 implementation on the classpath.
  *
  * @param  env       The JNI environment.
  * @param  uomClass  The Java UnitOfMeasure class to instantiate.
@@ -753,7 +753,7 @@ jobject to_java_unit(JNIEnv *env, jobject object, const UnitOfMeasure* unit) {
 
 /**
  * Creates the Java UnitOfMeasure class for one of the PROJ predefined values.
- * This method is invoked only at initialization time, and only if no JSR-363
+ * This method is invoked only at initialization time, and only if no JSR-385
  * implementation is provided on the classpath.
  *
  * @param  env     The JNI environment.

@@ -39,13 +39,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A set of predefined units of measurements used by PROJ.
  *
  * <p>Units of measurement are represented by the standard {@link Unit} interface, which is implemented by
- * <a href="https://jcp.org/aboutJava/communityprocess/implementations/jsr363/index.html">external libraries</a>.
- * PROJ-JNI uses whichever JSR-363 implementation is found on the classpath at the time this {@link Units} class is
+ * external libraries.
+ * PROJ-JNI uses whichever JSR-385 implementation is found on the classpath at the time this {@link Units} class is
  * initialized. If such implementation is found, then the constants in this class ({@link #DEGREE}, {@link #METRE},
  * {@link #SECOND}, <i>etc.</i>) are references to {@link Unit} instances provided by that implementation.
  * Otherwise those constants are references to an internal fallback implementation with limited capability.
  *
- * <p>Providing a JSR-363 implementation is optional but recommended if operations such as unit arithmetic
+ * <p>Providing a JSR-385 implementation is optional but recommended if operations such as unit arithmetic
  * (e.g. <code>METRE.{@linkplain Unit#divide(Unit) divide}(SECOND)</code>) and unit conversions
  * (e.g. <code>GRAD.{@linkplain Unit#getConverterTo(Unit) getConverterTo}(DEGREE)</code>) are to be performed.</p>
  *
@@ -81,7 +81,7 @@ public final class Units {
              * desired side effect of initializing the NativeResource class, which
              * is necessary for using the UnitOfMeasure fallback.
              */
-            NativeResource.logger().fine("No JSR-363 implementation found.");
+            NativeResource.logger().fine("No JSR-385 implementation found.");
         }
         SI = system;
     }
@@ -115,14 +115,14 @@ public final class Units {
     /**
      * Creates a unit of measurement for the given quantity type.
      *
-     * <p>If a JSR-363 implementation is available, it will be used. Otherwise {@link UnitOfMeasure}
+     * <p>If a JSR-385 implementation is available, it will be used. Otherwise {@link UnitOfMeasure}
      * is used as a fallback.
      *
      * @param  <Q>   compile time value of {@code type}.
      * @param  type  the type of quantity represented by the unit of measurement.
      * @param  toSI  the conversion factory to system unit. By convention a negative value means that we shall divide.
      * @param  code  one of {@link UnitOfMeasure} constants.
-     * @return unit of measurement, either form JSR-363 implementation or as {@link UnitOfMeasure} instance.
+     * @return unit of measurement, either form JSR-385 implementation or as {@link UnitOfMeasure} instance.
      */
     private static <Q extends Quantity<Q>> Unit<Q> create(final Class<Q> type, final double toSI, final short code) {
         final boolean isDivisor = (toSI < 0);
@@ -218,7 +218,7 @@ public final class Units {
      * testing if a predefined unit matches a given scale factor.
      *
      * @param  code  one of {@link UnitOfMeasure} constants.
-     * @return unit of measurement, either form JSR-363 implementation or as {@link UnitOfMeasure} instance.
+     * @return unit of measurement, either form JSR-385 implementation or as {@link UnitOfMeasure} instance.
      */
     static Unit<?> getUnit(final short code) {
         return PREDEFINED[code];

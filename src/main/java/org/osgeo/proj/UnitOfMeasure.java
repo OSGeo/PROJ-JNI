@@ -31,6 +31,7 @@ import javax.measure.Unit;
 import javax.measure.UnitConverter;
 import javax.measure.IncommensurableException;
 import javax.measure.Dimension;
+import javax.measure.Prefix;
 import javax.measure.Quantity;
 import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
@@ -40,8 +41,8 @@ import javax.measure.quantity.Dimensionless;
 
 /**
  * Mirror of {@code osgeo::proj::common::UnitOfMeasure} constants.
- * 
- * This class does not wrap native object. It is used only as a fallback when no JSR-363
+ *
+ * This class does not wrap native object. It is used only as a fallback when no JSR-385
  * implementation has been found on the classpath.
  *
  * @param <Q> The type of the quantity.
@@ -286,6 +287,24 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     }
 
     /**
+     * Returns a new unit equal to this unit prefixed by the specified {@code prefix}.
+     */
+    @Override
+    public final Unit<Q> prefix(final Prefix prefix) {
+        final double base = prefix.getValue().doubleValue();
+        final int exponent = prefix.getExponent();
+        return multiply(Math.pow(base, exponent));
+    }
+
+    /**
+     * Returns the result of setting the origin of the scale of measurement to the given value.
+     */
+    @Override
+    public Unit<Q> shift(final Number offset) {
+        return shift(offset.doubleValue());
+    }
+
+    /**
      * Returns the result of setting the origin of the scale of measurement to the given value.
      */
     @Override
@@ -295,6 +314,15 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
 
     /**
      * Returns the result of multiplying this unit by the specified factor.
+     */
+    @Override
+    public Unit<Q> multiply(final Number multiplier) {
+        return multiply(multiplier.doubleValue());
+    }
+
+    /**
+     * Returns the result of multiplying this unit by the specified factor.
+     * For example {@code KILOMETRE = METRE.multiply(1000)} returns a unit where 1 km is equal to 1000 m.
      */
     @Override
     public Unit<Q> multiply(final double multiplier) {
@@ -316,6 +344,14 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     @Override
     public Unit<?> inverse() {
         throw new NoUnitImplementationException();
+    }
+
+    /**
+     * Returns the result of dividing this unit by a divisor.
+     */
+    @Override
+    public Unit<Q> divide(final Number divisor) {
+        return divide(divisor.doubleValue());
     }
 
     /**
@@ -357,6 +393,14 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     @Override
     public Unit<Q> transform(final UnitConverter operation) {
         throw new NoUnitImplementationException();
+    }
+
+    /**
+     * Indicates if this unit is equal to the given unit, ignoring unit symbol.
+     */
+    @Override
+    public boolean isEquivalentTo(final Unit<Q> that) {
+        return getConverterTo(that).isIdentity();
     }
 
     /**

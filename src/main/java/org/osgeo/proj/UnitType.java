@@ -35,10 +35,10 @@ import javax.measure.quantity.Time;
 
 
 /**
- * Maps {@code osgeo::proj::common::UnitOfMeasure::Type} to JSR-363 elements.
+ * Maps {@code osgeo::proj::common::UnitOfMeasure::Type} to JSR-385 elements.
  *
  * <p>Enumeration values shall be declared in the same order as in the C++ header.
- * The C++ code has some additional types that we can not map to JSR-363,
+ * The C++ code has some additional types that we can not map to JSR-385,
  * for example "parametric" (mapping would need a more precise type).
  *
  * @author  Martin Desruisseaux (Geomatys)
@@ -144,7 +144,7 @@ enum UnitType {
     /**
      * Returns the unit type from the given ordinal value.
      * This method is invoked by {@link UnitOfMeasure} constructor, which is a
-     * fallback used when no JSR-363 implementation is found on the classpath.
+     * fallback used when no JSR-385 implementation is found on the classpath.
      *
      * @param  ordinal  {@link #ordinal()} value of the desired {@link UnitType}.
      * @return the type for the given ordinal value.
@@ -201,7 +201,7 @@ enum UnitType {
                 return unit.multiply(scale);
             }
             /*
-             * If there is no JSR-363 implementation, we have to instantiate an UnitOfMeasure.
+             * If there is no JSR-385 implementation, we have to instantiate an UnitOfMeasure.
              * The above unit.multiply(scale) call would work, but the unit name would be null.
              * By letting the native code instantiate UnitOfMeasure itself, we give it a chance
              * to set the unit name in addition of the scale factor.

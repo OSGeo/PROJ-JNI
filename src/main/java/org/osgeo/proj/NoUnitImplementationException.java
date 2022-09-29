@@ -26,9 +26,9 @@ import javax.measure.Unit;
 
 
 /**
- * Thrown when an unit operation is requested but no JSR-363 implementation is found on the classpath.
+ * Thrown when an unit operation is requested but no JSR-385 implementation is found on the classpath.
  * The PROJ-JNI binding provides only very minimalist support of the {@link Unit} interface.
- * For advanced operations such as units arithmetic, a JSR-363 implementation must be provided.
+ * For advanced operations such as units arithmetic, a JSR-385 implementation must be provided.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 1.0
@@ -44,13 +44,13 @@ public class NoUnitImplementationException extends UnsupportedOperationException
     private static final long serialVersionUID = 8591455304816250290L;
 
     /**
-     * Construct an exception with a default message saying that a JSR-363 implementation should be provided.
+     * Construct an exception with a default message saying that a JSR-385 implementation should be provided.
      * Default message is: <cite>"The PROJ-JNI binding provides only minimal support for Unit of Measurement
-     * operations. For more advanced operations, a JSR-363 implementation should be added to the classpath."</cite>
+     * operations. For more advanced operations, a JSR-385 implementation should be added to the classpath."</cite>
      */
     public NoUnitImplementationException() {
         super("The PROJ-JNI binding provides only minimal support for Unit of Measurement operations. "
-            + "For more advanced operations, a JSR-363 implementation should be added to the classpath.");
+            + "For more advanced operations, a JSR-385 implementation should be added to the classpath.");
     }
 
     /**
