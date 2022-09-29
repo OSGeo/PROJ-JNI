@@ -162,6 +162,21 @@
             </configuration>
           </execution>
           <execution>
+            <id>build-tests</id>
+            <phase>process-test-classes</phase>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target>
+                <!--
+                  "Copy" the native binary among test classes because `Class.getResource(…)` searches in the directory
+                  of `module-info.class`, which is overwritten in `test-classes`. This is needed for running the tests.
+                -->
+                <first id="native-binary"><fileset dir="${project.build.directory}/classes/org/osgeo/proj" includes="*-binding.*"/></first>
+                <symlink overwrite="true" link="${project.build.directory}/test-classes/org/osgeo/proj" resource="${toString:native-binary}"/>
+              </target>
+            </configuration>
+          </execution>
+          <execution>
             <id>package</id>
             <phase>package</phase>
             <goals><goal>run</goal></goals>
