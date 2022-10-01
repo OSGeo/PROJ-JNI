@@ -23,6 +23,7 @@
 package org.osgeo.proj;
 
 import java.util.Objects;
+import java.util.ServiceLoader;
 import javax.measure.Unit;
 import javax.measure.Quantity;
 import javax.measure.quantity.Angle;
@@ -62,17 +63,26 @@ public final class Units {
      */
     private static final SystemOfUnits SI;
     static {
-        SystemOfUnits system = null;
+        /*
+         * Get the JSR-385 service provider using the static method provided by JSR-385 first.
+         * However that `ServiceProvider.current()` method may not work, because it uses the
+         * context class loader, which may not see any implementation if JSR-385 API is in a
+         * different layer than implementations. If `current()` does not work, try with PROJ
+         * class loader on assumption that JSR-385 implementations may be in the same layer.
+         */
+        ServiceProvider provider;
         try {
-            final SystemOfUnitsService service = ServiceProvider.current().getSystemOfUnitsService();
-            if (service != null) {
-                system = service.getSystemOfUnits("SI");
-                if (system == null) {
-                    system = service.getSystemOfUnits();
-                }
-            }
+            provider = ServiceProvider.current();
         } catch (IllegalStateException e) {
-            // Ignore: logging message below.
+            provider = ServiceLoader.load(ServiceProvider.class, Units.class.getClassLoader()).findFirst().orElse(null);
+        }
+        SystemOfUnits system = null;
+        if (provider != null) {
+            final SystemOfUnitsService service = provider.getSystemOfUnitsService();
+            system = service.getSystemOfUnits("SI");
+            if (system == null) {
+                system = service.getSystemOfUnits();
+            }
         }
         if (system == null) {
             /*
@@ -120,7 +130,7 @@ public final class Units {
      *
      * @param  <Q>   compile time value of {@code type}.
      * @param  type  the type of quantity represented by the unit of measurement.
-     * @param  toSI  the conversion factory to system unit. By convention a negative value means that we shall divide.
+     * @param  toSI  the conversion factor to system unit. By convention a negative value means that we shall divide.
      * @param  code  one of {@link UnitOfMeasure} constants.
      * @return unit of measurement, either form JSR-385 implementation or as {@link UnitOfMeasure} instance.
      */

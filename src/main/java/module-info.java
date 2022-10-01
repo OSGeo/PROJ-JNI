@@ -61,6 +61,8 @@ module org.osgeo.proj {
 
     exports org.osgeo.proj;
 
+    uses javax.measure.spi.ServiceProvider;
+
     provides org.opengis.referencing.crs.CRSAuthorityFactory
         with org.osgeo.proj.spi.EPSG,
              org.osgeo.proj.spi.IAU;

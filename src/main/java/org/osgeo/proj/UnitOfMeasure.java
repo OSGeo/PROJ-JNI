@@ -93,7 +93,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
      *
      * @param  type  the unit type as an {@link UnitType} ordinal value.
      * @param  name  unit name (provided by PROJ, matches the name in EPSG database).
-     * @param  toSI  the conversion factory to system unit (provided by PROJ).
+     * @param  toSI  the conversion factor to system unit (provided by PROJ).
      */
     @SuppressWarnings("unchecked")
     private UnitOfMeasure(final int type, final String name, final double toSI) {
@@ -106,7 +106,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
      * Creates a new mirror of {@code osgeo::proj::common::UnitOfMeasure}.
      *
      * @param  type  the type of quantity represented by the unit of measurement.
-     * @param  toSI  the conversion factory to system unit (provided by PROJ).
+     * @param  toSI  the conversion factor to system unit (provided by PROJ).
      */
     private UnitOfMeasure(final Class<Q> type, final double toSI) {
         this.type = type;
@@ -124,7 +124,7 @@ final class UnitOfMeasure<Q extends Quantity<Q>> implements Unit<Q> {
     static native UnitOfMeasure<?> create(short code);
 
     /**
-     * Returns a unit of measurement of the same kind than this unit bit with the given {@link #toSI} factor
+     * Returns a unit of measurement of the same kind than this unit but with the given {@link #toSI} factor
      * (ignoring a small tolerance threshold). This method returns a predefined unit if possible or create a
      * new one otherwise.
      *
