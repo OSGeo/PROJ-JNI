@@ -29,6 +29,8 @@ import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.test.referencing.TransformTestCase;
 
+import static org.junit.Assert.*;
+
 
 /**
  * Tests coordinate operations executed with {@link Operation}.
@@ -142,5 +144,51 @@ public final strictfp class OperationTest extends TransformTestCase {
                         new double[] {62, 42, 0});
 
         verifyConsistency(testData());
+    }
+
+    /**
+     * Verifies that {@code Operation} can continue to do transformations after a {@link TransformException}.
+     *
+     * @throws FactoryException if an error occurred while creating a CRS or the operation.
+     * @throws TransformException if an error occurred while transforming a coordinate.
+     *
+     * @author Marco Simons
+     * @see <a href="https://github.com/OSGeo/PROJ-JNI/issues/61">Issue #61</a>
+     */
+    @Test
+    public void testRecoverAfterTransformException() throws FactoryException, TransformException {
+        /*
+         * WKT transformation for ETRS89 height → Dutch NAP height.
+         * The transformation will only succeed for points within the RD bounding box else an
+         * TransformException "Coordinate to transform falls outside grid" will be thrown by PROJ.
+         */
+        final CoordinateOperation operation = TestFactorySource.EPSG.createCoordinateOperation("9597");
+        transform = operation.getMathTransform();
+        tolerance = 0.01;                           // Request one centimetre accuracy.
+        /*
+         * First transform on a coordinate within RD bounding box.
+         */
+        final double[] source = {53.106038193, 5.255859149, 345.4981};
+        final double[] target = {53.106038193, 5.255859149, 303.7462};
+        verifyTransform(source, target);
+        /*
+         * Second transform on a coordinate outside RD bounding box results in TransformException
+         * "Coordinate to transform falls outside grid" as expected.
+         */
+        double[] coordinatesOutside = {
+            45.25635676, -2.00693553, 208.6062
+        };
+        try {
+            transform.transform(coordinatesOutside, 0, coordinatesOutside, 0, 1);
+            fail("Expected a TransformException.");
+        } catch (TransformException exception) {
+            assertNotNull(exception.getMessage());
+        }
+        /*
+         * Any subsequent transformation after the second transformation on
+         * the same `CoordinateOperation` instance was failing unexpectedly
+         * before issue #61 fix.
+         */
+        verifyTransform(source, target);
     }
 }
