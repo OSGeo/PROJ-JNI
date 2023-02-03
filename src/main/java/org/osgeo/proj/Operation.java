@@ -517,7 +517,7 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
     /**
      * Returns a {@code PJ} wrapper, creating a new one if none exist in the cache.
      * The returned wrapper shall be used in a single thread.
-     * The {@link #release(Transform, boolean)} method must be invoked after usage,
+     * The {@link #release(Transform)} method must be invoked after usage,
      * even on failure.
      *
      * @param  c  the current thread context.
@@ -539,24 +539,17 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
     }
 
     /**
-     * Releases the {@code PJ} wrapper, or destroys it if the cache is full or if an error occurred.
-     * We unconditionally destroy the {@code PJ} object in case of error because some internal state
-     * may not be cleaned.
+     * Releases the {@code PJ} wrapper, or destroys it if the cache is full.
      *
-     * @param  tr       wrapper of the {@code PJ} to cache for reuse or to destroy.
-     * @param  success  whether the operation has been successful.
-     *
-     * @see <a href="https://github.com/OSGeo/PROJ-JNI/issues/61">Issue #61</a>
+     * @param  tr  wrapper of the {@code PJ} to cache for reuse or to destroy.
      */
-    private void release(final Transform tr, final boolean success) {
-        if (success) {
-            synchronized (transforms) {
-                for (int i=transforms.length; --i >= 0;) {
-                    if (transforms[i] == null) {
-                        transforms[i] = tr;
-                        tr.assign(null);
-                        return;
-                    }
+    private void release(final Transform tr) {
+        synchronized (transforms) {
+            for (int i=transforms.length; --i >= 0;) {
+                if (transforms[i] == null) {
+                    transforms[i] = tr;
+                    tr.assign(null);
+                    return;
                 }
             }
         }
@@ -614,12 +607,10 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
          */
         try (Context c = Context.acquire()) {
             final Transform tr = acquire(c);
-            boolean success = false;
             try {
                 tr.transform(ordinates.length, ordinates, 0, 1);
-                success = true;
             } finally {
-                release(tr, success);
+                release(tr);
             }
         } catch (FactoryException e) {
             throw canNotDelegateToPROJ(e);
@@ -821,12 +812,10 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
              */
             try (Context c = Context.acquire()) {
                 final Transform tr = acquire(c);
-                boolean success = false;
                 try {
                     tr.transform(dimension, buffer, bufOff, numPts);
-                    success = true;
                 } finally {
-                    release(tr, success);
+                    release(tr);
                 }
             } catch (FactoryException e) {
                 throw canNotDelegateToPROJ(e);
@@ -864,12 +853,10 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
             floatsToDoubles(srcPts, srcOff, srcDim, buffer, 0, dimension, numPts);
             try (Context c = Context.acquire()) {
                 final Transform tr = acquire(c);
-                boolean success = false;
                 try {
                     tr.transform(dimension, buffer, 0, numPts);
-                    success = true;
                 } finally {
-                    release(tr, success);
+                    release(tr);
                 }
             } catch (FactoryException e) {
                 throw canNotDelegateToPROJ(e);
@@ -903,12 +890,10 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
             copy(srcPts, srcOff, srcDim, buffer, 0, dimension, numPts);
             try (Context c = Context.acquire()) {
                 final Transform tr = acquire(c);
-                boolean success = false;
                 try {
                     tr.transform(dimension, buffer, 0, numPts);
-                    success = true;
                 } finally {
-                    release(tr, success);
+                    release(tr);
                 }
             } catch (FactoryException e) {
                 throw canNotDelegateToPROJ(e);
@@ -952,12 +937,10 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
             floatsToDoubles(srcPts, srcOff, srcDim, buffer, bufOff, dimension, numPts);
             try (Context c = Context.acquire()) {
                 final Transform tr = acquire(c);
-                boolean success = false;
                 try {
                     tr.transform(dimension, buffer, 0, numPts);
-                    success = true;
                 } finally {
-                    release(tr, success);
+                    release(tr);
                 }
             } catch (FactoryException e) {
                 throw canNotDelegateToPROJ(e);
