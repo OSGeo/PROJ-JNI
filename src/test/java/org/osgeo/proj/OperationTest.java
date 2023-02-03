@@ -187,8 +187,8 @@ public final strictfp class OperationTest extends TransformTestCase {
              *
              * We ignore those exceptions until the reason for this behavior is identified.
              */
-            assumeTrue(e.getCause() instanceof FactoryException);
-            throw e;
+            assumeFalse(e.getCause() instanceof FactoryException);
+            throw e;        // Fail if above condition is false.
         }
         /*
          * Second transform on a coordinate outside RD bounding box results in TransformException
