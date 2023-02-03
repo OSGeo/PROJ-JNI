@@ -21,7 +21,7 @@ jobs:
     - name: Update apt-get
       run: sudo apt-get update
     - name: Install PROJ
-      run: sudo apt-get install proj-bin proj-data libproj-dev
+      run: sudo apt-get install proj-bin libproj-dev
     - name: Build with Maven
       run: mvn package
     - name: List contents of directory
