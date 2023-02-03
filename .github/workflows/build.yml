@@ -20,18 +20,8 @@ jobs:
         distribution: 'adopt'
     - name: Update apt-get
       run: sudo apt-get update
-    - name: Install sqlite3 and build-essential
-      run: sudo apt-get install sqlite3 libtiff-dev libcurl4-openssl-dev build-essential
-    - name: Download PROJ
-      run: wget https://download.osgeo.org/proj/proj-9.1.1.tar.gz
-    - name: Extract PROJ source
-      run: tar xf proj-9.1.1.tar.gz
-    - name: Build and install PROJ
-      run: |
-        ./configure
-        make -j `nproc`
-        sudo make install
-      working-directory: ./proj-9.1.1
+    - name: Install PROJ
+      run: sudo apt-get install proj-bin libproj-dev
     - name: Build with Maven
       run: mvn package
     - name: List contents of directory
