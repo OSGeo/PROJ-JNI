@@ -50,6 +50,8 @@
     <first id="native-binary">
       <fileset dir="classes/org/osgeo/proj" includes="*-binding.*"/>
     </first>
-    <symlink overwrite="true" link="${basedir}" resource="${toString:native-binary}"/>
+    <basename property="native-binary-filename" file="${toString:native-binary}"/>
+    <symlink overwrite="true" resource="${toString:native-binary}"
+             link="${basedir}/${native-binary-filename}"/>
   </target>
 </project>

@@ -23,7 +23,6 @@
 package org.osgeo.proj;
 
 import java.util.Objects;
-import java.util.Iterator;
 import java.util.ServiceLoader;
 import javax.measure.Unit;
 import javax.measure.Quantity;
@@ -75,8 +74,7 @@ public final class Units {
         try {
             provider = ServiceProvider.current();
         } catch (IllegalStateException e) {
-            Iterator<ServiceProvider> it = ServiceLoader.load(ServiceProvider.class, Units.class.getClassLoader()).iterator();
-            provider = it.hasNext() ? it.next() : null;
+            provider = ServiceLoader.load(ServiceProvider.class, Units.class.getClassLoader()).findFirst().orElse(null);
         }
         SystemOfUnits system = null;
         if (provider != null) {

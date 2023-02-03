@@ -89,14 +89,35 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>11</version>
+                </requireJavaVersion>
+                <dependencyConvergence/>
+              </rules>
+            </configuration>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-      <!-- Compilation: target Java 11, enable all warnings. -->
+      <!-- Compilation: target Java 8, enable all warnings. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.10.1</version>
         <configuration>
-          <release>11</release>
+          <release>8</release>
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
           <useIncrementalCompilation>false</useIncrementalCompilation>
@@ -146,8 +167,26 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
+        <version>3.1.0</version>
         <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <mkdir dir        = "${project.build.directory}/classes/META-INF/versions/9"/>
+                <javac destdir    = "${project.build.directory}/classes/META-INF/versions/9"
+                       srcdir     = "${project.basedir}/src/main/java9"
+                       modulepath = "${javax.measure:unit-api:jar}:${org.opengis:geoapi:jar}"
+                       release    = "9"
+                       includeAntRuntime = "false">
+                  <compilerarg line = "--patch-module org.osgeo.proj=${project.build.directory}/classes"/>
+                </javac>
+              </target>
+            </configuration>
+          </execution>
           <execution>
             <id>build-native</id>
             <phase>process-classes</phase>
@@ -172,19 +211,9 @@
                   of `module-info.class`, which is overwritten in `test-classes`. This is needed for running the tests.
                 -->
                 <first id="native-binary"><fileset dir="${project.build.directory}/classes/org/osgeo/proj" includes="*-binding.*"/></first>
-                <symlink overwrite="true" link="${project.build.directory}/test-classes/org/osgeo/proj" resource="${toString:native-binary}"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
-            <id>package</id>
-            <phase>package</phase>
-            <goals><goal>run</goal></goals>
-            <configuration>
-              <target>
-                <!-- Add links to dependencies for convenience. -->
-                <symlink overwrite="true" link="${project.build.directory}" resource="${maven.dependency.javax.measure.unit-api.jar.path}"/>
-                <symlink overwrite="true" link="${project.build.directory}" resource="${maven.dependency.org.opengis.geoapi.jar.path}"/>
+                <basename property="native-binary-filename" file="${toString:native-binary}"/>
+                <symlink overwrite="true" resource="${toString:native-binary}"
+                         link="${project.build.directory}/test-classes/org/osgeo/proj/${native-binary-filename}"/>
               </target>
             </configuration>
           </execution>
