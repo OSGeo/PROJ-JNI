@@ -1,6 +1,6 @@
 /*
  * Copyright © 2019-2021 Agency for Data Supply and Efficiency
- * Copyright © 2021 Open Source Geospatial Foundation
+ * Copyright © 2021-2023 Open Source Geospatial Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ import javax.measure.Unit;
  * For advanced operations such as units arithmetic, a JSR-385 implementation must be provided.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 1.1
  *
  * @see Units
  *

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2019-2021 Agency for Data Supply and Efficiency
- * Copyright © 2021 Open Source Geospatial Foundation
+ * Copyright © 2021-2023 Open Source Geospatial Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ package org.osgeo.proj;
  * it happens only if PROJ-JNI can not map the "foreign" implementation to the PROJ implementation.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class UnsupportedImplementationException extends IllegalArgumentException {
