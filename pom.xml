@@ -73,22 +73,25 @@
     <dependency>
       <groupId>org.opengis</groupId>
       <artifactId>geoapi</artifactId>
-      <version>3.0.2</version>
+      <version>${geoapi.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opengis</groupId>
       <artifactId>geoapi-conformance</artifactId>
-      <version>3.0.2</version>
+      <version>${geoapi.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <properties>
+    <geoapi.version>3.0.2</geoapi.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <build>
     <plugins>
+
+      <!-- Require Java 11 for compilation (but result will still run on Java 8). -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -154,21 +157,30 @@
               <classpathLayoutType>simple</classpathLayoutType>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
+            <manifestEntries>
+              <Built-On>${maven.build.timestamp}</Built-On>
+              <Specification-Title>GeoAPI</Specification-Title>
+              <Specification-Version>${geoapi.version}</Specification-Version>
+              <Specification-Vendor>Open Geospatial Consortium</Specification-Vendor>
+              <Implementation-URL>https://github.com/OSGeo/PROJ-JNI</Implementation-URL>
+            </manifestEntries>
           </archive>
         </configuration>
       </plugin>
 
-      <!--
-        Compile C/C++ code using CMake. Configuration will be written in `target/cmake` and will not
-        be redone, unless that directory is deleted. The compiled native file will be written in the
-       `classes/org/…/proj/` directory for inclusion in the JAR file and will not be rebuilt, unless
-        that file is deleted. Symbolik links to binaries will be created in the `target` directory.
-      -->
+      <!-- Use Ant for tasks that we cannot execute with Maven. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>3.1.0</version>
         <executions>
+          <!--
+            Compile the classes to package in the directory for Java 9 or later.
+            This compilation is done after the main compilation phase for Java 8.
+            The source files to compile are in the `src/main/java9` directory and
+            contains the `module-info` file together with only the classes having
+            some differences in the code compared to the file in `java` directory.
+          -->
           <execution>
             <phase>prepare-package</phase>
             <goals>
@@ -187,6 +199,12 @@
               </target>
             </configuration>
           </execution>
+          <!--
+            Compile C/C++ code using CMake. Configuration will be written in `target/cmake` and will not
+            be redone, unless that directory is deleted. The compiled native file will be written in the
+           `classes/org/…/proj/` directory for inclusion in the JAR file and will not be rebuilt, unless
+            that file is deleted. Symbolic links to binaries will be created in the `target` directory.
+          -->
           <execution>
             <id>build-native</id>
             <phase>process-classes</phase>
@@ -200,21 +218,42 @@
               </target>
             </configuration>
           </execution>
+          <!--
+            "Copy" the native binary among test classes because `Class.getResource(…)` searches in the directory
+            of `module-info.class`, which is overwritten in `test-classes`. This is needed for running the tests
+            in a named Jigsaw module (not needed when running as unnamed module).
+          -->
           <execution>
             <id>build-tests</id>
             <phase>process-test-classes</phase>
             <goals><goal>run</goal></goals>
             <configuration>
               <target>
-                <!--
-                  "Copy" the native binary among test classes because `Class.getResource(…)` searches in the directory
-                  of `module-info.class`, which is overwritten in `test-classes`. This is needed for running the tests.
-                -->
                 <first id="native-binary"><fileset dir="${project.build.directory}/classes/org/osgeo/proj" includes="*-binding.*"/></first>
                 <basename property="native-binary-filename" file="${toString:native-binary}"/>
                 <symlink overwrite="true" resource="${toString:native-binary}"
                          link="${project.build.directory}/test-classes/org/osgeo/proj/${native-binary-filename}"/>
               </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Copy dependencies in the output modules directory. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <includeScope>compile</includeScope>
             </configuration>
           </execution>
         </executions>
