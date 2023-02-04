@@ -22,64 +22,36 @@
  */
 package org.osgeo.proj.spi;
 
-import java.util.Map;
 import org.osgeo.proj.Proj;
-import org.opengis.metadata.citation.Citation;
-import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.Conversion;
-import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.CoordinateOperationFactory;
-import org.opengis.referencing.operation.OperationMethod;
-import org.opengis.util.FactoryException;
 
 
 /**
  * Provider for {@link CoordinateOperationFactory}.
- * This is a temporary class, to be removed after use Jigsaw modularisation
- * in which case the public static {@code provider()} method should be sufficient.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 2.0
  * @since   1.0
- *
- * @see <a href="https://github.com/OSGeo/PROJ-JNI/issues/15">Issue #15</a>
  */
-public final class OperationFactoryProvider implements CoordinateOperationFactory {
+public final class OperationFactoryProvider {
     /**
-     * The implementation where to delegate all operations.
+     * The unique instance of the factory.
      */
-    private final CoordinateOperationFactory impl;
+    private static final CoordinateOperationFactory FACTORY = Proj.getOperationFactory(null);
 
     /**
-     * Creates a new provider.
+     * Do not allow instantiation of this class.
      */
-    public OperationFactoryProvider() {
-        impl = Proj.getOperationFactory(null);
+    private OperationFactoryProvider() {
     }
 
-    @Override
-    public Citation getVendor() {
-        return impl.getVendor();
-    }
-
-    @Override
-    public CoordinateOperation createOperation(CoordinateReferenceSystem crs, CoordinateReferenceSystem crs1) throws FactoryException {
-        return impl.createOperation(crs, crs1);
-    }
-
-    @Override
-    public CoordinateOperation createOperation(CoordinateReferenceSystem crs, CoordinateReferenceSystem crs1, OperationMethod om) throws FactoryException {
-        return impl.createOperation(crs, crs1, om);
-    }
-
-    @Override
-    public CoordinateOperation createConcatenatedOperation(Map<String, ?> map, CoordinateOperation... cos) throws FactoryException {
-        return impl.createConcatenatedOperation(map, cos);
-    }
-
-    @Override
-    public Conversion createDefiningConversion(Map<String, ?> map, OperationMethod om, ParameterValueGroup pvg) throws FactoryException {
-        return impl.createDefiningConversion(map, om, pvg);
+    /**
+     * Returns the factory. This method is invoked automatically by {@link java.util.ServiceLoader}
+     * when needed and does not need to be invoked explicitly.
+     *
+     * @return the operation factory.
+     */
+    public static CoordinateOperationFactory provider() {
+        return FACTORY;
     }
 }

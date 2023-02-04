@@ -33,12 +33,16 @@ import org.opengis.referencing.crs.CRSAuthorityFactory;
  * @version 2.0
  * @since   1.0
  */
-public final class EPSG extends CRSAuthorityFactoryProvider {
+public final class EPSG {
     /**
-     * Creates a new provider.
+     * The unique instance of the EPSG factory.
      */
-    public EPSG() {
-        super("EPSG");
+    private static final CRSAuthorityFactory FACTORY = Proj.getAuthorityFactory("EPSG");
+
+    /**
+     * Do not allow instantiation of this class.
+     */
+    private EPSG() {
     }
 
     /**
@@ -50,6 +54,6 @@ public final class EPSG extends CRSAuthorityFactoryProvider {
      * @see Proj#getAuthorityFactory(String)
      */
     public static CRSAuthorityFactory provider() {
-        return Proj.getAuthorityFactory("EPSG");
+        return FACTORY;
     }
 }

@@ -33,12 +33,16 @@ import org.opengis.referencing.crs.CRSAuthorityFactory;
  * @version 2.0
  * @since   1.0
  */
-public final class IAU extends CRSAuthorityFactoryProvider {
+public final class IAU {
     /**
-     * Creates a new provider.
+     * The unique instance of the IAU factory.
      */
-    public IAU() {
-        super("IAU");
+    private static final CRSAuthorityFactory FACTORY = Proj.getAuthorityFactory("IAU");
+
+    /**
+     * Do not allow instantiation of this class.
+     */
+    private IAU() {
     }
 
     /**
@@ -50,6 +54,6 @@ public final class IAU extends CRSAuthorityFactoryProvider {
      * @see Proj#getAuthorityFactory(String)
      */
     public static CRSAuthorityFactory provider() {
-        return Proj.getAuthorityFactory("IAU");
+        return FACTORY;
     }
 }
