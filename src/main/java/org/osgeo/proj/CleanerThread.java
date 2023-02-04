@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  * each references enqueued by the garbage collector.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 final class CleanerThread extends Thread {

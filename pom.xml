@@ -15,7 +15,7 @@
 
   <groupId>org.osgeo</groupId>
   <artifactId>proj</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>2.0-SNAPSHOT</version>
   <name>PROJ bindings</name>
   <url>https://github.com/OSGeo/PROJ-JNI</url>
   <description>

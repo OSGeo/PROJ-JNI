@@ -42,7 +42,7 @@ import org.opengis.util.FactoryException;
  * Creates coordinate operations from a pair of CRS, optionally with some contextual information.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 final class OperationFactory implements CoordinateOperationFactory {

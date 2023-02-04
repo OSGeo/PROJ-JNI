@@ -43,7 +43,7 @@ import org.opengis.parameter.ParameterNotFoundException;
  * It is subclass responsibility to implement the interfaces relevant to them.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 abstract class ParameterGroup extends IdentifiableObject {

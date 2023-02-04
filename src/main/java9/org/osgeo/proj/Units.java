@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * (e.g. <code>GRAD.{@linkplain Unit#getConverterTo(Unit) getConverterTo}(DEGREE)</code>) are to be performed.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 public final class Units {

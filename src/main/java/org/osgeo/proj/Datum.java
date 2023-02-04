@@ -49,7 +49,7 @@ import org.opengis.referencing.datum.EngineeringDatum;
  * implementation is offset by the user convenience.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 class Datum extends IdentifiableObject implements org.opengis.referencing.datum.Datum {

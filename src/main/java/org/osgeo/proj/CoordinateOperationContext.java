@@ -44,7 +44,7 @@ import org.opengis.metadata.extent.Extent;
  * and rarely needs to be shared between different threads.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  *
  * @see <a href="https://proj.org/development/reference/cpp/operation.html#_CPPv4N5osgeo4proj9operation26CoordinateOperationContextE">PROJ C++ API</a>

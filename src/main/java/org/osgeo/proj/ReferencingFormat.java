@@ -50,7 +50,7 @@ import org.opengis.referencing.operation.CoordinateOperation;
  * then each thread should have its own instance, or synchronization shall be done by the user.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 public class ReferencingFormat {
@@ -290,7 +290,7 @@ public class ReferencingFormat {
      * {@code "definition_12_063"} column formatted by {@link #WKT2_2015}.
      *
      * @author  Martin Desruisseaux (Geomatys)
-     * @version 1.1
+     * @version 2.0
      * @since   1.0
      */
     public enum Convention {

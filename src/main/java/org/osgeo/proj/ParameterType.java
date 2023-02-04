@@ -29,7 +29,7 @@ import java.net.URI;
  * Enumeration of {@code osgeo::proj::operation::OperationParameter::Type} values.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 enum ParameterType {

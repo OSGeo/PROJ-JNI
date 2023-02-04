@@ -27,7 +27,7 @@ package org.osgeo.proj;
  * Thrown when a PROJ object can not be formatted to Well Known Text (WKT), JSON or PROJ string.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 public class UnformattableObjectException extends RuntimeException {

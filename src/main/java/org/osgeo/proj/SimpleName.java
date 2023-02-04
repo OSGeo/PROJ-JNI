@@ -38,7 +38,7 @@ import org.opengis.util.ScopedName;
  * more sophisticated implementations behaving like a path in a file directory structure.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 class SimpleName implements LocalName, NameSpace {

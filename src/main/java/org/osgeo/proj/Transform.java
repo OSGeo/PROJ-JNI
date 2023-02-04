@@ -33,7 +33,7 @@ import org.opengis.referencing.operation.TransformException;
  * and should be used only in that context.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 final class Transform extends NativeResource {

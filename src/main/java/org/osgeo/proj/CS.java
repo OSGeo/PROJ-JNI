@@ -37,7 +37,7 @@ import org.opengis.referencing.cs.TimeCS;
  * Each subtype is represented by an inner class in this file.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 class CS extends IdentifiableObject implements CoordinateSystem {

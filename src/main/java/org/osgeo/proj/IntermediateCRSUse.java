@@ -26,7 +26,7 @@ package org.osgeo.proj;
 /**
  * Describes if and how intermediate CRS should be used.
  *
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  *
  * @see <a href="https://proj.org/development/reference/cpp/operation.html#_CPPv4N5osgeo4proj9operation18IntermediateCRSUseE">PROJ C++ API</a>

@@ -42,7 +42,7 @@ import javax.measure.quantity.Time;
  * for example "parametric" (mapping would need a more precise type).
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  *
  * @see UnitOfMeasure
  *

@@ -48,7 +48,7 @@ import org.opengis.util.InternationalString;
  * should be sufficient.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  *
  * @see <a href="https://github.com/OSGeo/PROJ-JNI/issues/15">Issue #15</a>

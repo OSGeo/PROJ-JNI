@@ -31,7 +31,7 @@ import javax.measure.Unit;
  * For advanced operations such as units arithmetic, a JSR-385 implementation must be provided.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  *
  * @see Units
  *

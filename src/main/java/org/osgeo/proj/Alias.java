@@ -32,7 +32,7 @@ import org.opengis.util.GenericName;
  * user asks for another property, then we will fetch that information from parent.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 final class Alias extends SimpleName {

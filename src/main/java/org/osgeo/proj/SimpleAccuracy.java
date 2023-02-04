@@ -39,7 +39,7 @@ import org.opengis.util.InternationalString;
  * A {@link PositionalAccuracy} containing only a description as a character string.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 final class SimpleAccuracy implements PositionalAccuracy, ConformanceResult, Serializable {

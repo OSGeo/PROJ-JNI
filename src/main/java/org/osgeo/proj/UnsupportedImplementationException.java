@@ -40,7 +40,7 @@ package org.osgeo.proj;
  * it happens only if PROJ-JNI can not map the "foreign" implementation to the PROJ implementation.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 public class UnsupportedImplementationException extends IllegalArgumentException {

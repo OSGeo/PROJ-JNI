@@ -45,7 +45,7 @@ import org.opengis.metadata.citation.Series;
  * about the value represented by the citation or the international string.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 class SimpleCitation implements Citation, InternationalString {

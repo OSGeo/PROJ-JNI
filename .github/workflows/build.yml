@@ -29,4 +29,4 @@ jobs:
     - name: Verify module identification
       run: jar --describe-module --file target/proj-*.jar --release 9
     - name: Run tests
-      run: java --class-path target/proj-1.1-SNAPSHOT.jar example/TransformPoints.java
+      run: java --class-path target/proj-2.0-SNAPSHOT.jar example/TransformPoints.java

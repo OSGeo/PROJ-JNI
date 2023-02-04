@@ -34,7 +34,7 @@ import org.opengis.referencing.cs.RangeMeaning;
  * Wrappers around {@code osgeo::proj::cs::CoordinateSystemAxis}.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 final class Axis extends IdentifiableObject implements CoordinateSystemAxis {

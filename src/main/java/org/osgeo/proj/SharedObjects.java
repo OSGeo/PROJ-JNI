@@ -56,7 +56,7 @@ import java.util.concurrent.locks.StampedLock;
  * Callers should not rely on this implementation detail.</p>
  *
  * @author  Martin Desruisseaux (IRD, Geomatys)
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  */
 @SuppressWarnings("serial")

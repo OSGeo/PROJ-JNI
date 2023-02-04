@@ -26,7 +26,7 @@ package org.osgeo.proj;
 /**
  * The criterion to use for comparing PROJ objects.
  *
- * @version 1.1
+ * @version 2.0
  * @since   1.0
  *
  * @see Proj#areEquivalent(Object, Object, ComparisonCriterion)
