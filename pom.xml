@@ -99,7 +99,7 @@
   <build>
     <plugins>
 
-      <!-- Require Java 11 for compilation (but result will still run on Java 8). -->
+      <!-- Require Java 11 for compilation. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -122,13 +122,13 @@
         </executions>
       </plugin>
 
-      <!-- Compilation: target Java 8, enable all warnings. -->
+      <!-- Compilation: target Java 11, enable all warnings. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.10.1</version>
         <configuration>
-          <release>8</release>
+          <release>11</release>
           <showWarnings>true</showWarnings>
           <showDeprecation>true</showDeprecation>
           <useIncrementalCompilation>false</useIncrementalCompilation>
@@ -182,31 +182,6 @@
         <artifactId>maven-antrun-plugin</artifactId>
         <version>3.1.0</version>
         <executions>
-          <!--
-            Compile the classes to package in the directory for Java 9 or later.
-            This compilation is done after the main compilation phase for Java 8.
-            The source files to compile are in the `src/main/java9` directory and
-            contains the `module-info` file together with only the classes having
-            some differences in the code compared to the file in `java` directory.
-          -->
-          <execution>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <mkdir dir        = "${project.build.directory}/classes/META-INF/versions/9"/>
-                <javac destdir    = "${project.build.directory}/classes/META-INF/versions/9"
-                       srcdir     = "${project.basedir}/src/main/java9"
-                       modulepath = "${javax.measure:unit-api:jar}:${org.opengis:geoapi:jar}"
-                       release    = "9"
-                       includeAntRuntime = "false">
-                  <compilerarg line = "--patch-module org.osgeo.proj=${project.build.directory}/classes"/>
-                </javac>
-              </target>
-            </configuration>
-          </execution>
           <!--
             Compile C/C++ code using CMake. Configuration will be written in `target/cmake` and will not
             be redone, unless that directory is deleted. The compiled native file will be written in the

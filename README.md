@@ -25,7 +25,7 @@ Latest release is [2.0](https://github.com/OSGeo/PROJ-JNI/releases/2.0).
     - **g++** compiler and **cmake** building tools.
     - Apache Maven.
   * For running:
-    - Java Runtime Environment (JRE) version 8 or later.
+    - Java Runtime Environment (JRE) version 11 or later.
     - PROJ 6 or later.
 
 ## Contributing
