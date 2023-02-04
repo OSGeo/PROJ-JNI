@@ -70,6 +70,7 @@ public class CoordinateOperationContext implements Cloneable, Serializable {
     /**
      * The desired area of interest, or {@code null} if unknown.
      */
+    @SuppressWarnings("serial")         // PROJ-JNI implementation is serializable.
     private Extent areaOfInterest;
 
     /**

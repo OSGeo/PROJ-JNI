@@ -32,8 +32,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.lang.annotation.Native;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.logging.Logger;
 import org.opengis.util.FactoryException;
 import javax.measure.Unit;
@@ -47,7 +45,7 @@ import javax.measure.Unit;
  * by {@link #ptr} when no longer referenced.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 abstract class NativeResource {
@@ -199,15 +197,7 @@ abstract class NativeResource {
         } catch (URISyntaxException | IOException e) {
             throw (UnsatisfiedLinkError) new UnsatisfiedLinkError("Can not get path to native file.").initCause(e);
         }
-        /*
-         * The AccessController is used for loading native code in a security constrained environment.
-         * It has no effect on the common case where no security manager is enforced. We must promise
-         * to not use any user-supplied parameter in the privileged block.
-         */
-        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
-            System.load(path);
-            return null;
-        });
+        System.load(path);
         initialize();
     }
 

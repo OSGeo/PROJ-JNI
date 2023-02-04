@@ -28,9 +28,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Formattable;
 import java.util.Formatter;
-import java.util.logging.Level;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
 import org.opengis.util.FactoryException;
@@ -58,7 +55,7 @@ import org.opengis.referencing.operation.TransformException;
  * Each subtype is represented by an inner class in this file.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 class Operation extends ParameterGroup implements CoordinateOperation, MathTransform {
@@ -70,22 +67,7 @@ class Operation extends ParameterGroup implements CoordinateOperation, MathTrans
      */
     private static final int NUM_THREADS;
     static {
-        Integer n = null;
-        try {
-            /*
-             * The AccessController is used for reading the property value in a security constrained environment.
-             * It has no effect on the common case where no security manager is enforced. We must promise to not
-             * execute any user-supplied parameter in the privileged block.
-             */
-            n = AccessController.doPrivileged((PrivilegedAction<Integer>) () ->
-                    Integer.getInteger("org.osgeo.proj.maxThreadsPerInstance"));
-        } catch (SecurityException e) {
-            /*
-             * If we do not have the authorization to read the property value, this is not a big issue.
-             * We can work with the default value.
-             */
-            NativeResource.logger().log(Level.FINE, e.getLocalizedMessage(), e);
-        }
+        final Integer n = Integer.getInteger("org.osgeo.proj.maxThreadsPerInstance");
         /*
          * The default value below (4) is arbitrary. If that default value is modified,
          * then the documentation in package-info.java file should be updated accordingly.

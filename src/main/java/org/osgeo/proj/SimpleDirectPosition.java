@@ -24,25 +24,18 @@ package org.osgeo.proj;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.io.Serializable;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 
 /**
  * A trivial implementation of {@link DirectPosition}.
- * Serialization of this class excludes the CRS.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
-final class SimpleDirectPosition implements DirectPosition, Serializable {
-    /**
-     * For cross-version compatibility of serialized objects.
-     */
-    private static final long serialVersionUID = 1768239094900135558L;
-
+final class SimpleDirectPosition implements DirectPosition {
     /**
      * The coordinate reference system, or {@code null} if unknown.
      * This coordinate reference system is not serialized because PROJ wrappers are not serializable.

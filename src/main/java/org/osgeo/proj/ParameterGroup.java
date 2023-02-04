@@ -170,6 +170,7 @@ abstract class ParameterGroup extends IdentifiableObject {
      *
      * @return a modifiable copy of this parameter group.
      */
+    @Override
     @SuppressWarnings("CloneDoesntCallSuperClone")
     public final ParameterValueGroup clone() {
         final ParameterValueGroup group = createValue();
