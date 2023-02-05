@@ -83,8 +83,16 @@
     </dependency>
   </dependencies>
 
+  <!--
+    Version numbers of main dependencies are specified here.
+    JSR-385 is inherited as a transitive dependency, so it is not specified here.
+    Seshat is not used by PROJ-JNI, but copied for convenience because execution
+    of GIGS tests (for example) requires a JSR-385 implementation. We must ensure
+    that the Seshat version specified here uses the same JSR-385 version as GeoAPI.
+  -->
   <properties>
     <geoapi.version>3.0.2</geoapi.version>
+    <seshat.version>1.3</seshat.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -254,6 +262,25 @@
             <configuration>
               <outputDirectory>${project.build.directory}</outputDirectory>
               <includeScope>compile</includeScope>
+            </configuration>
+          </execution>
+
+          <!-- Add a JSR-385 implementation for convenience (can be ignored). -->
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>tech.uom</groupId>
+                  <artifactId>seshat</artifactId>
+                  <version>${seshat.version}</version>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                </artifactItem>
+              </artifactItems>
             </configuration>
           </execution>
         </executions>
