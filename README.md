@@ -14,6 +14,7 @@ Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
   * [PROJ binding Javadoc](https://osgeo.github.io/PROJ-JNI/index.html)
   * [GeoAPI 3.0 Javadoc](https://www.geoapi.org/3.0/javadoc/index.html)
   * [Example](./example)
+  * [GIGS tests](https://github.com/OSGeo/PROJ-JNI/wiki/GIGS-tests)
 
 ## Prerequisites:
 
