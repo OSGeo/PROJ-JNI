@@ -1,7 +1,0 @@
-//
-// Security policy for running PROJ-JNI in a security-constrained environment.
-//
-grant {
-  permission java.util.PropertyPermission  "org.osgeo.proj.maxThreadsPerInstance", "read";
-  permission java.lang.RuntimePermission   "loadLibrary.libproj-binding";
-};

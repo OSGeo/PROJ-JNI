@@ -95,10 +95,6 @@
  * The {@code "%s"} flag formats the object name, while the alternative form {@code "%#s"}
  * formats the authority (typically EPSG) code.</p>
  *
- * <h2>Security</h2>
- * <p>PROJ-JNI can be executed in a security constrained environment if the {@code "loadLibrary.libproj-binding"}
- * runtime permission is granted. An example is given in the {@code security.policy} file.</p>
- *
  * <h2>Unsupported features</h2>
  * <p>The following method calls will cause an exception to be thrown:</p>
  * <ul>
