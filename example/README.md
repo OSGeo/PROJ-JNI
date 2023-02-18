@@ -4,7 +4,7 @@ on-the-fly by the `java` command.
 
 ``` sh
 mvn install
-java --class-path target/proj-2.0-SNAPSHOT.jar example/TransformPoints.java
+java --class-path target/proj-2.0.jar example/TransformPoints.java
 ```
 
 The expected output for the example is
