@@ -7,6 +7,7 @@ geospatial coordinates from one coordinate reference system (CRS) to another.
 This includes cartographic projections as well as geodetic transformations.
 This package exposes PROJ services as implementations of [GeoAPI](https://www.geoapi.org/) interfaces.
 Both PROJ and GeoAPI are modeled according the ISO 19111 international standard.
+Latest release is [2.0](https://github.com/OSGeo/PROJ-JNI/releases/2.0).
 
 ## Developer documentation:
 
