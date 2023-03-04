@@ -245,13 +245,13 @@ JNIEXPORT void JNICALL Java_org_osgeo_proj_NativeResource_initialize(JNIEnv *env
          * null. We use that as a sentinel value for determining that the
          * logging system is not available.
          */
-        jclass c = env->FindClass("java/util/logging/Logger");
-        if (c) {
-            java_method_log = env->GetMethodID(c, "log", "(Ljava/util/logging/Level;Ljava/lang/String;)V");
-            if (java_method_log) {
-                c = env->FindClass("java/util/logging/Level");
-                if (c) {
-                    java_field_debug_level = env->GetStaticFieldID(c, "FINE", "Ljava/util/logging/Level;");
+        jclass logger = env->FindClass("java/util/logging/Logger");
+        if (logger) {
+            jclass level = env->FindClass("java/util/logging/Level");
+            if (level) {
+                java_method_log = env->GetMethodID(logger, "log", "(Ljava/util/logging/Level;Ljava/lang/String;)V");
+                if (java_method_log) {
+                    java_field_debug_level = env->GetStaticFieldID(level, "FINE", "Ljava/util/logging/Level;");
                     if (java_field_debug_level) {
                         java_method_getLogger = env->GetStaticMethodID(caller, "logger", "()Ljava/util/logging/Logger;");
                     }
