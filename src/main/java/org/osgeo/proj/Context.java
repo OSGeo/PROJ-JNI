@@ -22,6 +22,7 @@
  */
 package org.osgeo.proj;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Deque;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ import org.opengis.referencing.operation.TransformException;
  * }</pre>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 2.0
+ * @version 2.1
  * @since   1.0
  */
 final class Context extends NativeResource implements AutoCloseable {
@@ -90,21 +91,23 @@ final class Context extends NativeResource implements AutoCloseable {
 
     /**
      * Creates and wraps a new {@code PJ_CONTEXT}.
+     * The search path system property is documented in the package javadoc.
      *
      * @throws FactoryException if the PROJ object can not be allocated.
      */
     private Context() throws FactoryException {
-        super(create(System.getProperty("proj.data")));
+        super(create(System.getProperty("org.osgeo.proj.data"), File.pathSeparatorChar));
     }
 
     /**
      * Invokes the C/C++ {@code proj_context_create()} method.
      * It is caller's responsibility to verify that the returned value is non-null.
      *
+     * @param  searchPath     the location of PROJ resource files, or {@code null} for default.
+     * @param  pathSeparator  value of {@link File#pathSeparatorChar} (system-dependent).
      * @return pointer to the {@code PJ_CONTEXT} allocated by PROJ, or 0 if out of memory.
      */
-    private static native long create(final String searchPath);
-    
+    private static native long create(String searchPath, char pathSeparator);
 
     /**
      * Gets a PROJ context, creating a new one if needed.

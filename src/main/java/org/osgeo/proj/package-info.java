@@ -95,6 +95,14 @@
  * The {@code "%s"} flag formats the object name, while the alternative form {@code "%#s"}
  * formats the authority (typically EPSG) code.</p>
  *
+ * <h2>Configuration</h2>
+ * <p>The "{@systemProperty org.osgeo.proj.data}" system property can be set for specifying the location
+ * of PROJ resource files, such as the {@code proj.db} database and the datum shift grid files.
+ * Multiple directories can be specified in the string with platform-specific path separator
+ * ({@code ':'} on Unix and {@code ';'} on Windows).
+ * If this property is not set, then the value specified by the {@code PROJ_DATA} environment variable is used.
+ * If that environment variable is not set neither, then a PROJ hard-coded default path is used.</p>
+ *
  * <h2>Unsupported features</h2>
  * <p>The following method calls will cause an exception to be thrown:</p>
  * <ul>

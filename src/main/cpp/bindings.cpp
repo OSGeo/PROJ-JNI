@@ -782,22 +782,26 @@ JNIEXPORT jobject JNICALL Java_org_osgeo_proj_UnitOfMeasure_create
  * Allocates a PJ_CONTEXT for using PROJ in a multi-threads environment.
  * Each thread should have its own PJ_CONTEXT instance.
  *
- * @param  env     The JNI environment.
- * @param  caller  The class from which this method has been invoked.
+ * @param  env            The JNI environment.
+ * @param  caller         The class from which this method has been invoked.
+ * @param  searchPaths    The location(s) of PROJ resource files, or null for default.
+ * @param  pathSeparator  The system-dependent path separator (':' on Unix or ';' on Windows).
  * @return The address of the new PJ_CONTEXT structure, or 0 in case of failure.
  */
-JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass caller, jstring searchPaths) {
+JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass caller, jstring searchPaths, jchar pathSeparator) {
     static_assert(sizeof(PJ_CONTEXT*) <= sizeof(jlong), "Can not store PJ_CONTEXT* in a jlong.");
     PJ_CONTEXT *ctx = proj_context_create();
-    
     if (searchPaths != NULL) {
         const char *path = env->GetStringUTFChars(searchPaths, nullptr);
         if (path) {
-            proj_context_set_search_paths(ctx, 1, &path);
+            int n = 1;
+            for (const char *s = path; *s; s++) {
+                if (*s == pathSeparator) n++;
+            }
+            proj_context_set_search_paths(ctx, n, &path);
             env->ReleaseStringUTFChars(searchPaths, path);
         }
     }
-
     return reinterpret_cast<jlong>(ctx);
 }
 
