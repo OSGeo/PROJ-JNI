@@ -789,15 +789,15 @@ JNIEXPORT jobject JNICALL Java_org_osgeo_proj_UnitOfMeasure_create
 JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass caller, jstring searchPaths) {
     static_assert(sizeof(PJ_CONTEXT*) <= sizeof(jlong), "Can not store PJ_CONTEXT* in a jlong.");
     PJ_CONTEXT *ctx = proj_context_create();
-	
-	if (searchPaths != NULL) {
-		const char *path = env->GetStringUTFChars(searchPaths, nullptr);
-		if (path) {
-			proj_context_set_search_paths(ctx, 1, &path);
-			env->ReleaseStringUTFChars(searchPaths, path);
-		}
-	}
-		
+    
+    if (searchPaths != NULL) {
+        const char *path = env->GetStringUTFChars(searchPaths, nullptr);
+        if (path) {
+            proj_context_set_search_paths(ctx, 1, &path);
+            env->ReleaseStringUTFChars(searchPaths, path);
+        }
+    }
+
     return reinterpret_cast<jlong>(ctx);
 }
 
