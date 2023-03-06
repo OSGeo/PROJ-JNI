@@ -94,7 +94,7 @@ final class Context extends NativeResource implements AutoCloseable {
      * @throws FactoryException if the PROJ object can not be allocated.
      */
     private Context() throws FactoryException {
-        super(create());
+        super(create(System.getProperty("proj.data")));
     }
 
     /**
@@ -103,7 +103,8 @@ final class Context extends NativeResource implements AutoCloseable {
      *
      * @return pointer to the {@code PJ_CONTEXT} allocated by PROJ, or 0 if out of memory.
      */
-    private static native long create();
+    private static native long create(final String searchPath);
+    
 
     /**
      * Gets a PROJ context, creating a new one if needed.
