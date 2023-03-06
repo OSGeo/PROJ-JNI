@@ -786,9 +786,18 @@ JNIEXPORT jobject JNICALL Java_org_osgeo_proj_UnitOfMeasure_create
  * @param  caller  The class from which this method has been invoked.
  * @return The address of the new PJ_CONTEXT structure, or 0 in case of failure.
  */
-JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass caller) {
+JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass caller, jstring searchPaths) {
     static_assert(sizeof(PJ_CONTEXT*) <= sizeof(jlong), "Can not store PJ_CONTEXT* in a jlong.");
     PJ_CONTEXT *ctx = proj_context_create();
+    
+    if (searchPaths != NULL) {
+        const char *path = env->GetStringUTFChars(searchPaths, nullptr);
+        if (path) {
+            proj_context_set_search_paths(ctx, 1, &path);
+            env->ReleaseStringUTFChars(searchPaths, path);
+        }
+    }
+
     return reinterpret_cast<jlong>(ctx);
 }
 
