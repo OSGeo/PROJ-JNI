@@ -32,7 +32,7 @@ import java.util.concurrent.locks.StampedLock;
  * This class is convenient for avoiding the creation of duplicated elements,
  * as in the example below:
  *
- * <pre>{@code
+ * {@snippet lang="java" :
  *     long pointer = ...
  *     IdentifiableObject wrapper = CACHE.get(pointer);
  *     if (wrapper == null) {
@@ -43,7 +43,7 @@ import java.util.concurrent.locks.StampedLock;
  *             wrapper = existing;
  *         }
  *     }
- * }</pre>
+ * }
  *
  * <h2>Design note</h2>
  * We use soft references instead than weak references because PROJ-JNI does not retain hard reference

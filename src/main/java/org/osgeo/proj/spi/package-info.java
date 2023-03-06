@@ -25,11 +25,12 @@
  * Providers of PROJ factories for automatic discovery by {@link java.util.ServiceLoader}.
  * Example:
  *
- * <pre>
+ * {@snippet lang="java" :
  * for (CRSAuthorityFactory factory : ServiceLoader.load(CRSAuthorityFactory.class)) {
  *     String authority = factory.getAuthority().getTitle().toString();
  *     System.out.println("Found a factory for " + authority + " codes.");
- * }</pre>
+ * }
+ * }
  *
  * While the classes in this packages are public, they usually don't need to be used directly.
  *

@@ -296,7 +296,7 @@
           <docencoding>${project.build.sourceEncoding}</docencoding>
           <charset>${project.build.sourceEncoding}</charset>
           <author>false</author>
-          <version>false</version>
+          <version>true</version>
           <noqualifier>all</noqualifier>
           <quiet>true</quiet>
           <keywords>true</keywords>

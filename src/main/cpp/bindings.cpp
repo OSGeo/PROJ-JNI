@@ -42,9 +42,6 @@
 #include "org_osgeo_proj_Transform.h"
 #include "org_osgeo_proj_UnitOfMeasure.h"
 
-// TODO: remove after PROJ 6.3 release.
-#include <proj_experimental.h>
-
 /*
  * The strcase*-functions are not Standard C, but a POSIX extension.
  * The Microsoft Visual C++ 2015 compiler does not support them, but

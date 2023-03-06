@@ -112,11 +112,11 @@ public final class Proj {
      * In that example, only the first line is PROJ-specific;
      * the remaining lines can be executed with any GeoAPI implementation:
      *
-     * <blockquote><pre>
+     * {@snippet lang="java" :
      * CRSAuthorityFactory factory = Proj.getAuthorityFactory("EPSG");
      * CoordinateReferenceSystem crs = factory.createCoordinateReferenceSystem("4326");
-     * System.out.println(crs.toWKT());</pre>
-     * </blockquote>
+     * System.out.println(crs.toWKT());
+     * }
      *
      * The factory returned by this method is safe for concurrent use in multi-threads environment.
      * The object returned by this method also implements the
@@ -151,13 +151,13 @@ public final class Proj {
      * The returned factory can be used for creating {@link CoordinateOperation}s for given pairs of
      * {@link CoordinateReferenceSystem}s. Example:
      *
-     * <blockquote><pre>
+     * {@snippet lang="java" :
      * CoordinateReferenceSystem  sourceCRS = ...;
      * CoordinateReferenceSystem  targetCRS = ...;
      * CoordinateOperationFactory opFactory = Proj.getOperationFactory(null);
      * CoordinateOperation        operation = opFactory.createOperation(sourceCRS, targetCRS);
-     * System.out.println(operation.toWKT());</pre>
-     * </blockquote>
+     * System.out.println(operation.toWKT());
+     * }
      *
      * @param  context in which coordinate operations are to be used, or {@code null}
      *                 for the {@linkplain #createCoordinateOperation default setting}.

@@ -43,11 +43,12 @@ import org.opengis.referencing.operation.TransformException;
  * so it should be used in the same thread than that {@code PJ_CONTEXT}. All those resources shall be used in
  * a try-with-resource block. Example:</p>
  *
- * <pre>
- * try (Context c = Context.acquire()) {
- *     AuthorityFactory factory = c.factory("EPSG");
- *     // Do not use above factory ouside this block.
- * }</pre>
+ * {@snippet lang="java" :
+ *     try (Context c = Context.acquire()) {
+ *         AuthorityFactory factory = c.factory("EPSG");
+ *         // Do not use above factory ouside this block.
+ *     }
+ * }
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 2.1
@@ -113,11 +114,12 @@ final class Context extends NativeResource implements AutoCloseable {
      * Gets a PROJ context, creating a new one if needed.
      * This method shall be invoked in a {@code try} block as below:
      *
-     * <pre>
-     * try (Context c = Context.acquire()) {
-     *     AuthorityFactory factory = c.factory("EPSG");
-     *     // Do not use above factory ouside this block.
-     * }</pre>
+     * {@snippet lang="java" :
+     *     try (Context c = Context.acquire()) {
+     *         AuthorityFactory factory = c.factory("EPSG");
+     *         // Do not use above factory ouside this block.
+     *     }
+     * }
      *
      * All objects obtained from {@link Context} shall be used inside the {@code try} block.
      *

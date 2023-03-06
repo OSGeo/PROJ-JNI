@@ -38,9 +38,9 @@
  * Compilation instructions are given <a href="https://github.com/OSGeo/PROJ-JNI/wiki/Install">in this page</a>.
  * The presence of native libraries can be tested as below:</p>
  *
- * <blockquote><pre>
- * {@linkplain org.osgeo.proj.Proj#version()}.isPresent()</pre>
- * </blockquote>
+ * {@snippet lang="java" :
+ * Proj.version().isPresent();
+ * }
  *
  * <h2>References</h2>
  * <ul>
@@ -48,11 +48,11 @@
  *   <li><a href="https://www.geoapi.org/3.0/index.html">OGC GeoAPI 3.0</a> (derived from OGC Topic 2)</li>
  *   <li><a href="https://proj.org/development/reference/cpp/index.html">PROJ C++ API</a> (derived from OGC Topic 2)</li>
  *   <li><a href="https://github.com/OSGeo/PROJ-JNI">PROJ-JNI Source code</a></li>
- *   <li><a href="https://docs.oracle.com/en/java/javase/13/docs/specs/jni/index.html">Java Native Interface (JNI) Specification</a></li>
+ *   <li><a href="https://docs.oracle.com/en/java/javase/19/docs/specs/jni/index.html">Java Native Interface (JNI) Specification</a></li>
  * </ul>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 2.0
+ * @version 2.1
  * @since   1.0
  */
 module org.osgeo.proj {
