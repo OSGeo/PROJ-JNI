@@ -32,7 +32,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * A trivial implementation of {@link DirectPosition}.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 2.0
+ * @version 2.1
  * @since   1.0
  */
 final class SimpleDirectPosition implements DirectPosition {
@@ -138,7 +138,7 @@ final class SimpleDirectPosition implements DirectPosition {
         }
         if (object instanceof DirectPosition) {
             final DirectPosition other = (DirectPosition) object;
-            return Objects.equals(crs, other.getCoordinateReferenceSystem() == null)
+            return Objects.equals(crs, other.getCoordinateReferenceSystem())
                  && Arrays.equals(coordinates, other.getCoordinate());
         }
         return false;
