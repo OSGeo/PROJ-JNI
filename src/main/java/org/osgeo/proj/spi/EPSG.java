@@ -23,14 +23,17 @@
 package org.osgeo.proj.spi;
 
 import org.osgeo.proj.Proj;
+import org.opengis.referencing.cs.CSAuthorityFactory;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
+import org.opengis.referencing.datum.DatumAuthorityFactory;
+import org.opengis.referencing.operation.CoordinateOperationAuthorityFactory;
 
 
 /**
  * Providers of {@link CRSAuthorityFactory} for EPSG authority.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 2.0
+ * @version 2.1
  * @since   1.0
  */
 public final class EPSG {
@@ -55,5 +58,29 @@ public final class EPSG {
      */
     public static CRSAuthorityFactory provider() {
         return FACTORY;
+    }
+
+    /** Provider for CRS components. */
+    public static final class CS {
+        private CS() {}
+        public static CSAuthorityFactory provider() {
+            return (CSAuthorityFactory) FACTORY;
+        }
+    }
+
+    /** Provider for CS components. */
+    public static final class Datum {
+        private Datum() {}
+        public static DatumAuthorityFactory provider() {
+            return (DatumAuthorityFactory) FACTORY;
+        }
+    }
+
+    /** Provider for CS components. */
+    public static final class Operation {
+        private Operation() {}
+        public static CoordinateOperationAuthorityFactory provider() {
+            return (CoordinateOperationAuthorityFactory) FACTORY;
+        }
     }
 }

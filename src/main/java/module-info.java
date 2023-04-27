@@ -67,6 +67,18 @@ module org.osgeo.proj {
         with org.osgeo.proj.spi.EPSG,
              org.osgeo.proj.spi.IAU;
 
+    provides org.opengis.referencing.cs.CSAuthorityFactory
+        with org.osgeo.proj.spi.EPSG.CS,
+             org.osgeo.proj.spi.IAU.CS;
+
+    provides org.opengis.referencing.datum.DatumAuthorityFactory
+        with org.osgeo.proj.spi.EPSG.Datum,
+             org.osgeo.proj.spi.IAU.Datum;
+
+    provides org.opengis.referencing.operation.CoordinateOperationAuthorityFactory
+        with org.osgeo.proj.spi.EPSG.Operation,
+             org.osgeo.proj.spi.IAU.Operation;
+
     provides org.opengis.referencing.operation.CoordinateOperationFactory
         with org.osgeo.proj.spi.OperationFactoryProvider;
 }
