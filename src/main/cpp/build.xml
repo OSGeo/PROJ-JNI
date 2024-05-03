@@ -42,16 +42,5 @@
     <exec executable="cmake" failonerror="true">
       <arg line="--build ${cmake.subdir}"/>
     </exec>
-    <!--
-      At this point the native file (".so" or ".dll") has been written in "classes/org/…/proj/" directory.
-      The exact name depends on the platform. The <first> task below locates that file and the <symlink>
-      task creates a symbolic link to it in the "target" directory for convenience.
-    -->
-    <first id="native-binary">
-      <fileset dir="classes/org/osgeo/proj" includes="*-binding.*"/>
-    </first>
-    <basename property="native-binary-filename" file="${toString:native-binary}"/>
-    <symlink overwrite="true" resource="${toString:native-binary}"
-             link="${basedir}/${native-binary-filename}"/>
   </target>
 </project>
