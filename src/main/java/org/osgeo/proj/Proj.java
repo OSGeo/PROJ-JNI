@@ -197,6 +197,21 @@ public final class Proj {
      * @throws IllegalArgumentException if the specified type is not one of the above-listed types.
      */
     public static <F extends Factory> F getFactory(final Class<F> type) {
+        return getFactory(type, "");
+    }
+
+    /**
+     * Returns a factory of the given type for codes allocated by the given authority:
+     * The valid values for the {@code type} argument are documented in {@link #getFactory(Class)}.
+     * The valid values for the {@code authority} argument are documented in {@link #getAuthorityFactory(String)}.
+     *
+     * @param  <F>   compile-time value of {@code type} argument.
+     * @param  type  type of factory desired.
+     * @param  authority  name of the authority for AuthorityFactory. Shall not be null e.g. "EPSG" or "".
+     * @return factory of the given type.
+     * @throws IllegalArgumentException if the specified type is not one of the above-listed types.
+     */
+    public static <F extends Factory> F getFactory(final Class<F> type, final String authority) {
         final Factory factory;
         if (org.opengis.referencing.crs.CRSFactory.class.equals(type) ||
             org.opengis.referencing.cs.CSFactory.class.equals(type) ||
@@ -208,7 +223,7 @@ public final class Proj {
                    org.opengis.referencing.datum.DatumAuthorityFactory.class.equals(type) ||
                    org.opengis.referencing.operation.CoordinateOperationAuthorityFactory.class.equals(type))
         {
-            factory = new AuthorityFactory.API("");
+            factory = new AuthorityFactory.API(authority);
         } else if (CoordinateOperationFactory.class.equals(type)) {
             factory = new OperationFactory(null);
         } else {
