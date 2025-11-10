@@ -201,28 +201,9 @@ public final class Proj {
     }
 
     /**
-     * Returns a factory of the given type. This method recognizes three groups of factories:
-     *
-     * <ul class="verbose">
-     *   <li>
-     *     {@link org.opengis.referencing.crs.CRSAuthorityFactory},
-     *     {@link org.opengis.referencing.cs.CSAuthorityFactory},
-     *     {@link org.opengis.referencing.datum.DatumAuthorityFactory} and
-     *     {@link org.opengis.referencing.operation.CoordinateOperationAuthorityFactory}:
-     *     equivalent to the factories returned by
-     *     <code>{@linkplain #getAuthorityFactory(String) getAuthorityFactory}("")</code>.
-     *   </li><li>
-     *     {@link org.opengis.referencing.crs.CRSFactory},
-     *     {@link org.opengis.referencing.cs.CSFactory} and
-     *     {@link org.opengis.referencing.datum.DatumFactory}: no equivalence.
-     *     Those factories allow to create customized CRS from components such as
-     *     axes, datum, map projection parameters, <i>etc.</i>
-     *   </li><li>
-     *     {@link org.opengis.referencing.operation.CoordinateOperationFactory}:
-     *     equivalent to the factory returned by
-     *     <code>{@linkplain #getOperationFactory(CoordinateOperationContext) getOperationFactory}(null)</code>.
-     *   </li>
-     * </ul>
+     * Returns a factory of the given type for codes allocated by the given authority:
+     * The valid values for the {@code type} argument are documented in {@link #getFactory(Class)}.
+     * The valid values for the {@code authority} argument are documented in {@link #getAuthorityFactory(String)}.
      *
      * @param  <F>   compile-time value of {@code type} argument.
      * @param  type  type of factory desired.
