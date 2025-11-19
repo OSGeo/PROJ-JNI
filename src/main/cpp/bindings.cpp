@@ -1719,6 +1719,29 @@ void send_warnings(JNIEnv *env, jobject format, const std::vector<std::string>& 
     }
 }
 
+/**
+ * Sends grammar errors to the `ReferencingFormat` instance used for parsing a text.
+ * This method should be invoked only after successful parsing.
+ *
+ * @param  env       The JNI environment.
+ * @param  format    The `ReferencingFormat` instance used for formatting.
+ * @param  warnings  The warnings, or an empty list if none.
+ */
+void send_grammarErrors(JNIEnv *env, jobject format, const std::vector<std::string>& grammarErrors) {
+    int n = grammarErrors.size();
+    if (n) {
+        jmethodID addGrammarError = env->GetMethodID(env->GetObjectClass(format), "addGrammarError", "(Ljava/lang/String;)V");
+        if (addGrammarError) {
+            for (int i=0; i<n; i++) {
+                jstring message = env->NewStringUTF(grammarErrors[i].c_str());
+                if (!message) break;
+                env->CallVoidMethod(format, addGrammarError, message);
+                if (env->ExceptionCheck()) break;                       // Exception will be thrown in Java code.
+            }
+        }
+    }
+}
+
 
 /**
  * Parses a Well-Known Text (WKT), JSON or PROJ string.
@@ -1755,6 +1778,8 @@ JNIEXPORT jobject JNICALL Java_org_osgeo_proj_ReferencingFormat_parse
                     text_utf = nullptr;
                     const std::list<std::string>& warnings = parser.warningList();
                     send_warnings(env, format, std::vector<std::string>(warnings.begin(), warnings.end()));
+                    const std::list<std::string>& grammarErrors = parser.grammarErrorList();
+                    send_grammarErrors(env, format, std::vector<std::string>(grammarErrors.begin(), grammarErrors.end()));
                 }
                 break;
             }

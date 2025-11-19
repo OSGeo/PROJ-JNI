@@ -82,6 +82,11 @@ public class ReferencingFormat {
     private final List<String> warnings;
 
     /**
+     * The grammarError that occurred during parsing, or an empty list if none.
+     */
+    private final List<String> grammarErrors;
+
+    /**
      * Creates a new formatter initialized to default configuration.
      * The default configuration uses {@link Convention#WKT} and
      * formats the WKT in a multi-lines layout.
@@ -91,6 +96,7 @@ public class ReferencingFormat {
         multiline   = true;
         indentation = 4;
         warnings    = new ArrayList<>();
+        grammarErrors = new ArrayList<>();
     }
 
     /**
@@ -259,7 +265,25 @@ public class ReferencingFormat {
         return Collections.unmodifiableList(warnings);
     }
 
+    /**
+     * Adds the given message to the grammar errors. This method is invoked from native code;
+     * method signature shall not be modified unless the native code is updated accordingly.
+     *
+     * @param  message  the grammar error message to add.
+     */
+    private void addGrammarError(final String message) {
+        grammarErrors.add(message);
+    }
 
+    /**
+     * Returns the grammar errors emitted during the last parsing operation.
+     * If no grammar error occurred, then this method returns an empty list.
+     *
+     * @return the grammar errors that occurred during the last parsing operation.
+     */
+    public List<String> getGrammarErrors() {
+        return Collections.unmodifiableList(grammarErrors);
+    }
 
     /**
      * Controls some aspects in formatting referencing objects as <cite>Well Known Text</cite> (WKT),
