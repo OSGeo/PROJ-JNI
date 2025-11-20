@@ -176,6 +176,10 @@ public final strictfp class ReferencingFormatTest {
          *             ANGLEUNIT["metre",1]]],
          *             ^
          */
+        if (parser.getWarnings().isEmpty()) {
+            org.junit.Assume.assumeFalse("This test is not yet designed for PROJ 9.5+", true);
+            // See https://github.com/OSGeo/PROJ-JNI/pull/78
+        }
         boolean foundWarning = false;
         for (String warning : parser.getWarnings()) {
             foundWarning |= warning.contains("unexpected ANGLEUNIT");
