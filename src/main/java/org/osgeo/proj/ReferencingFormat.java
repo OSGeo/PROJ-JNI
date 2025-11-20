@@ -50,7 +50,7 @@ import org.opengis.referencing.operation.CoordinateOperation;
  * then each thread should have its own instance, or synchronization shall be done by the user.</p>
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 2.0
+ * @version 2.1
  * @since   1.0
  */
 public class ReferencingFormat {
@@ -82,9 +82,11 @@ public class ReferencingFormat {
     private final List<String> warnings;
 
     /**
-     * The grammarError that occurred during parsing, or an empty list if none.
+     * The grammar error that occurred during parsing, or an empty list if none.
      */
     private final List<String> grammarErrors;
+
+    private boolean isLenient;
 
     /**
      * Creates a new formatter initialized to default configuration.
@@ -94,6 +96,7 @@ public class ReferencingFormat {
     public ReferencingFormat() {
         convention  = Convention.WKT;
         multiline   = true;
+        isLenient   = false;
         indentation = 4;
         warnings    = new ArrayList<>();
         grammarErrors = new ArrayList<>();
@@ -187,6 +190,24 @@ public class ReferencingFormat {
     }
 
     /**
+     * Returns whether the parser should be lenient with respect to grammar errors.
+     *
+     * @return whether the parser should be lenient with respect to grammar errors.
+     */
+    public boolean isLenient() {
+        return isLenient;
+    }
+
+    /**
+     * Sets whether the parser should be lenient with respect to grammar errors.
+     *
+     * @param isLenient whether the parser should be lenient with respect to grammar errors.
+     */
+    public void setLenient(boolean isLenient) {
+        this.isLenient = isLenient;
+    }
+
+    /**
      * Formats the given object. It must be a PROJ implementation.
      *
      * @param  object  the PROJ object to format.
@@ -226,11 +247,16 @@ public class ReferencingFormat {
     public Object parse(final String text) throws UnparsableObjectException {
         warnings.clear();
         Objects.requireNonNull(text);
+        Object result;
         try (Context c = Context.acquire()) {
-            return parse(text, c, convention.ordinal(), strict);
+            result = parse(text, c, convention.ordinal(), strict);
         } catch (FactoryException e) {
             throw new UnparsableObjectException("Can not parse WKT.", e);
         }
+        if ( isLenient || grammarErrors.isEmpty()) {
+            return result;
+        }
+        throw new UnparsableObjectException(String.join(System.lineSeparator(), grammarErrors));
     }
 
     /**
@@ -250,9 +276,10 @@ public class ReferencingFormat {
      * method signature shall not be modified unless the native code is updated accordingly.
      *
      * @param  message  the warning message to add.
+     * @param  isGrammarError  whether the message is a grammar error.
      */
-    private void addWarning(final String message) {
-        warnings.add(message);
+    private void addWarning(final String message, final boolean isGrammarError) {
+        (isGrammarError ? grammarErrors : warnings).add(message);
     }
 
     /**
@@ -263,16 +290,6 @@ public class ReferencingFormat {
      */
     public List<String> getWarnings() {
         return Collections.unmodifiableList(warnings);
-    }
-
-    /**
-     * Adds the given message to the grammar errors. This method is invoked from native code;
-     * method signature shall not be modified unless the native code is updated accordingly.
-     *
-     * @param  message  the grammar error message to add.
-     */
-    private void addGrammarError(final String message) {
-        grammarErrors.add(message);
     }
 
     /**
