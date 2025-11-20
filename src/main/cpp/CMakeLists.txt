@@ -50,10 +50,10 @@
 # Only the executable for the current platform will be updated. If the JNI have been updated, then `cmake`
 # will need to be executed again. The JNI may also need to be recompiled when the PROJ version changes.
 #
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 # Set the project name and version.
-project(PROJ-JNI VERSION 1.1 LANGUAGES CXX)
+project(PROJ-JNI VERSION 2.1 LANGUAGES CXX)
 
 # Specify the C++ standard.
 set(CMAKE_CXX_STANDARD 11)
