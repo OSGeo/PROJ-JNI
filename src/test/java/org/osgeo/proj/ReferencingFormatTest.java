@@ -39,7 +39,7 @@ import static org.junit.Assert.*;
  * Tests {@link ReferencingFormat}.
  *
  * @author  Martin Desruisseaux (Geomatys)
- * @version 2.0
+ * @version 2.1
  * @since   1.0
  */
 public final strictfp class ReferencingFormatTest {
@@ -152,13 +152,14 @@ public final strictfp class ReferencingFormatTest {
      * Tests {@link ReferencingFormat#parse(String)}.
      */
     @Test
-    public void testParse() {
+    public void testParseGrammarErrors() {
         final ReferencingFormat parser = new ReferencingFormat();
+        parser.setLenient(true);
         final GeographicCRS crs = (GeographicCRS) parser.parse(
                 "GEOGCRS[\"WGS 84\",\n" +
                 "    DATUM[\"World Geodetic System 1984\",\n" +
                 "        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n" +
-                "            ANGLEUNIT[\"metre\",1]]],\n" +                 // Intentional error for testing warnings.
+                "            ANGLEUNIT[\"metre\",1]]],\n" +                 // Intentional error for testing grammar errors.
                 "    CS[ellipsoidal,2],\n" +
                 "        AXIS[\"geodetic latitude (Lat)\",north,\n" +
                 "            ANGLEUNIT[\"degree\",0.0174532925199433]],\n" +
@@ -176,10 +177,10 @@ public final strictfp class ReferencingFormatTest {
          *             ANGLEUNIT["metre",1]]],
          *             ^
          */
-        boolean foundWarning = false;
-        for (String warning : parser.getWarnings()) {
-            foundWarning |= warning.contains("unexpected ANGLEUNIT");
+        boolean foundGrammarError = false;
+        for (String grammarError : parser.getGrammarErrors()) {
+            foundGrammarError |= grammarError.contains("unexpected ANGLEUNIT");
         }
-        assertTrue(foundWarning);
+        assertTrue(foundGrammarError);
     }
 }
