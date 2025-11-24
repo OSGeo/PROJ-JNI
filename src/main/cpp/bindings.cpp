@@ -1704,7 +1704,7 @@ JNIEXPORT jstring JNICALL Java_org_osgeo_proj_SharedPointer_format
  * @param  format    The `ReferencingFormat` instance used for formatting.
  * @param  warnings  The warnings, or an empty list if none.
  */
-void send_warnings(JNIEnv *env, jobject format, const std::vector<std::string>& warnings, bool isGrammarErrors = false) {
+void send_warnings(JNIEnv *env, jobject format, const std::vector<std::string>& warnings, jboolean isGrammarErrors = JNI_FALSE) {
     int n = warnings.size();
     if (n) {
         jmethodID addWarning = env->GetMethodID(env->GetObjectClass(format), "addWarning", "(Ljava/lang/String;Z)V");
@@ -1755,7 +1755,7 @@ JNIEXPORT jobject JNICALL Java_org_osgeo_proj_ReferencingFormat_parse
                     const std::list<std::string>& warnings = parser.warningList();
                     send_warnings(env, format, std::vector<std::string>(warnings.begin(), warnings.end()));
                     const std::list<std::string>& grammarErrors = parser.grammarErrorList();
-                    send_warnings(env, format, std::vector<std::string>(grammarErrors.begin(), grammarErrors.end()), true);
+                    send_warnings(env, format, std::vector<std::string>(grammarErrors.begin(), grammarErrors.end()), JNI_TRUE);
                 }
                 break;
             }
