@@ -69,7 +69,9 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
     @Override
     public AxisDirection getDirection() {
         final String dir = impl.getStringProperty(Property.DIRECTION);
-        return search(AxisDirection.class, dir);
+        AxisDirection direction = search(AxisDirection.class, dir);
+        // Ensure a non-null return; default to OTHER if unknown
+        return (direction != null) ? direction : AxisDirection.OTHER;
     }
 
     /**
@@ -79,7 +81,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      * @param  <T>   compile-time value of {@code type}.
      * @param  type  class of the code to search.
      * @param  code  name of the code that we are searching.
-     * @return the code list for the given UML identifier.
+     * @return the code list for the given UML identifier, or null if not found.
      */
     private static <T extends CodeList<T>> T search(final Class<T> type, final String code) {
         return CodeList.valueOf(type, new CodeList.Filter() {
