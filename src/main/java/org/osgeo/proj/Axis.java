@@ -78,8 +78,6 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
     // GeoAPI has not yet been updated for that revision, but this change anticipates it.
     }
 
-
-
     /**
      * Searches for the given code, ignoring case. The string should be the UML identifier,
      * not Java or C/C++ field name. However this method accepts both.
