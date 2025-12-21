@@ -69,7 +69,13 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
     @Override
     public AxisDirection getDirection() {
         final String dir = impl.getStringProperty(Property.DIRECTION);
-        return search(AxisDirection.class, dir);
+        AxisDirection direction = search(AxisDirection.class, dir);
+        // Ensure a non-null return; default to UNSPECIFIED if unknown
+        return (direction != null) ? direction : AxisDirection.valueOf("UNSPECIFIED");
+
+        // TODO: Use AxisDirection.UNSPECIFIED in GeoAPI 3.1.
+        // The "Unspecified" axis direction has been added in ISO 19111:2019.
+        // GeoAPI has not yet been updated for that revision, but this change anticipates it.
     }
 
     /**
@@ -79,7 +85,7 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      * @param  <T>   compile-time value of {@code type}.
      * @param  type  class of the code to search.
      * @param  code  name of the code that we are searching.
-     * @return the code list for the given UML identifier.
+     * @return the code list for the given UML identifier, or null if not found.
      */
     private static <T extends CodeList<T>> T search(final Class<T> type, final String code) {
         return CodeList.valueOf(type, new CodeList.Filter() {
