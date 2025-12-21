@@ -68,14 +68,14 @@ final class Axis extends IdentifiableObject implements CoordinateSystemAxis {
      */
     @Override
     public AxisDirection getDirection() {
-    final String dir = impl.getStringProperty(Property.DIRECTION);
-    AxisDirection direction = search(AxisDirection.class, dir);
-    // Ensure a non-null return; default to UNSPECIFIED if unknown
+        final String dir = impl.getStringProperty(Property.DIRECTION);
+        AxisDirection direction = search(AxisDirection.class, dir);
+        // Ensure a non-null return; default to UNSPECIFIED if unknown
         return (direction != null) ? direction : AxisDirection.valueOf("UNSPECIFIED");
 
-    // TODO: Use AxisDirection.UNSPECIFIED in GeoAPI 3.1.
-    // The "Unspecified" axis direction has been added in ISO 19111:2019.
-    // GeoAPI has not yet been updated for that revision, but this change anticipates it.
+        // TODO: Use AxisDirection.UNSPECIFIED in GeoAPI 3.1.
+        // The "Unspecified" axis direction has been added in ISO 19111:2019.
+        // GeoAPI has not yet been updated for that revision, but this change anticipates it.
     }
 
     /**
