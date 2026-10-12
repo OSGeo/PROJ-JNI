@@ -21,12 +21,12 @@ Latest release is [2.0](https://github.com/OSGeo/PROJ-JNI/releases/2.0).
 
   * For building:
     - Java Developer Kit (JDK) version 11 or later.
-    - PROJ 6 or later with its header files.
+    - PROJ 9.5 or later with its header files.
     - **g++** compiler and **cmake** building tools.
     - Apache Maven.
   * For running:
     - Java Runtime Environment (JRE) version 11 or later.
-    - PROJ 6 or later.
+    - PROJ 9.5 or later.
 
 ## Contributing
 
