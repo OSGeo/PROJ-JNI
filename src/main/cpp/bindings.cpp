@@ -304,6 +304,7 @@ JNIEXPORT jstring JNICALL Java_org_osgeo_proj_NativeResource_version(JNIEnv *env
 #define JPJ_UNPARSABLE_EXCEPTION       "org/osgeo/proj/UnparsableObjectException"
 #define JPJ_OUT_OF_BOUNDS_EXCEPTION    "java/lang/IndexOutOfBoundsException"
 #define JPJ_ILLEGAL_ARGUMENT_EXCEPTION "java/lang/IllegalArgumentException"
+#define JPJ_UNSUPPORTED_OPERATION      "java/lang/UnsupportedOperationException"
 #define JPJ_RUNTIME_EXCEPTION          "java/lang/RuntimeException"
 
 /*
@@ -2679,15 +2680,27 @@ JNIEXPORT jobject JNICALL Java_org_osgeo_proj_SharedPointer_inverse(JNIEnv *env,
  * if possible.
  *
  * @param  env         The JNI environment.
- * @param  operation   The Java object wrapping the PROJ operation to inverse.
+ * @param  object      The Java object wrapping the PROJ CRS or coordinate operation to normalize.
  * @return an object with an axis order convenient for visualization.
  */
-JNIEXPORT jobject JNICALL Java_org_osgeo_proj_SharedPointer_normalizeForVisualization(JNIEnv *env, jobject operation) {
+JNIEXPORT jobject JNICALL Java_org_osgeo_proj_SharedPointer_normalizeForVisualization(JNIEnv *env, jobject object) {
     try {
-        CoordinateOperationNNPtr cop = get_shared_object<CoordinateOperation>(env, operation);
-        cop = cop->normalizeForVisualization();
-        BaseObjectPtr ptr = cop.as_nullable();
-        return specific_subclass(env, operation, ptr, org_osgeo_proj_Type_COORDINATE_OPERATION);
+        BaseObjectPtr ptr = get_and_unwrap_ptr<BaseObject>(env, object);
+        CRSPtr crs = std::dynamic_pointer_cast<CRS>(ptr);
+        if (crs) {
+#if PROJ_VERSION_MAJOR > 8 || (PROJ_VERSION_MAJOR == 8 && PROJ_VERSION_MINOR >= 1)
+            ptr = NN_CHECK_ASSERT(crs)->normalizeForVisualization().as_nullable();
+            return specific_subclass(env, object, ptr, org_osgeo_proj_Type_COORDINATE_REFERENCE_SYSTEM);
+#else
+            // CRS::normalizeForVisualization() is not exported before PROJ 8.1.
+            jclass c = env->FindClass(JPJ_UNSUPPORTED_OPERATION);
+            if (c) env->ThrowNew(c, "Requires PROJ 8.1 or later.");
+            return nullptr;
+#endif
+        }
+        CoordinateOperationNNPtr cop = NN_CHECK_THROW(std::dynamic_pointer_cast<CoordinateOperation>(ptr));
+        ptr = cop->normalizeForVisualization().as_nullable();
+        return specific_subclass(env, object, ptr, org_osgeo_proj_Type_COORDINATE_OPERATION);
     } catch (const std::exception &e) {
         rethrow_as_java_exception(env, JPJ_ILLEGAL_ARGUMENT_EXCEPTION, e);
     }

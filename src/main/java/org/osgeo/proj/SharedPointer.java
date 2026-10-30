@@ -151,7 +151,7 @@ class SharedPointer extends NativeResource {
 
     /**
      * Returns an object with axis order such as the east direction is first and north direction is second,
-     * if possible. This method can be applied on coordinate operations.
+     * if possible. This method can be applied on coordinate reference systems and coordinate operations.
      *
      * @return an object with an axis order convenient for visualization.
      */

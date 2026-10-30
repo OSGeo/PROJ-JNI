@@ -26,6 +26,9 @@ import java.util.Optional;
 import org.junit.Test;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.IdentifiedObject;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.AxisDirection;
+import org.opengis.referencing.cs.CoordinateSystem;
 
 import static org.junit.Assert.*;
 
@@ -62,5 +65,22 @@ public final strictfp class ProjTest {
 
         // Verify that the hash code value is stable.
         assertEquals(obj.hashCode(), obj.hashCode());
+    }
+
+    /**
+     * Tests {@link Proj#normalizeForVisualization(CoordinateReferenceSystem)}.
+     *
+     * @throws FactoryException if the object creation failed.
+     */
+    @Test
+    public void testNormalizeCRSForVisualization() throws FactoryException {
+        final CoordinateReferenceSystem crs = (CoordinateReferenceSystem) Proj.createFromUserInput("EPSG:4326");
+        CoordinateSystem cs = crs.getCoordinateSystem();
+        assertEquals(AxisDirection.NORTH, cs.getAxis(0).getDirection());
+        assertEquals(AxisDirection.EAST,  cs.getAxis(1).getDirection());
+
+        cs = Proj.normalizeForVisualization(crs).getCoordinateSystem();
+        assertEquals(AxisDirection.EAST,  cs.getAxis(0).getDirection());
+        assertEquals(AxisDirection.NORTH, cs.getAxis(1).getDirection());
     }
 }
