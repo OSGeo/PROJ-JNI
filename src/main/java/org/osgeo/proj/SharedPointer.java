@@ -53,12 +53,14 @@ class SharedPointer extends NativeResource {
 
     /**
      * Returns a property value as an object.
+     * The return type is {@code Object} because units of measurement are returned too.
+     * The C2 compiler trusts the declared return type of native methods.
      *
      * @param  property  one of {@link Property#COORDINATE_SYSTEM}, <i>etc.</i> values.
      * @return value of the specified property, or {@code null} if undefined.
      * @throws RuntimeException if the specified property does not exist for this object.
      */
-    final native IdentifiableObject getObjectProperty(short property);
+    final native Object getObjectProperty(short property);
 
     /**
      * Returns a property value as a string.
