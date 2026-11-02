@@ -12,10 +12,10 @@ extern "C" {
 /*
  * Class:     org_osgeo_proj_Context
  * Method:    create
- * Signature: (Ljava/lang/String;C)J
+ * Signature: (Ljava/lang/String;CI)J
  */
 JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create
-  (JNIEnv *, jclass, jstring, jchar);
+  (JNIEnv *, jclass, jstring, jchar, jint);
 
 /*
  * Class:     org_osgeo_proj_Context

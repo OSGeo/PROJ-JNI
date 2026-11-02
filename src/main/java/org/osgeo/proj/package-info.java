@@ -103,6 +103,13 @@
  * If this property is not set, then the value specified by the {@code PROJ_DATA} environment variable is used.
  * If that environment variable is not set neither, then a PROJ hard-coded default path is used.</p>
  *
+ * <p>The "{@systemProperty org.osgeo.proj.logLevel}" system property can be set for controlling
+ * which messages PROJ writes to the standard error stream. Accepted values are {@code "none"}
+ * (no messages), {@code "error"}, {@code "debug"} and {@code "trace"}. If this property is not set,
+ * then the value specified by the {@code PROJ_DEBUG} environment variable is used, or {@code "error"}
+ * if that environment variable is not set neither. Errors are reported as Java exceptions regardless
+ * of this setting, so {@code "none"} does not hide them.</p>
+ *
  * <h2>Unsupported features</h2>
  * <p>The following method calls will cause an exception to be thrown:</p>
  * <ul>

@@ -783,11 +783,15 @@ JNIEXPORT jobject JNICALL Java_org_osgeo_proj_UnitOfMeasure_create
  * @param  caller         The class from which this method has been invoked.
  * @param  searchPaths    The location(s) of PROJ resource files, or null for default.
  * @param  pathSeparator  The system-dependent path separator (':' on Unix or ';' on Windows).
+ * @param  logLevel       One of the PJ_LOG_LEVEL values, or -1 for keeping the PROJ default.
  * @return The address of the new PJ_CONTEXT structure, or 0 in case of failure.
  */
-JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass caller, jstring searchPaths, jchar pathSeparator) {
+JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass caller, jstring searchPaths, jchar pathSeparator, jint logLevel) {
     static_assert(sizeof(PJ_CONTEXT*) <= sizeof(jlong), "Can not store PJ_CONTEXT* in a jlong.");
     PJ_CONTEXT *ctx = proj_context_create();
+    if (ctx && logLevel >= 0) {
+        proj_log_level(ctx, static_cast<PJ_LOG_LEVEL>(logLevel));
+    }
     if (searchPaths != NULL) {
         const char *path = env->GetStringUTFChars(searchPaths, nullptr);
         if (path) {
