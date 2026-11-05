@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <cstring>
 #include <string>
+#include <vector>
 #include <cmath>
 #include <atomic>
 #include <proj.h>
@@ -791,12 +792,23 @@ JNIEXPORT jlong JNICALL Java_org_osgeo_proj_Context_create(JNIEnv *env, jclass c
     if (searchPaths != NULL) {
         const char *path = env->GetStringUTFChars(searchPaths, nullptr);
         if (path) {
-            int n = 1;
+            std::vector<std::string> directories;
+            std::string current;
             for (const char *s = path; *s; s++) {
-                if (*s == pathSeparator) n++;
+                if (*s == pathSeparator) {
+                    directories.push_back(current);
+                    current.clear();
+                } else {
+                    current += *s;
+                }
             }
-            proj_context_set_search_paths(ctx, n, &path);
+            directories.push_back(current);
             env->ReleaseStringUTFChars(searchPaths, path);
+            std::vector<const char*> pointers;
+            for (const std::string &directory : directories) {
+                pointers.push_back(directory.c_str());
+            }
+            proj_context_set_search_paths(ctx, static_cast<int>(pointers.size()), pointers.data());
         }
     }
     return reinterpret_cast<jlong>(ctx);
