@@ -25,6 +25,7 @@ package org.osgeo.proj;
 import java.io.File;
 import java.util.Map;
 import java.util.Deque;
+import java.util.Locale;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.lang.annotation.Native;
@@ -92,12 +93,13 @@ final class Context extends NativeResource implements AutoCloseable {
 
     /**
      * Creates and wraps a new {@code PJ_CONTEXT}.
-     * The search path system property is documented in the package javadoc.
+     * The search path and log level system properties are documented in the package javadoc.
      *
      * @throws FactoryException if the PROJ object can not be allocated.
      */
     private Context() throws FactoryException {
-        super(create(System.getProperty("org.osgeo.proj.data"), File.pathSeparatorChar));
+        super(create(System.getProperty("org.osgeo.proj.data"), File.pathSeparatorChar,
+                     logLevel(System.getProperty("org.osgeo.proj.logLevel"))));
     }
 
     /**
@@ -106,9 +108,29 @@ final class Context extends NativeResource implements AutoCloseable {
      *
      * @param  searchPath     the location of PROJ resource files, or {@code null} for default.
      * @param  pathSeparator  value of {@link File#pathSeparatorChar} (system-dependent).
+     * @param  logLevel       one of the {@code PJ_LOG_LEVEL} values, or -1 for the PROJ default.
      * @return pointer to the {@code PJ_CONTEXT} allocated by PROJ, or 0 if out of memory.
      */
-    private static native long create(String searchPath, char pathSeparator);
+    private static native long create(String searchPath, char pathSeparator, int logLevel);
+
+    /**
+     * Converts the value of the log level system property to a {@code PJ_LOG_LEVEL} value.
+     *
+     * @param  value  the property value ({@code "none"}, {@code "error"}, {@code "debug"} or {@code "trace"}), or {@code null}.
+     * @return the corresponding {@code PJ_LOG_LEVEL} value, or -1 for the PROJ default.
+     */
+    static int logLevel(final String value) {
+        if (value != null) {
+            switch (value.trim().toLowerCase(Locale.ROOT)) {
+                case "none":  return 0;
+                case "error": return 1;
+                case "debug": return 2;
+                case "trace": return 3;
+                default: NativeResource.logger().warning("Unknown PROJ log level: " + value);
+            }
+        }
+        return -1;
+    }
 
     /**
      * Gets a PROJ context, creating a new one if needed.
