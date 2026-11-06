@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     org_osgeo_proj_SharedPointer
  * Method:    getObjectProperty
- * Signature: (S)Lorg/osgeo/proj/IdentifiableObject;
+ * Signature: (S)Ljava/lang/Object;
  */
 JNIEXPORT jobject JNICALL Java_org_osgeo_proj_SharedPointer_getObjectProperty
   (JNIEnv *, jobject, jshort);
