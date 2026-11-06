@@ -420,6 +420,23 @@ public final class Proj {
     }
 
     /**
+     * Returns a coordinate reference system with axis order such as the east direction is first
+     * and the north direction is second, if possible.
+     *
+     * @param  crs  the coordinate reference system for which to adjust axis order.
+     * @return a coordinate reference system with axis order convenient for visualization.
+     * @throws UnsupportedOperationException if PROJ-JNI has been compiled with a PROJ version older than 8.1.
+     */
+    public static CoordinateReferenceSystem normalizeForVisualization(final CoordinateReferenceSystem crs) {
+        Objects.requireNonNull(crs);
+        if (crs instanceof IdentifiableObject) {
+            return (CoordinateReferenceSystem) ((IdentifiableObject) crs).impl.normalizeForVisualization();
+        } else {
+            throw new UnsupportedImplementationException("crs", crs);
+        }
+    }
+
+    /**
      * Returns {@code true} if the given objects are equivalent according the given criterion.
      * If the two given objects are {@code null}, this method returns {@code true}.
      * If one object is null and the other object is non-null, this method returns {@code false}.
